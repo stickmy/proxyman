@@ -1,0 +1,11 @@
+.app {
+}
+
+.aside {
+  padding: 16px 8px;
+}
+
+.main {
+  height: 100vh;
+  padding: 16px 8px;
+}

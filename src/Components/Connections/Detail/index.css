@@ -1,0 +1,11 @@
+.item {
+  padding: 4px 0;
+}
+
+.label {
+  @apply text-gray10;
+}
+
+.value {
+  @apply break-all;
+}

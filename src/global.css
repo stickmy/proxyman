@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+.arco-icon {
+  font-size: 14px;
+  stroke-width: 2;
+}
+
+.arco-input-inner-wrapper-small {
+  height: 32px !important;
+}
+
+.arco-input-size-small {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.arco-collapse-item-header {
+  user-select: none;
+}

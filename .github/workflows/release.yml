@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  push:
+    tags: [ v\d+\.\d+\.\d+ ]
+
+jobs:
+  create-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-20.04
+    outputs:
+      release_id: ${{ steps.create-release.outputs.id }}
+      release_upload_url: ${{ steps.create-release.outputs.upload_url }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get version
+        id: get_version
+        uses: battila7/get-version-action@v2
+
+      - name: Get tag message
+        id: tag
+        run: |
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+          echo "message<<EOF" >> $GITHUB_OUTPUT
+          echo "$(git tag -l --format='%(contents)' ${{ steps.get_version.outputs.version }})" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create-release
+        uses: ncipollo/release-action@v1
+        with:
+          draft: true
+          name: ${{ steps.get_version.outputs.version }}
+          tag: ${{ steps.get_version.outputs.version }}
+          body: "${{ steps.tag.outputs.message }}"
+
+  build-tauri:
+    needs: create-release
+    permissions:
+      contents: write
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - os: macos-latest
+            arch: x86_64
+            rust_target: x86_64-apple-darwin
+          - os: macos-latest
+            arch: aarch64
+            rust_target: aarch64-apple-darwin
+
+    runs-on: ${{ matrix.config.os }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get version
+        id: get_version
+        uses: battila7/get-version-action@v2
+
+      - name: setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.config.rust_target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.config.rust_target }}
+          workspaces: './src-tauri -> target'
+
+      - name: install dependencies (mac only)
+        if: matrix.config.os == 'macos-latest'
+        run: |
+          rustup target add aarch64-apple-darwin
+
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: install frontend dependencies
+        run: yarn install # change this to npm or pnpm depending on which one you use
+
+      - name: Change Version
+        env:
+          VERSION: "${{ steps.get_version.outputs.version-without-v }}"
+        run: make change-version
+
+      - uses: oNaiPs/secrets-to-env-action@v1
+        with:
+          secrets: ${{ toJSON(secrets) }}
+
+      - name: Build Tauri App
+        uses: tauri-apps/tauri-action@dev
+        if: matrix.config.os != 'macos-latest' || matrix.config.arch != 'aarch64'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+
+      - name: Build Tauri App (macOS aarch64)
+        uses: tauri-apps/tauri-action@dev
+        if: matrix.config.os == 'macos-latest' && matrix.config.arch == 'aarch64'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          args: --target aarch64-apple-darwin
+
+  publish-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-20.04
+    needs: [create-release, build-tauri]
+
+    steps:
+      - name: publish release
+        id: publish-release
+        uses: actions/github-script@v6
+        env:
+          release_id: ${{ needs.create-release.outputs.release_id }}
+        with:
+          script: |
+            github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: process.env.release_id,
+              draft: false,
+              prerelease: false
+            })
