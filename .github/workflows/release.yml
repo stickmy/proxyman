@@ -78,7 +78,7 @@ jobs:
           workspaces: './src-tauri -> target'
 
       - name: install dependencies (mac only)
-        if: matrix.config.os == 'macos-latest'
+        if: matrix.config.os == 'macos-latest' && matrix.config.arch == 'aarch64'
         run: |
           rustup target add aarch64-apple-darwin
 
