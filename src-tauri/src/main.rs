@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use sys_events::handle_sys_events;
 use tauri::{LogicalSize, Manager, Size};
 
 mod app_conf;
@@ -10,11 +11,12 @@ mod error;
 mod events;
 mod processors;
 mod proxy;
+mod sys_events;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
 fn main() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(proxy::init())
         .setup(|app| {
             let window = app.get_window("main").unwrap();
@@ -43,6 +45,8 @@ fn main() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
+        .build(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    app.run(handle_sys_events);
 }
