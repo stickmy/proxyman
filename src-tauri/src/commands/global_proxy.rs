@@ -4,40 +4,13 @@ use serde::{Deserialize, Serialize};
 
 #[tauri::command]
 pub async fn turn_on_global_proxy(port: String) -> Result<bool, String> {
-    let http = Command::new("networksetup")
-        .arg("-setwebproxy")
-        .arg("Wi-Fi")
-        .arg("127.0.0.1")
-        .arg(&port)
-        .output();
-
-    let https = Command::new("networksetup")
-        .arg("-setsecurewebproxy")
-        .arg("Wi-Fi")
-        .arg("127.0.0.1")
-        .arg(&port)
-        .output();
-
-    let (http_output, https_output) = future::join(http, https).await;
-    if http_output.is_ok() && https_output.is_ok() {
-        let (http_state, https_state) = future::join(
-            get_global_proxy_status(false),
-            get_global_proxy_status(true),
-        )
-        .await;
-
-        if let Ok(http_state) = http_state {
-            if let Ok(https_state) = https_state {
-                return Ok(http_state.port == https_state.port && http_state.port == Some(port));
-            }
-        }
-    }
-
-    Err("Turn on by networksetup failed".to_string())
+    set_global_proxy(String::from("127.0.0.1"), port).await
 }
 
 #[tauri::command]
 pub async fn turn_off_global_proxy() -> Result<bool, String> {
+    set_global_proxy(String::from(""), String::from("0")).await?;
+
     let http = Command::new("networksetup")
         .arg("-setwebproxystate")
         .arg("Wi-Fi")
@@ -67,6 +40,42 @@ pub async fn turn_off_global_proxy() -> Result<bool, String> {
     }
 
     Err("Turn off by networksetup failed".to_string())
+}
+
+async fn set_global_proxy(host: String, port: String) -> Result<bool, String> {
+    let http = Command::new("networksetup")
+        .arg("-setwebproxy")
+        .arg("Wi-Fi")
+        .arg(&host)
+        .arg(&port)
+        .output();
+
+    let https = Command::new("networksetup")
+        .arg("-setsecurewebproxy")
+        .arg("Wi-Fi")
+        .arg(&host)
+        .arg(&port)
+        .output();
+
+    let (http_output, https_output) = future::join(http, https).await;
+    if http_output.is_ok() && https_output.is_ok() {
+        let (http_state, https_state) = future::join(
+            get_global_proxy_status(false),
+            get_global_proxy_status(true),
+        )
+        .await;
+
+        if let Ok(http_state) = http_state {
+            if let Ok(https_state) = https_state {
+                return Ok(http_state.port == https_state.port
+                    && http_state.port == Some(port)
+                    && http_state.server == https_state.server
+                    && http_state.server == Some(host));
+            }
+        }
+    }
+
+    Err("Turn on by networksetup failed".to_string())
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
