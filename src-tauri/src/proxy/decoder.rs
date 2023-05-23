@@ -1,4 +1,4 @@
-use crate::error::EndpointError;
+use crate::error::endpoint_error::EndpointError;
 use async_compression::tokio::bufread::{BrotliDecoder, GzipDecoder, ZlibDecoder, ZstdDecoder};
 use bstr::ByteSlice;
 use bytes::Bytes;

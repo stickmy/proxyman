@@ -2,7 +2,7 @@ use async_process::Command;
 use std::path::PathBuf;
 use tauri::{AppHandle, Runtime};
 
-use crate::error::{ConfigurationErrorKind, Error};
+use crate::error::{configuration_error::ConfigurationErrorKind, Error};
 
 #[tauri::command]
 pub async fn check_cert_installed<R: Runtime>(app: AppHandle<R>) -> Result<bool, String> {
@@ -24,10 +24,9 @@ pub async fn check_cert_installed<R: Runtime>(app: AppHandle<R>) -> Result<bool,
 }
 
 #[tauri::command]
-pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, String> {
-    let key_chain = get_key_chain()
-        .await
-        .map_err(|_| "Read default-keychain failed".to_string())?;
+pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, Error> {
+    let key_chain = get_key_chain().await?;
+
     let ca_path = get_ca_path(app);
 
     let child = Command::new("security")
@@ -46,10 +45,20 @@ pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, String>
                 ca_path,
                 e
             );
-            "Install certificate failed".to_string()
+            Error::Configuration {
+                scenario: "Install https certificate",
+                source: ConfigurationErrorKind::Cert {
+                    scenario: "Execute 'security add-trusted-cert'",
+                },
+            }
         })
         .and_then(|out| {
-            String::from_utf8(out.stdout).map_err(|_| "Install certificate failed".to_string())
+            String::from_utf8(out.stdout).map_err(|_| Error::Configuration {
+                scenario: "Read https certificate installation output",
+                source: ConfigurationErrorKind::Cert {
+                    scenario: "Transform output to uft8",
+                },
+            })
         })
         .map(|ret| {
             log::debug!("Install cert output: {}", ret);
@@ -70,14 +79,18 @@ async fn get_key_chain() -> Result<String, Error> {
         .await;
 
     child
-        .map_err(|e| Error::Configuration {
-            reason: "Execute default-keychain command",
-            source: ConfigurationErrorKind::Cert {},
+        .map_err(|_| Error::Configuration {
+            scenario: "Execute default-keychain command",
+            source: ConfigurationErrorKind::Cert {
+                scenario: "read default keychain store",
+            },
         })
         .and_then(|c| {
-            String::from_utf8(c.stdout).map_err(|e| Error::Configuration {
-                reason: "Read default-keychain command output",
-                source: ConfigurationErrorKind::Cert {},
+            String::from_utf8(c.stdout).map_err(|_| Error::Configuration {
+                scenario: "Read default-keychain command output",
+                source: ConfigurationErrorKind::Cert {
+                    scenario: "read default keychain store",
+                },
             })
         })
         .and_then(|output| {
@@ -87,8 +100,10 @@ async fn get_key_chain() -> Result<String, Error> {
             match parts.next() {
                 Some(path) => Ok(path.to_string()),
                 None => Err(Error::Configuration {
-                    reason: "Read default-keychain command output",
-                    source: ConfigurationErrorKind::Cert {},
+                    scenario: "Read default-keychain command output",
+                    source: ConfigurationErrorKind::Cert {
+                        scenario: "transform default keychain store to string",
+                    },
                 }),
             }
         })

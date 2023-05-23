@@ -1,4 +1,3 @@
-import { listen } from "@tauri-apps/api/event";
 import { invoke, InvokeArgs } from "@tauri-apps/api/tauri";
 
 export const checkCertInstalled = async () => {
@@ -10,7 +9,9 @@ export const installCert = async () => {
 };
 
 export const turnOnGlobalProxy = async (port: string) => {
-  return invokeWithLogging<boolean>("plugin:proxy|turn_on_global_proxy", { port });
+  return invokeWithLogging<boolean>("plugin:proxy|turn_on_global_proxy", {
+    port,
+  });
 };
 
 export const turnOffGlobalProxy = async () => {
@@ -58,8 +59,8 @@ const invokeWithLogging = async <T>(
     const t = await invoke<T>(cmd, args);
     console.debug("Command response - ", t);
     return t;
-  } catch (error) {
+  } catch (error: any) {
     console.debug("Command error - ", error);
-    throw error;
+    throw JSON.parse(error);
   }
 };

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
+use crate::error::configuration_error::SslError;
 use crate::error::{self, *};
 use async_trait::async_trait;
 use http::uri::Authority;
@@ -68,13 +69,13 @@ impl Ssl {
             X509NameBuilder::new()
                 .context(SslError {})
                 .context(ConfigurationError {
-                    reason: "Create CA name builder failed",
+                    scenario: "Create CA name builder failed",
                 })?;
         name_builder
             .append_entry_by_text("CN", authority.host())
             .context(SslError)
             .context(ConfigurationError {
-                reason: "Append CA entry name failed",
+                scenario: "Append CA entry name failed",
             })?;
         let name = name_builder.build();
 
@@ -82,19 +83,19 @@ impl Ssl {
             X509Builder::new()
                 .context(SslError {})
                 .context(ConfigurationError {
-                    reason: "Create X509 builder failed",
+                    scenario: "Create X509 builder failed",
                 })?;
         x509_builder
             .set_subject_name(&name)
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "Set CA subject name failed",
+                scenario: "Set CA subject name failed",
             })?;
         x509_builder
             .set_version(2)
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "Set version failed",
+                scenario: "Set version failed",
             })?;
 
         let not_before = SystemTime::now()
@@ -107,39 +108,39 @@ impl Ssl {
                 Asn1Time::from_unix(not_before)
                     .context(SslError {})
                     .context(ConfigurationError {
-                        reason: "Asn1 failed",
+                        scenario: "Asn1 failed",
                     })?
                     .as_ref(),
             )
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "x509 not before error",
+                scenario: "x509 not before error",
             })?;
         x509_builder
             .set_not_after(
                 Asn1Time::from_unix(not_before + TTL_SECS)
                     .context(SslError {})
                     .context(ConfigurationError {
-                        reason: "Asn1 failed",
+                        scenario: "Asn1 failed",
                     })?
                     .as_ref(),
             )
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "x509 not after error",
+                scenario: "x509 not after error",
             })?;
 
         x509_builder
             .set_pubkey(&self.pkey)
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "Set pub key failed",
+                scenario: "Set pub key failed",
             })?;
         x509_builder
             .set_issuer_name(self.ca_cert.subject_name())
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "Set issuer name failed",
+                scenario: "Set issuer name failed",
             })?;
 
         let alternative_name = SubjectAlternativeName::new()
@@ -147,44 +148,44 @@ impl Ssl {
             .build(&x509_builder.x509v3_context(Some(&self.ca_cert), None))
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "Create x509 v3 context failed",
+                scenario: "Create x509 v3 context failed",
             })?;
         x509_builder
             .append_extension(alternative_name)
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "Append x509 extension failed",
+                scenario: "Append x509 extension failed",
             })?;
 
         let mut serial_number = [0; 16];
         rand::rand_bytes(&mut serial_number)
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "Create cryptographically strong random byte failed",
+                scenario: "Create cryptographically strong random byte failed",
             })?;
 
         let serial_number = BigNum::from_slice(&serial_number)
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "Create serial number failed",
+                scenario: "Create serial number failed",
             })?;
         let serial_number = Asn1Integer::from_bn(&serial_number)
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "Create Asn1 integer failed",
+                scenario: "Create Asn1 integer failed",
             })?;
         x509_builder
             .set_serial_number(&serial_number)
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "Set x509 serial number failed",
+                scenario: "Set x509 serial number failed",
             })?;
 
         x509_builder
             .sign(&self.pkey, self.hash)
             .context(SslError {})
             .context(ConfigurationError {
-                reason: "Sign x509 failed",
+                scenario: "Sign x509 failed",
             })?;
 
         let x509 = x509_builder.build();
@@ -193,7 +194,7 @@ impl Ssl {
             x509.to_der()
                 .context(SslError {})
                 .context(ConfigurationError {
-                    reason: "Transform x509 to der failed",
+                    scenario: "Transform x509 to der failed",
                 })?,
         ))
     }

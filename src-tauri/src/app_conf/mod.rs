@@ -1,7 +1,7 @@
 use snafu::ResultExt;
 use std::{fs, path::PathBuf};
 
-use crate::error::{self, AppConfError, ConfigurationError};
+use crate::error::{self, configuration_error::AppConfError, ConfigurationError};
 
 pub fn init() -> Result<(), error::Error> {
     ensure_app_dir()
@@ -39,7 +39,7 @@ fn ensure_app_dir() -> Result<(), error::Error> {
                 fs::create_dir(app_dir)
                     .context(AppConfError {})
                     .context(ConfigurationError {
-                        reason: "Ensure app dir",
+                        scenario: "Ensure app dir",
                     })
             } else {
                 Ok(())
@@ -48,7 +48,7 @@ fn ensure_app_dir() -> Result<(), error::Error> {
         Err(_) => fs::create_dir(app_dir)
             .context(AppConfError {})
             .context(ConfigurationError {
-                reason: "Ensure app dir",
+                scenario: "Ensure app dir",
             }),
     }
 }

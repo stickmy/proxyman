@@ -1,6 +1,8 @@
 use core::fmt;
 
-#[derive(Debug, Eq, PartialEq)]
+use serde::Serialize;
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct ProcessorID(pub(super) &'static str);
 
 impl fmt::Display for ProcessorID {
@@ -16,6 +18,13 @@ impl Into<&str> for ProcessorID {
     }
 }
 
+#[allow(clippy::from_over_into)]
+impl Into<String> for ProcessorID {
+    fn into(self) -> String {
+        self.0.to_string()
+    }
+}
+
 impl TryFrom<String> for ProcessorID {
     type Error = &'static str;
 
@@ -26,5 +35,14 @@ impl TryFrom<String> for ProcessorID {
             "Response" => Ok(Self::RESPONSE),
             _ => Err("Unsupport processor"),
         }
+    }
+}
+
+impl Serialize for ProcessorID {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(self.0)
     }
 }

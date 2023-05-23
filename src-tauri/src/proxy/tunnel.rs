@@ -22,7 +22,10 @@ use uuid::Uuid;
 
 use crate::{
     ca::CertificateAuthority,
-    error::*,
+    error::{
+        endpoint_error::{EndpointError, HttpError, WebsocketProtocolError},
+        ClientError, ServerError,
+    },
     events::{self, Events, RequestEvent, ResponseEvent},
 };
 

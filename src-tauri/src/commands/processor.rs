@@ -4,6 +4,7 @@ use tauri::{async_runtime::Mutex, State};
 use tokio::sync::mpsc::{self, Sender};
 
 use crate::{
+    error::{processor_error::ProcessorErrorKind, Error},
     processors::{
         http_processor::{
             delay::{RequestDelayProcessor, RequestDelayRule},
@@ -178,8 +179,12 @@ pub fn get_processor_content(mode: String) -> Result<String, String> {
     } else if processor_id == ProcessorID::DELAY {
         RequestDelayProcessor::into_string()
     } else {
-        return Err("Unsupport rule".to_string());
+        return Err(Error::Processor {
+            id: processor_id,
+            source: ProcessorErrorKind::Unsupport {},
+        }
+        .to_json());
     };
 
-    ret.map_err(|e| e.to_string())
+    ret.map_err(|e| e.to_json())
 }

@@ -14,7 +14,11 @@ use super::tunnel::Tunnel;
 
 use crate::{
     ca::Ssl,
-    error::{self, *},
+    error::{
+        self,
+        endpoint_error::{ConnectError, HttpError},
+        ServerError,
+    },
     events,
     processors::http_processor::HttpProcessor,
 };
