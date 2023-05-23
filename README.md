@@ -1,4 +1,4 @@
-## Proxyman
+## proxyman
 
 [![Release](https://github.com/stickmy/proxyman/actions/workflows/release.yml/badge.svg)](https://github.com/stickmy/proxyman/actions/workflows/release.yml)
 
