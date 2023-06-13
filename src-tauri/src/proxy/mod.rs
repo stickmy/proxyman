@@ -53,7 +53,7 @@ pub(crate) async fn start_proxy<R: Runtime>(
 
     let addr: SocketAddr = ([127, 0, 0, 1], port).into();
 
-    let (transporter_tx, mut transporter_recv) = tokio::sync::mpsc::channel(1);
+    let (transporter_tx, mut transporter_recv) = tokio::sync::mpsc::channel(100);
     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
 
     // ------------------------------- Interceptors update channel -------------------------------
