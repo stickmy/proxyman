@@ -3,8 +3,6 @@ name: Release
 on:
   push:
     tags: [ v\d+\.\d+\.\d+ ]
-    branches:
-      - 'ci/**'
 
 jobs:
   create-release:
