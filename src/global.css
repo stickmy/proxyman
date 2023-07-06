@@ -26,3 +26,17 @@ body,
 .arco-collapse-item-header {
   user-select: none;
 }
+
+input {
+  -webkit-appearance: textfield;
+}
+
+input::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  position: absolute;
+  right: 0;
+}
