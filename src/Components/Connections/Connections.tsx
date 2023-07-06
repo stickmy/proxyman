@@ -41,7 +41,7 @@ export const Connections = () => {
         setRenderConnections(connections);
       } else {
         setRenderConnections(
-          connections.filter((x) => x.request.uri.includes(uriKeyword))
+          connections.filter((x) => x.request.uri.toLowerCase().includes(uriKeyword.toLowerCase()))
         );
       }
     },
