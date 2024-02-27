@@ -1,7 +1,11 @@
 import React, { FC, useEffect, useState } from "react";
-import { Input, Button, Message, Tooltip } from "@arco-design/web-react";
-import { IconPause, IconPlayArrow } from "@arco-design/web-react/icon";
-import { GlobeIcon } from "@radix-ui/react-icons";
+import {
+  Input,
+  Button,
+  Message,
+  Switch,
+  Grid,
+} from "@arco-design/web-react";
 import {
   checkCertInstalled,
   installCert,
@@ -10,6 +14,8 @@ import {
   stopProxy,
 } from "@/Commands/Commands";
 import { useGlobalProxy } from "./useGlobalProxy";
+
+const { Row, Col } = Grid;
 
 export const Toolbar: FC = () => {
   const [status, setStatus] = useState<boolean>(false);
@@ -107,7 +113,7 @@ export const Toolbar: FC = () => {
   }
 
   return (
-    <nav className="flex flex-row items-center">
+    <nav className="pr-3 pb-2 border-b-4 border-gray-50 border-solid">
       {!installed ? (
         <Button
           className="w-full"
@@ -115,17 +121,42 @@ export const Toolbar: FC = () => {
           status="warning"
           onClick={installCa}
         >
-          Install certificate for https decoding
+          安装 SLS 证书
         </Button>
       ) : (
         <>
-          <Input
-            size="small"
-            prefix="listening on port:"
-            value={port}
-            onChange={setPort}
-          />
-          <Button
+          <Row className="mb-2">
+            <Col span={24}>
+              <Input
+                size="small"
+                addBefore="监听端口号:"
+                value={port}
+                onChange={setPort}
+              />
+            </Col>
+          </Row>
+          <Row>
+            <Col span={11} offset={1}>
+              <span className="mr-2">开启</span>
+              <Switch size="small" checked={status} onChange={onSwitchClick} />
+            </Col>
+            <Col span={11} offset={1}>
+              <span className="mr-2">全局代理</span>
+              <Switch
+                size="small"
+                checked={globally}
+                onChange={(value) => {
+                  if (globally) {
+                    turnoffGlobalProxy();
+                  } else {
+                    turnonGlobalProxy();
+                  }
+                }}
+              />
+            </Col>
+          </Row>
+
+          {/* <Button
             className="ml-[8px] shrink-0"
             icon={
               status ? (
@@ -135,8 +166,8 @@ export const Toolbar: FC = () => {
               )
             }
             onClick={onSwitchClick}
-          />
-          <Button
+          /> */}
+          {/* <Button
             className="ml-[8px] shrink-0"
             onClick={() => {
               if (globally) {
@@ -157,7 +188,7 @@ export const Toolbar: FC = () => {
                 />
               </Tooltip>
             }
-          ></Button>
+          ></Button> */}
         </>
       )}
     </nav>

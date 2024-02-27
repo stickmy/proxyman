@@ -1,4 +1,4 @@
-@tailwind base;
+/* @tailwind base; */
 @tailwind components;
 @tailwind utilities;
 
@@ -12,6 +12,11 @@ body,
 .arco-icon {
   font-size: 14px;
   stroke-width: 2;
+}
+
+.arco-input-inner-wrapper-focus {
+  border-color: rgb(242, 243, 245) !important;
+  border-width: 1px !important;
 }
 
 .arco-input-inner-wrapper-small {
@@ -39,4 +44,10 @@ input::-webkit-credentials-auto-fill-button {
   visibility: hidden;
   position: absolute;
   right: 0;
+}
+
+ul, li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }

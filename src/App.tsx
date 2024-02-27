@@ -16,9 +16,9 @@ function App() {
       <ResizeBox.Split
         className="w-full h-full"
         direction="horizontal"
-        max="320px"
+        max="600px"
         min="0px"
-        size="320px"
+        size="260px"
         panes={[
           <Sidebar />,
           <main className="main bg-gray2 w-full relative pl-1">
