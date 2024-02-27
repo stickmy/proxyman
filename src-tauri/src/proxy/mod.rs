@@ -45,15 +45,15 @@ pub(crate) async fn start_proxy<R: Runtime>(
     proxy: State<'_, ProxyState>,
     port: u16,
 ) -> Result<(), String> {
-    let avaiable = check_port_avaiable(port).await;
+    let available = check_port_available(port).await;
 
-    if !avaiable {
+    if !available {
         return Err(format!("port {} was occupied", port));
     }
 
     let addr: SocketAddr = ([127, 0, 0, 1], port).into();
 
-    let (transporter_tx, mut transporter_recv) = tokio::sync::mpsc::channel(100);
+    let (transporter_tx, mut transporter_recv) = tokio::sync::mpsc::channel(200);
     let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
 
     // ------------------------------- Interceptors update channel -------------------------------
@@ -105,7 +105,7 @@ async fn proxy_status(proxy: State<'_, ProxyState>) -> Result<bool, String> {
     Ok(proxy.lock().await.is_some())
 }
 
-async fn check_port_avaiable(port: u16) -> bool {
+async fn check_port_available(port: u16) -> bool {
     let v4_addr = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), port);
     let v6_addr = SocketAddrV6::new(Ipv6Addr::UNSPECIFIED, port, 0, 0);
     TcpListener::bind(v4_addr).await.is_ok() && TcpListener::bind(v6_addr).await.is_ok()

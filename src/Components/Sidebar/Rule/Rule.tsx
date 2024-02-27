@@ -36,13 +36,13 @@ export const Rule = () => {
           className="hover:text-blue9 transition cursor-pointer"
           onClick={() => openRuleEditor(RuleMode.Redirect)}
         >
-          Redirect
+          重定向
         </li>
         <li
           className="hover:text-blue9 transition cursor-pointer"
           onClick={() => openRuleEditor(RuleMode.Delay)}
         >
-          Delay
+          延时
         </li>
       </ul>
       <Drawer

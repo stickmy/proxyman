@@ -102,21 +102,21 @@ export const Connections = () => {
       width: 120,
     },
     {
-      title: "begin time",
+      title: "开始时间",
       key: "begin-time",
       dataIndex: "request.time",
       render: (col) => (col ? dayjs(col).format("HH:mm:ss:SSS") : "-"),
       width: 120,
     },
     {
-      title: "complete time",
+      title: "完成时间",
       key: "complete-time",
       dataIndex: "response.time",
       render: (col) => (col ? dayjs(col).format("HH:mm:ss:SSS") : "-"),
       width: 140,
     },
     {
-      title: "duration",
+      title: "耗时",
       key: "duration",
       dataIndex: "status",
       render: (_, item) =>
@@ -126,7 +126,7 @@ export const Connections = () => {
       width: 100,
     },
     {
-      title: "hit rules",
+      title: "命中的规则",
       key: "rules",
       dataIndex: "hitRules",
       render: (_, item) =>
@@ -149,10 +149,10 @@ export const Connections = () => {
           onChange={setUriKeyword}
           className="w-[300px] mr-2"
         />
-        <div className="text-gray12 mr-2 text-sm w-[64px]">
-          total {renderConnections.length}
+        <div className="text-gray12 mr-2 text-sm">
+          共 {renderConnections.length} 条请求
         </div>
-        <Tooltip mini content="clear">
+        <Tooltip mini content="清除">
           <Button
             icon={<IconBrush className="text-blue11" />}
             onClick={clearConnections}
@@ -166,7 +166,7 @@ export const Connections = () => {
         })}
         data={renderConnections}
         columns={columns}
-        noDataElement={<span>Empty connections</span>}
+        noDataElement={<span className="text-gray11">无数据</span>}
         style={{
           height: "calc(100% - 46px)",
           overflowY: "scroll",

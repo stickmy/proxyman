@@ -29,7 +29,7 @@ export const Sidebar: FC = () => {
           }
           className="bg-gray2 border-none"
           extra={
-            <Tooltip mini content="Click uri to filter, click again to cancel">
+            <Tooltip mini content="点击请求列表中任意一条进行过滤，再次点击取消">
               <IconInfoCircle />
             </Tooltip>
           }
@@ -42,7 +42,7 @@ export const Sidebar: FC = () => {
           header={
             <span>
               <IconCodeBlock className="mr-1" />
-              Rule
+              规则
             </span>
           }
         >
