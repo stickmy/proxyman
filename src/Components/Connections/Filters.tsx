@@ -39,28 +39,28 @@ const responseTypes: Array<Filter> = [
     label: "JSON",
     filter: (conn) =>
       conn.response
-        ? conn.response.headers["content-type"].toLowerCase().includes("json")
+        ? conn.response.headers["content-type"]?.toLowerCase().includes("json")
         : false,
   },
   {
     label: "XML",
     filter: (conn) =>
       conn.response
-        ? conn.response.headers["content-type"].toLowerCase().includes("xml")
+        ? conn.response.headers["content-type"]?.toLowerCase().includes("xml")
         : false,
   },
   {
     label: "TEXT",
     filter: (conn) =>
       conn.response
-        ? conn.response.headers["content-type"].toLowerCase() === "text/plain"
+        ? conn.response.headers["content-type"]?.toLowerCase() === "text/plain"
         : false,
   },
   {
     label: "HTML",
     filter: (conn) =>
       conn.response
-        ? conn.response.headers["content-type"].toLowerCase().includes("html")
+        ? conn.response.headers["content-type"]?.toLowerCase().includes("html")
         : false,
   },
   {
@@ -68,7 +68,7 @@ const responseTypes: Array<Filter> = [
     filter: (conn) =>
       conn.response
         ? conn.response.headers["content-type"]
-            .toLowerCase()
+            ?.toLowerCase()
             .includes("javascript")
         : false,
   },
@@ -76,14 +76,14 @@ const responseTypes: Array<Filter> = [
     label: "CSS",
     filter: (conn) =>
       conn.response
-        ? conn.response.headers["content-type"].toLowerCase().includes("css")
+        ? conn.response.headers["content-type"]?.toLowerCase().includes("css")
         : false,
   },
   {
     label: "IMAGE",
     filter: (conn) =>
       conn.response
-        ? conn.response.headers["content-type"].toLowerCase().includes("image")
+        ? conn.response.headers["content-type"]?.toLowerCase().includes("image")
         : false,
   },
   {
@@ -91,7 +91,7 @@ const responseTypes: Array<Filter> = [
     filter: (conn) =>
       conn.response
         ? conn.response.headers["content-type"]
-            .toLowerCase()
+            ?.toLowerCase()
             .includes("octet-stream")
         : false,
   },

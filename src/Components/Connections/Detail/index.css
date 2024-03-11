@@ -9,3 +9,17 @@
 .value {
   @apply break-all;
 }
+
+.headers {
+  position: relative;
+
+  .header-pretty {
+    margin-right: 4px;
+    cursor: pointer;
+  }
+
+  .active {
+    color: var(--primary-color);
+    stroke-width: 4;
+  }
+}
