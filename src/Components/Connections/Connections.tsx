@@ -18,43 +18,50 @@ import { useDebounceEffect } from "ahooks";
 import { Connection, useConnectionStore } from "@/Store/ConnectionStore";
 import { usePinUriStore } from "@/Store/PinUriStore";
 import dayjs from "dayjs";
-import { useDetailVisible } from "@/Components/Connections/DetailVisibleStore";
+import { Filters } from "@/Components/Connections/Filters";
+import { useConnActionStore } from "@/Components/Connections/ConnActionStore";
+import "./connections.css";
 
 export const Connections = () => {
   const { connections, clearConnections } = useConnectionStore();
+  const { filter } = useConnActionStore();
   const { currentPin, pinUri, unpinUri, pins } = usePinUriStore();
 
-  const { visible, setVisible } = useDetailVisible();
-  const [detailConn, setDetailConn] = useState<Connection>();
+  const { detailVisible, setDetailVisible } = useConnActionStore();
+  const [detailConn, setDetailConnection] = useState<Connection>();
   useEffect(() => {
-    setVisible(!!detailConn);
+    setDetailVisible(!!detailConn);
   }, [detailConn]);
 
   const [uriKeyword, setUriKeyword] = useState<string>();
   const [renderConnections, setRenderConnections] = useState<Connection[]>([]);
+
   useDebounceEffect(
     () => {
-      // Ignore uri keyword search when a pined uri exists.
-      if (currentPin) return;
-
-      if (!uriKeyword) {
-        setRenderConnections(connections);
-      } else {
+      // Ignore other searches when a pined uri exists.
+      if (currentPin) {
         setRenderConnections(
-          connections.filter((x) => x.request.uri.toLowerCase().includes(uriKeyword.toLowerCase()))
+          connections.filter((x) => x.request.uri.startsWith(currentPin))
+        );
+        return;
+      }
+
+      let filtered = connections;
+
+      if (uriKeyword) {
+        filtered = connections.filter((x) =>
+          x.request.uri.toLowerCase().includes(uriKeyword.toLowerCase())
         );
       }
+      if (filter) {
+        filtered = filtered.filter((x) => filter(x));
+      }
+
+      setRenderConnections(filtered);
     },
-    [uriKeyword, connections, currentPin],
+    [uriKeyword, connections, currentPin, filter],
     { wait: 150 }
   );
-  useEffect(() => {
-    if (currentPin) {
-      setRenderConnections(
-        connections.filter((x) => x.request.uri.startsWith(currentPin))
-      );
-    }
-  }, [connections, currentPin]);
 
   const columns: TableColumnProps<Connection>[] = [
     {
@@ -136,39 +143,42 @@ export const Connections = () => {
     {
       title: "uri",
       key: "uri",
-      dataIndex: "request.uri"
+      dataIndex: "request.uri",
     },
   ];
 
+  console.debug(`connections render`);
+
   return (
     <>
-      <div className="sticky top-0 z-20 px-1 py-1 mb-1 flex flex-row items-center shadow-md">
+      <div className="sticky top-0 z-20 px-1 py-1 mb-1 flex flex-row items-center shadow-md bg-[#f1f1f1]">
         <Input.Search
           size="small"
           value={uriKeyword}
           onChange={setUriKeyword}
-          className="w-[300px] mr-2"
+          className="w-[300px] mr-2 connections"
         />
         <div className="text-gray12 mr-2 text-sm">
           共 {renderConnections.length} 条请求
         </div>
         <Tooltip mini content="清除">
           <Button
-            icon={<IconBrush className="text-blue11" />}
+            icon={<IconBrush className="text-[darkgreen]" />}
             onClick={clearConnections}
           />
         </Tooltip>
       </div>
+      <Filters />
       <Table
         rowKey="id"
         onRow={(record) => ({
-          onClick: () => setDetailConn(record),
+          onClick: () => setDetailConnection(record),
         })}
         data={renderConnections}
         columns={columns}
-        noDataElement={<span className="text-gray11">无数据</span>}
+        noDataElement={<span className="text-gray11">等待请求</span>}
         style={{
-          height: "calc(100% - 46px)",
+          height: "calc(100% - 44px)",
           overflowY: "scroll",
           position: "relative",
         }}
@@ -184,13 +194,12 @@ export const Connections = () => {
         }}
       />
       <Drawer
-        // className="bg-gray2"
         title={null}
         footer={null}
         width={800}
-        visible={visible}
+        visible={detailVisible}
         closable={false}
-        onCancel={() => setDetailConn(undefined)}
+        onCancel={() => setDetailConnection(undefined)}
       >
         {detailConn && <ConnectionDetail connection={detailConn} />}
       </Drawer>
@@ -202,7 +211,7 @@ const StickyHeader: FC<PropsWithChildren> = ({ children }) => {
   return (
     <div
       style={{
-        position: "sticky",
+        // position: "sticky",
         top: 0,
         zIndex: 5,
       }}

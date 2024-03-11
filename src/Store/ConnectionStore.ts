@@ -23,9 +23,6 @@ export const useConnectionStore = create<{
   clearConnections: () => set({ connections: [] }),
 }));
 
-export const clearConnections = () =>
-  useConnectionStore.setState({ connections: [] });
-
 const processConnections = (event: ConnectionEvent) => {
   if (isRequestEvent(event)) {
     const reqConn = event.NewRequest;

@@ -3,6 +3,18 @@ import { Drawer } from "@arco-design/web-react";
 import { Redirect } from "@/Components/Sidebar/Rule/Editors/Redirect";
 import { Delay } from "@/Components/Sidebar/Rule/Editors/Delay";
 import { RuleMode } from "@/Events/ConnectionEvents";
+import "./rule.css";
+
+const rules = [
+  {
+    label: "重定向",
+    mode: RuleMode.Redirect,
+  },
+  {
+    label: "延时",
+    mode: RuleMode.Delay,
+  },
+];
 
 export const Rule = () => {
   const [openStatus, setOpenStatus] = useState<boolean>(false);
@@ -31,19 +43,17 @@ export const Rule = () => {
 
   return (
     <>
-      <ul>
-        <li
-          className="hover:text-blue9 transition cursor-pointer"
-          onClick={() => openRuleEditor(RuleMode.Redirect)}
-        >
-          重定向
-        </li>
-        <li
-          className="hover:text-blue9 transition cursor-pointer"
-          onClick={() => openRuleEditor(RuleMode.Delay)}
-        >
-          延时
-        </li>
+      <ul className="sidebar-item">
+        {rules.map(({ label, mode }) => (
+          <li
+            key={mode}
+            data-active={mode === ruleMode}
+            className="hover:text-gray-800 transition cursor-pointer"
+            onClick={() => openRuleEditor(mode)}
+          >
+            {label}
+          </li>
+        ))}
       </ul>
       <Drawer
         title={null}

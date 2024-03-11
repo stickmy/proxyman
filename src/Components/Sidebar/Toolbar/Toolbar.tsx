@@ -1,11 +1,5 @@
 import React, { FC, useEffect, useState } from "react";
-import {
-  Input,
-  Button,
-  Message,
-  Switch,
-  Grid,
-} from "@arco-design/web-react";
+import { Input, Button, Message, Switch, Grid } from "@arco-design/web-react";
 import {
   checkCertInstalled,
   installCert,
@@ -17,15 +11,17 @@ import { useGlobalProxy } from "./useGlobalProxy";
 
 const { Row, Col } = Grid;
 
+const DEFAULT_PORT: string = "9000";
+
 export const Toolbar: FC = () => {
   const [status, setStatus] = useState<boolean>(false);
 
-  const [port, setPort] = useState<string>("9000");
+  const [port, setPort] = useState<string>(DEFAULT_PORT);
 
   const {
     globally,
-    turnOn: turnonGlobalProxy,
-    turnOff: turnoffGlobalProxy,
+    turnOn: turnOnGlobalProxy,
+    turnOff: turnOffGlobalProxy,
   } = useGlobalProxy(port);
 
   const [installed, setInstalled] = useState<boolean>(false);
@@ -85,7 +81,7 @@ export const Toolbar: FC = () => {
 
     Message.loading({
       id: "install_ca",
-      content: "Installing",
+      content: "SLS 证书安装中",
     });
 
     try {
@@ -93,13 +89,13 @@ export const Toolbar: FC = () => {
       if (success) {
         Message.success({
           id: "install_ca",
-          content: "Install success",
+          content: "安装成功",
         });
         setInstalled(true);
       } else {
         Message.error({
           id: "install_ca",
-          content: "Install failed",
+          content: "安装失败",
         });
       }
     } catch (error: any) {
@@ -113,7 +109,7 @@ export const Toolbar: FC = () => {
   }
 
   return (
-    <nav className="pr-3 pb-2 border-b-4 border-gray-50 border-solid">
+    <nav className="pb-2 mb-2 border-b-4 border-gray-50 border-solid bg-white">
       {!installed ? (
         <Button
           className="w-full"
@@ -129,7 +125,7 @@ export const Toolbar: FC = () => {
             <Col span={24}>
               <Input
                 size="small"
-                addBefore="监听端口号:"
+                addBefore="监听端口号"
                 value={port}
                 onChange={setPort}
               />
@@ -147,48 +143,14 @@ export const Toolbar: FC = () => {
                 checked={globally}
                 onChange={(value) => {
                   if (globally) {
-                    turnoffGlobalProxy();
+                    void turnOffGlobalProxy();
                   } else {
-                    turnonGlobalProxy();
+                    void turnOnGlobalProxy();
                   }
                 }}
               />
             </Col>
           </Row>
-
-          {/* <Button
-            className="ml-[8px] shrink-0"
-            icon={
-              status ? (
-                <IconPause className="text-yellow-500" />
-              ) : (
-                <IconPlayArrow className="text-green10" />
-              )
-            }
-            onClick={onSwitchClick}
-          /> */}
-          {/* <Button
-            className="ml-[8px] shrink-0"
-            onClick={() => {
-              if (globally) {
-                turnoffGlobalProxy();
-              } else {
-                turnonGlobalProxy();
-              }
-            }}
-            icon={
-              <Tooltip
-                content={
-                  globally ? "Turn off global proxy" : "Set as global proxy"
-                }
-                mini
-              >
-                <GlobeIcon
-                  className={`inline-block ${globally ? "text-green10" : ""}`}
-                />
-              </Tooltip>
-            }
-          ></Button> */}
         </>
       )}
     </nav>
