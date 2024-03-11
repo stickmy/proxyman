@@ -8,6 +8,7 @@ import { removeResponseMapping, setProcessor } from "@/Commands/Commands";
 import { usePretty } from "./Hooks/usePretty";
 import dayjs from "dayjs";
 import { useConnActionStore } from "@/Components/Connections/ConnActionStore";
+import {Headers} from "@/Components/Connections/Detail/Headers";
 
 export const Response: FC<{
   uri: string;
@@ -106,12 +107,7 @@ export const Response: FC<{
         </span>
       </div>
       <LabelSeparator label="Headers" />
-      {Object.keys(response.headers).map((key) => (
-        <div className="item" key={key}>
-          <span className="inline-block mr-2 label">{key}</span>
-          <span className="value">{response.headers[key]}</span>
-        </div>
-      ))}
+      <Headers headers={response.headers} />
       <LabelSeparator label="Body" />
       <div className="mb-[10px]">
         <Button

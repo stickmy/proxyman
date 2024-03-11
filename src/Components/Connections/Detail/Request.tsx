@@ -7,6 +7,7 @@ import {
 } from "@/Components/Connections/Detail/Helper";
 import { LabelSeparator } from "@/Components/Connections/Detail/Separator";
 import dayjs from "dayjs";
+import { Headers } from "@/Components/Connections/Detail/Headers";
 
 export const Request: FC<{
   request: RequestConnection;
@@ -52,12 +53,7 @@ export const Request: FC<{
         </span>
       </div>
       <LabelSeparator label="Headers" />
-      {Object.keys(request.headers).map((key) => (
-        <div className="item" key={key}>
-          <span className="inline-block mr-2 label">{key}</span>
-          <span className="value">{request.headers[key]}</span>
-        </div>
-      ))}
+      <Headers headers={request.headers} />
       <LabelSeparator label="Body" />
       {request.body.length !== 0 && (
         <div id="req-body" className="w-full h-[500px] relative"></div>
