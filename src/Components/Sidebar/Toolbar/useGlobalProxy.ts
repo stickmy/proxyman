@@ -16,7 +16,7 @@ export const useGlobalProxy = (port: string) => {
       }
 
       if (!ret) {
-        Notification.warning({ content: "Set as global proxy failed" });
+        Notification.warning({ content: "全局代理开启失败" });
       }
     } catch (error: any) {
       Notification.warning({ content: error });
@@ -35,7 +35,7 @@ export const useGlobalProxy = (port: string) => {
       }
 
       if (!ret) {
-        Notification.warning({ content: "Turnoff global proxy failed" });
+        Notification.warning({ content: "全局代理关闭失败" });
       }
     } catch (error: any) {
       Notification.warning({ content: error });

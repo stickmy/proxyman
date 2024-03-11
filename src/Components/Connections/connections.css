@@ -1,0 +1,9 @@
+.connections .arco-input-inner-wrapper-focus {
+  outline: 2px var(--primary-color) solid;
+  border-radius: 2px;
+}
+
+.conn-filters .filter[data-active="true"] {
+  background: var(--primary-color);
+  color: #f1f1f1;
+}

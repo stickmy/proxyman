@@ -5,9 +5,9 @@ import { isJsonp } from "@/Components/Connections/Detail/Helper";
 import { Button, Notification } from "@arco-design/web-react";
 import { LabelSeparator } from "@/Components/Connections/Detail/Separator";
 import { removeResponseMapping, setProcessor } from "@/Commands/Commands";
-import { useDetailVisible } from "@/Components/Connections/DetailVisibleStore";
 import { usePretty } from "./Hooks/usePretty";
 import dayjs from "dayjs";
+import { useConnActionStore } from "@/Components/Connections/ConnActionStore";
 
 export const Response: FC<{
   uri: string;
@@ -66,7 +66,7 @@ export const Response: FC<{
       (async () => {
         try {
           await setProcessor(RuleMode.Response, rule);
-          setVisible(false);
+          setDetailVisible(false);
         } catch (error: any) {
           Notification.error({
             content: error,
@@ -76,11 +76,12 @@ export const Response: FC<{
     }
   }, [beEditing]);
 
-  const { setVisible } = useDetailVisible();
+  const { setDetailVisible } = useConnActionStore();
+
   const dropEditedResponse = async () => {
     try {
       await removeResponseMapping(uri);
-      setVisible(false);
+      setDetailVisible(false);
     } catch (error: any) {
       Notification.error({
         content: "Drop edited response failed",

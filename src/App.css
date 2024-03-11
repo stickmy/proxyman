@@ -1,11 +1,15 @@
 .app {
+  background: #f1f1f1;
 }
 
 .aside {
-  padding: 16px 8px;
+  box-sizing: border-box;
+  padding: 8px;
+  flex-shrink: 0;
 }
 
 .main {
   height: 100vh;
-  padding: 16px 8px;
+  padding: 1rem 0.5rem;
+  box-sizing: border-box;
 }

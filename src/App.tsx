@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { ResizeBox } from "@arco-design/web-react";
 import { Sidebar } from "@/Components/Sidebar/Sidebar";
 import { Connections } from "@/Components/Connections/Connections";
@@ -12,12 +12,12 @@ dayjs.locale("zh-cn");
 
 function App() {
   return (
-    <div className="app w-full h-screen bg-white flex flex-row">
+    <div className="app w-full h-screen flex flex-row">
       <ResizeBox.Split
         className="w-full h-full"
         direction="horizontal"
         max="600px"
-        min="0px"
+        min="240px"
         size="260px"
         panes={[
           <Sidebar />,
