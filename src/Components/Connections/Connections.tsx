@@ -96,6 +96,12 @@ export const Connections = () => {
       width: 64,
     },
     {
+      title: "uri",
+      key: "uri",
+      dataIndex: "request.uri",
+    },
+
+    {
       title: "method",
       key: "method",
       dataIndex: "request.method",
@@ -139,11 +145,6 @@ export const Connections = () => {
       render: (_, item) =>
         item.response?.hitRules ? item.response.hitRules.join(", ") : "-",
       width: 160,
-    },
-    {
-      title: "uri",
-      key: "uri",
-      dataIndex: "request.uri",
     },
   ];
 
