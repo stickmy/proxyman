@@ -27,6 +27,7 @@ const processConnections = (event: ConnectionEvent) => {
   if (isRequestEvent(event)) {
     const reqConn = event.NewRequest;
 
+    // TODO: perf optimization
     unstable_batchedUpdates(() =>
       useConnectionStore.setState(({ connections }) => {
         if (connections.find((x) => x.id === reqConn.id)) {
