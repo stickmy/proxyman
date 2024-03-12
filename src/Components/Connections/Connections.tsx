@@ -176,7 +176,7 @@ export const Connections = () => {
         columns={columns}
         noDataElement={<span className="text-gray11">等待请求</span>}
         style={{
-          height: "calc(100% - 44px)",
+          height: "calc(100% - 64px)",
           overflowY: "scroll",
           position: "relative",
         }}
