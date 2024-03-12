@@ -8,7 +8,7 @@ import { removeResponseMapping, setProcessor } from "@/Commands/Commands";
 import { usePretty } from "./Hooks/usePretty";
 import dayjs from "dayjs";
 import { useConnActionStore } from "@/Components/Connections/ConnActionStore";
-import {Headers} from "@/Components/Connections/Detail/Headers";
+import { Headers } from "@/Components/Connections/Detail/Headers";
 
 export const Response: FC<{
   uri: string;
@@ -17,6 +17,10 @@ export const Response: FC<{
   const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor>();
 
   const { isPretty, pretty } = usePretty(monacoRef, response.body);
+
+  const contentTypeKey = Object.keys(response.headers).find(
+    (x) => x.toLowerCase() === "content-type"
+  );
 
   useLayoutEffect(() => {
     setTimeout(() => {
@@ -90,6 +94,13 @@ export const Response: FC<{
     }
   };
 
+  const notStringLike = !!(
+    contentTypeKey &&
+    ["image", "octet-stream", "media"].some((type) =>
+      response.headers[contentTypeKey].includes(type)
+    )
+  );
+
   return (
     <div>
       <div className="item">
@@ -136,13 +147,15 @@ export const Response: FC<{
           </Button>
         )}
       </div>
-      {response.body.length !== 0 && (
-        <div
-          id="res-body"
-          className="w-full h-[500px] relative border border-gray4 data-[editing=true]:border-dashed data-[editing=true]:border-blue9"
-          data-editing={beEditing}
-        ></div>
-      )}
+      {notStringLike
+        ? "Media type not supported"
+        : response.body.length !== 0 && (
+            <div
+              id="res-body"
+              className="w-full h-[500px] relative border border-gray4 data-[editing=true]:border-dashed data-[editing=true]:border-blue9"
+              data-editing={beEditing}
+            ></div>
+          )}
     </div>
   );
 };

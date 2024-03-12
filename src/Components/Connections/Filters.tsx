@@ -7,7 +7,7 @@ interface Filter {
   filter: (conn: Connection) => boolean;
 }
 
-const status: Array<Filter> = ["1**", "2**", "3**", "4**", "5**"].map(
+const status: Array<Filter> = ["100", "200", "300", "400", "500"].map(
   (status) => ({
     label: status,
     filter: (conn) =>

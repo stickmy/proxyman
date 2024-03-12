@@ -84,6 +84,10 @@ input::-webkit-credentials-auto-fill-button {
   border-radius: 0;
 }
 
+.arco-table-size-mini .arco-table-td {
+  padding: 6px 16px;
+}
+
 ul, li {
   list-style: none;
   margin: 0;
