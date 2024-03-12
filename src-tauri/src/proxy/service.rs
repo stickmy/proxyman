@@ -81,6 +81,7 @@ impl ProxyService {
             let websocket_connector = None;
             let remote_addr = conn.remote_addr();
 
+            // 每一个接收到的 request 都以异步任务处理
             async move {
                 Ok::<_, Infallible>(service_fn(move |req| {
                     Tunnel {

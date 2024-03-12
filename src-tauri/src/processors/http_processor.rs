@@ -63,7 +63,7 @@ impl HttpProcessor {
 #[async_trait]
 impl processor::HttpProcessor for HttpProcessor {
     async fn process_request(&self, req: Request<Body>) -> RequestOrResponse {
-        // --------------------- collect processores ---------------------
+        // --------------------- collect processors ---------------------
         let mut processors: Vec<&dyn HttpRequestProcessor> = Vec::new();
         if let Some(ref response) = self.response {
             processors.push(response);
@@ -80,9 +80,9 @@ impl processor::HttpProcessor for HttpProcessor {
         let mut hit_rules: Vec<String> = Vec::new();
 
         for processor in processors.iter() {
-            let (req_or_res, catched) = processor.process_request(processed_ret.req).await;
+            let (req_or_res, caught) = processor.process_request(processed_ret.req).await;
 
-            if catched {
+            if caught {
                 hit_rules.push(processor.name().0.to_string());
             }
 

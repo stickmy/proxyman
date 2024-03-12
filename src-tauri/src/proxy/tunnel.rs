@@ -79,7 +79,7 @@ where
             Ok(self.upgrade_websocket(req))
         } else {
             let conn_id = Uuid::new_v4();
-            log::debug!("sending request: {}, {:?}", conn_id, req);
+            log::trace!("accept request from client: {}, {:?}", conn_id, req);
 
             let mut req = decode_request(req)
                 .context(ClientError {
@@ -87,11 +87,11 @@ where
                 })
                 .unwrap();
 
-            self.send_event(RequestEvent::new(conn_id, &mut req).await.into())
-                .await;
+            self.send_event(RequestEvent::new(conn_id, &mut req).await.into()).await;
 
             let processor = self.processor.lock().await;
             let req_or_res = processor.process_request(req).await;
+            drop(processor); // release mutex lock
 
             let req = match req_or_res.res {
                 Some(mut res) => {
@@ -106,6 +106,7 @@ where
                 None => req_or_res.req,
             };
 
+            log::trace!("send network request: {}, {:?}", conn_id, req);
             let res = self
                 .client
                 .request(normalize_request(req))
@@ -114,16 +115,19 @@ where
                 .context(ServerError {
                     scenario: "sending request",
                 });
+            log::trace!("send network request done: {}, {:?}", conn_id, res);
 
+            let processor = self.processor.lock().await;
             let mut res = match res {
                 Ok(res) => res,
                 Err(e) => processor.process_error(e).await,
             };
+            drop(processor);
 
             res = decode_response(res).unwrap();
 
             self.send_event(
-                ResponseEvent::new(conn_id, &mut res, req_or_res.hit_rules)
+                ResponseEvent::new(conn_id, &mut res, None)
                     .await
                     .into(),
             )
