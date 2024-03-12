@@ -79,15 +79,13 @@ impl ProxyService {
             let transporter = self.transporter.clone();
             let processor = Arc::clone(&self.processor);
             let websocket_connector = None;
-            let remote_addr = conn.remote_addr();
 
-            // 每一个接收到的 request 都以异步任务处理
+            // accept every request with async tasks
             async move {
                 Ok::<_, Infallible>(service_fn(move |req| {
                     Tunnel {
                         ca: Arc::clone(&ca),
                         client: client.clone(),
-                        remote_addr,
                         websocket_connector: websocket_connector.clone(),
                         transporter: transporter.clone().unwrap(),
                         processor: Arc::clone(&processor),
@@ -103,7 +101,7 @@ impl ProxyService {
             .await
             .context(HttpError {})
             .context(ServerError {
-                scenario: "proxy start",
+                scenario: "tunnel start",
             })
     }
 }

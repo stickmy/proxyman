@@ -1,4 +1,4 @@
-use std::{convert::Infallible, net::SocketAddr, sync::Arc};
+use std::{convert::Infallible, sync::Arc};
 
 use bytes::Bytes;
 use http::{
@@ -37,8 +37,7 @@ pub struct Tunnel<CA, C, P> {
     pub ca: Arc<CA>,
     pub client: Client<C>,
     pub websocket_connector: Option<Connector>,
-    pub remote_addr: SocketAddr,
-    pub transporter: Sender<events::Events>,
+    pub transporter: Sender<Events>,
     pub processor: Arc<Mutex<P>>,
 }
 
@@ -52,7 +51,6 @@ where
             ca: Arc::clone(&self.ca),
             client: self.client.clone(),
             websocket_connector: self.websocket_connector.clone(),
-            remote_addr: self.remote_addr,
             transporter: self.transporter.clone(),
             processor: Arc::clone(&self.processor),
         }
@@ -172,7 +170,7 @@ where
                                 let server_config = self.ca.gen_server_config(&authority).await;
 
                                 log::debug!(
-                                    "TLS connections established with client and proxy server"
+                                    "TLS connections established with client and tunnel server"
                                 );
 
                                 // stream for proxy to server
