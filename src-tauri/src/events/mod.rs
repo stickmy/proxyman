@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::{str, string};
 
 use bytes::Bytes;
 use http::{HeaderMap, Method, StatusCode, Uri, Version};
@@ -110,12 +111,12 @@ trait ToHashMap {
 impl ToString for Version {
     fn to_string(&self) -> String {
         match *self {
-            Version::HTTP_2 => "HTTP_2".to_string(),
-            Version::HTTP_3 => "HTTP_3".to_string(),
-            Version::HTTP_09 => "HTTP_09".to_string(),
-            Version::HTTP_10 => "HTTP_10".to_string(),
-            Version::HTTP_11 => "HTTP_11".to_string(),
-            _ => "Unrecognized".to_string(),
+            Version::HTTP_2 => string::ToString::to_string("HTTP_2"),
+            Version::HTTP_3 => string::ToString::to_string("HTTP_3"),
+            Version::HTTP_09 => string::ToString::to_string("HTTP_09"),
+            Version::HTTP_10 => string::ToString::to_string("HTTP_10"),
+            Version::HTTP_11 => string::ToString::to_string("HTTP_11"),
+            _ => string::ToString::to_string("Unrecognized"),
         }
     }
 }
@@ -125,7 +126,7 @@ impl ToHashMap for HeaderMap {
         let mut headers: HashMap<String, String> = HashMap::new();
 
         for (k, v) in self.iter() {
-            headers.insert(k.as_str().to_string(), v.to_str().unwrap().to_string());
+            headers.insert(string::ToString::to_string(k), string::ToString::to_string(v.to_str().unwrap()));
         }
 
         headers
