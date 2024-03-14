@@ -7,6 +7,7 @@ import {
   IconPushpin,
 } from "@arco-design/web-react/icon";
 import { Rule } from "@/Components/Sidebar/Rule/Rule";
+import "./sidebar.css";
 
 export const Sidebar: FC = () => {
   return (
@@ -15,7 +16,7 @@ export const Sidebar: FC = () => {
         lazyload={false}
         bordered={false}
         defaultActiveKey={["pin"]}
-        className="bg-gray2 min-w-min"
+        className="min-w-min"
       >
         <Collapse.Item
           name="pin"
@@ -25,7 +26,7 @@ export const Sidebar: FC = () => {
               Pin
             </div>
           }
-          className="bg-gray2 border-none"
+          className="sidebar"
           extra={
             <Tooltip mini content="点击请求列表中任意一条进行过滤，再次点击取消">
               <IconInfoCircle />
@@ -36,7 +37,7 @@ export const Sidebar: FC = () => {
         </Collapse.Item>
         <Collapse.Item
           name="rule"
-          className="bg-gray2 border-none"
+          className="sidebar"
           header={
             <span>
               <IconCodeBlock className="mr-1" />

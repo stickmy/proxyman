@@ -24,7 +24,7 @@ function App() {
         size="200px"
         panes={[
           <Sidebar />,
-          <main className="main bg-gray2">
+          <main className="main">
             <Connections />
           </main>,
         ]}

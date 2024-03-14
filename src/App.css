@@ -1,5 +1,28 @@
+body {
+  --primary-6: 0, 100, 0;
+  --primary-color: darkgreen;
+  --bg-color: #f1f1f1;
+  --bg-section-color: #ffffff;
+  --warning-color: rgb(245, 63, 63);
+}
+
+body[arco-theme="dark"] {
+  --primary-6: 0, 100, 0;
+  --primary-color: #11A611;
+  --bg-color: var(--color-bg-2);
+  --bg-section-color: var(--color-bg-2);
+  --warning-color: rgb(245, 63, 63);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f6f6f6;
+    background-color: #2f2f2f;
+  }
+}
+
 .app {
-  background: #f8f8f8;
+  background-color: var(--color-neutral-2);
 }
 
 .aside {

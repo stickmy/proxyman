@@ -3,7 +3,7 @@ import { monaco } from "@/Monaco/Monaco";
 import { RuleEditorProps } from "@/Components/Sidebar/Rule/Rule";
 import { getProcessorContent, setProcessor } from "@/Commands/Commands";
 import { RuleMode } from "@/Events/ConnectionEvents";
-import { Notification } from "@arco-design/web-react";
+import { ThemeType, useTheme } from "@/Components/TopBar/useTheme";
 
 export const useRuleEditor = (
   elemId: string,
@@ -11,6 +11,8 @@ export const useRuleEditor = (
   setSaveAction: RuleEditorProps["setSaveAction"],
   defaultValue?: string
 ) => {
+  const { theme } = useTheme();
+
   const serializationKey = getRuleModeSerializationKey(mode);
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
@@ -34,7 +36,7 @@ export const useRuleEditor = (
     if (!node || editorRef.current) return;
 
     (async () => {
-      const editor = createRuleEditor(node, RuleMode.Delay);
+      const editor = createRuleEditor(node, theme);
       editorRef.current = editor;
 
       try {
@@ -57,10 +59,11 @@ const getRuleModeSerializationKey = (mode: RuleMode) => {
   throw new TypeError("Unsupported rule");
 };
 
-const createRuleEditor = (elem: HTMLElement, mode: RuleMode) => {
+const createRuleEditor = (elem: HTMLElement, theme: ThemeType) => {
   return monaco.editor.create(elem, {
     value: undefined,
     language: "shell",
+    theme: transformSystemThemeToMonaco(theme),
     minimap: {
       enabled: false,
     },
@@ -68,4 +71,8 @@ const createRuleEditor = (elem: HTMLElement, mode: RuleMode) => {
       verticalScrollbarSize: 4,
     },
   });
+};
+
+const transformSystemThemeToMonaco = (theme: ThemeType) => {
+  return theme === "light" ? "vs" : "vs-dark";
 };

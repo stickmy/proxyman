@@ -11,17 +11,21 @@ import {
   IconBrush,
   IconCopy,
   IconDesktop,
+  IconMoon,
   IconPause,
   IconPlayArrow,
   IconSafe,
+  IconSun,
 } from "@arco-design/web-react/icon";
 import { useSystemProxy } from "@/Components/Sidebar/Toolbar/useSystemProxy";
 import "./topbar.css";
-import {useConnectionStore} from "@/Store/ConnectionStore";
+import { useConnectionStore } from "@/Store/ConnectionStore";
+import { useTheme } from "@/Components/TopBar/useTheme";
 
 const DEFAULT_PORT: string = "9000";
 
 export const TopBar = () => {
+  const { theme, setTheme } = useTheme();
   const { clearConnections } = useConnectionStore();
   const [status, setStatus] = useState<boolean>(false);
 
@@ -153,6 +157,26 @@ export const TopBar = () => {
         }
       />
       <div className="mr-4 ml-4 shrink-0">
+        <Tooltip
+          mini
+          content={theme === "light" ? "切换暗黑模式" : "切换亮色模式"}
+        >
+          <div className="sys-setting-wrap">
+            {theme === "light" ? (
+              <IconSun
+                className="sys-setting"
+                data-enable={true}
+                onClick={() => setTheme("dark")}
+              />
+            ) : (
+              <IconMoon
+                className="sys-setting"
+                data-enable={true}
+                onClick={() => setTheme("light")}
+              />
+            )}
+          </div>
+        </Tooltip>
         <Tooltip
           mini
           content={enableSystemProxy ? "系统代理已开启" : "系统代理未开启"}

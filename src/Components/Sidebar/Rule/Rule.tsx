@@ -48,7 +48,7 @@ export const Rule = () => {
           <li
             key={mode}
             data-active={mode === ruleMode}
-            className="hover:text-gray-800 transition cursor-pointer"
+            className="transition cursor-pointer"
             onClick={() => openRuleEditor(mode)}
           >
             {label}
