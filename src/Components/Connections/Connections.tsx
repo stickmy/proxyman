@@ -150,25 +150,28 @@ export const Connections = () => {
 
   return (
     <>
-      <div className="sticky top-0 z-20 px-1 py-1 mb-1 flex flex-row items-center shadow-md bg-[#f1f1f1]">
-        <Input.Search
-          size="small"
-          value={uriKeyword}
-          onChange={setUriKeyword}
-          className="w-[300px] mr-2 connections"
-        />
-        <div className="text-gray12 mr-2 text-sm">
-          共 {renderConnections.length} 条请求
-        </div>
-        <Tooltip mini content="清除">
-          <Button
-            icon={<IconBrush className="text-[darkgreen]" />}
-            onClick={clearConnections}
-          />
-        </Tooltip>
+      <div className="z-20 px-2 py-2 mb-2 flex flex-col bg-white">
+        {/*<div className="flex flex-row items-center">*/}
+        {/*  <Input.Search*/}
+        {/*    size="small"*/}
+        {/*    value={uriKeyword}*/}
+        {/*    onChange={setUriKeyword}*/}
+        {/*    className="w-[300px] mr-2 connections"*/}
+        {/*  />*/}
+        {/*  <div className="text-gray12 mr-2 text-sm">*/}
+        {/*    共 {renderConnections.length} 条请求*/}
+        {/*  </div>*/}
+        {/*  <Tooltip mini content="清除">*/}
+        {/*    <Button*/}
+        {/*      icon={<IconBrush className="text-[darkgreen]" />}*/}
+        {/*      onClick={clearConnections}*/}
+        {/*    />*/}
+        {/*  </Tooltip>*/}
+        {/*</div>*/}
+        <Filters />
       </div>
-      <Filters />
       <Table
+        virtualized
         rowKey="id"
         onRow={(record) => ({
           onClick: () => setDetailConnection(record),
@@ -177,7 +180,7 @@ export const Connections = () => {
         columns={columns}
         noDataElement={<span className="text-gray11">等待请求</span>}
         style={{
-          height: "calc(100% - 64px)",
+          height: "calc(100% - 88px)",
           overflowY: "scroll",
           position: "relative",
         }}

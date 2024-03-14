@@ -3,7 +3,19 @@
   border-radius: 2px;
 }
 
+.conn-filters .filter:hover {
+  background: var(--primary-color);
+  color: #f1f1f1;
+  transition: .1s ease-in background-color;
+}
+
 .conn-filters .filter[data-active="true"] {
   background: var(--primary-color);
   color: #f1f1f1;
+}
+
+.conn-filter-mark {
+  stroke: var(--primary-color) !important;
+  margin-right: 8px;
+  stroke-width: 4 !important;
 }
