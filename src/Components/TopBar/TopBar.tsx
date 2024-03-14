@@ -1,13 +1,14 @@
 import { Button, Input, Message, Tooltip } from "@arco-design/web-react";
 import { MouseEvent, useEffect, useState } from "react";
 import {
-  checkCertInstalled,
+  checkTlsCertInstalled,
   getProxyStatus,
-  installCert,
+  installTlsCert,
   startProxy,
   stopProxy,
 } from "@/Commands/Commands";
 import {
+  IconBrush,
   IconCopy,
   IconDesktop,
   IconPause,
@@ -16,10 +17,12 @@ import {
 } from "@arco-design/web-react/icon";
 import { useSystemProxy } from "@/Components/Sidebar/Toolbar/useSystemProxy";
 import "./topbar.css";
+import {useConnectionStore} from "@/Store/ConnectionStore";
 
 const DEFAULT_PORT: string = "9000";
 
 export const TopBar = () => {
+  const { clearConnections } = useConnectionStore();
   const [status, setStatus] = useState<boolean>(false);
 
   const [port, setPort] = useState<string>(DEFAULT_PORT);
@@ -33,6 +36,15 @@ export const TopBar = () => {
     turnOff: turnOffSystemProxy,
   } = useSystemProxy(port);
 
+  function onPortChange(value: string) {
+    if (status) {
+      Message.info(`请先停止代理服务, 再修改端口号`);
+      return;
+    }
+
+    setPort(value);
+  }
+
   async function getStatus() {
     const status = await getProxyStatus();
     setStatus(status);
@@ -40,7 +52,7 @@ export const TopBar = () => {
   }
 
   async function checkTlsInstalled() {
-    const installed = await checkCertInstalled();
+    const installed = await checkTlsCertInstalled();
     setCaInstalled(installed);
     return installed;
   }
@@ -57,7 +69,7 @@ export const TopBar = () => {
     });
 
     try {
-      const success = await installCert();
+      const success = await installTlsCert();
       if (success) {
         Message.success({
           id: "install_ca",
@@ -83,6 +95,12 @@ export const TopBar = () => {
   async function start() {
     if (status) return;
 
+    const caInstalled = await checkTlsInstalled();
+    if (!caInstalled) {
+      Message.info(`请先安装 TLS 证书`);
+      return;
+    }
+
     try {
       await startProxy(parseInt(port));
       setStatus(true);
@@ -97,10 +115,6 @@ export const TopBar = () => {
   async function stop() {
     await stopProxy();
     setStatus(false);
-  }
-
-  function onStartClick() {
-    status ? stop() : start();
   }
 
   useEffect(() => {
@@ -127,6 +141,7 @@ export const TopBar = () => {
         className="address"
         addBefore="代理地址"
         value={port}
+        onChange={onPortChange}
         prefix={<span>127.0.0.1:</span>}
         suffix={
           <Tooltip mini content="复制终端代理命令">
@@ -168,9 +183,18 @@ export const TopBar = () => {
             />
           </div>
         </Tooltip>
+        <Tooltip mini content="清空连接">
+          <div className="sys-setting-wrap">
+            <IconBrush className="sys-setting" onClick={clearConnections} />
+          </div>
+        </Tooltip>
       </div>
       {status ? (
-        <Button icon={<IconPause />} className="proxy-btn proxy-stop" onClick={stop}>
+        <Button
+          icon={<IconPause />}
+          className="proxy-btn proxy-stop"
+          onClick={stop}
+        >
           停止
         </Button>
       ) : (

@@ -20,8 +20,8 @@ function App() {
         style={{ height: `calc(100% - 53px)`}}
         direction="horizontal"
         max="600px"
-        min="240px"
-        size="260px"
+        min="180px"
+        size="200px"
         panes={[
           <Sidebar />,
           <main className="main bg-gray2">

@@ -5,6 +5,14 @@
 html,
 body,
 #root {
+  color: #0f0f0f;
+  background-color: #f6f6f6;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
   width: 100%;
   height: 100%;
   --primary-6: 0, 100, 0;
@@ -17,22 +25,9 @@ body,
     color: #f6f6f6;
     background-color: #2f2f2f;
   }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-
-  button:active {
-    background-color: #0f0f0f69;
-  }
 }
 
+/* override */
 
 .arco-icon {
   font-size: 14px;
@@ -72,8 +67,10 @@ input::-webkit-search-decoration {
 }
 
 input::-webkit-credentials-auto-fill-button {
+  display: none !important;
   visibility: hidden;
   position: absolute;
+  pointer-events: none;
   right: 0;
 }
 
