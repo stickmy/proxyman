@@ -19,7 +19,7 @@ function App() {
         className="w-full"
         style={{ height: `calc(100% - 53px)`}}
         direction="horizontal"
-        max="600px"
+        max="300px"
         min="180px"
         size="200px"
         panes={[

@@ -6,6 +6,7 @@
   box-sizing: border-box;
   padding: 8px;
   flex-shrink: 0;
+  user-select: none;
 }
 
 .main {
