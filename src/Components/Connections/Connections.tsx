@@ -1,17 +1,16 @@
 import React, { FC, PropsWithChildren, useEffect, useState } from "react";
 import {
-  Button,
   Drawer,
+  Empty,
   Input,
   Table,
   TableColumnProps,
   Tag,
-  Tooltip,
 } from "@arco-design/web-react";
 import {
-  IconBrush,
   IconLoading,
   IconPushpin,
+  IconSearch,
 } from "@arco-design/web-react/icon";
 import { ConnectionDetail } from "@/Components/Connections/Detail/ConnectionDetail";
 import { useDebounceEffect } from "ahooks";
@@ -23,7 +22,7 @@ import { useConnActionStore } from "@/Components/Connections/ConnActionStore";
 import "./connections.css";
 
 export const Connections = () => {
-  const { connections, clearConnections } = useConnectionStore();
+  const { connections } = useConnectionStore();
   const { filter } = useConnActionStore();
   const { currentPin, pinUri, unpinUri, pins } = usePinUriStore();
 
@@ -150,24 +149,15 @@ export const Connections = () => {
 
   return (
     <>
-      <div className="z-20 px-2 py-2 mb-2 flex flex-col bg-white">
-        {/*<div className="flex flex-row items-center">*/}
-        {/*  <Input.Search*/}
-        {/*    size="small"*/}
-        {/*    value={uriKeyword}*/}
-        {/*    onChange={setUriKeyword}*/}
-        {/*    className="w-[300px] mr-2 connections"*/}
-        {/*  />*/}
-        {/*  <div className="text-gray12 mr-2 text-sm">*/}
-        {/*    共 {renderConnections.length} 条请求*/}
-        {/*  </div>*/}
-        {/*  <Tooltip mini content="清除">*/}
-        {/*    <Button*/}
-        {/*      icon={<IconBrush className="text-[darkgreen]" />}*/}
-        {/*      onClick={clearConnections}*/}
-        {/*    />*/}
-        {/*  </Tooltip>*/}
-        {/*</div>*/}
+      <div className="z-20 px-2 py-2 mb-2 flex flex-col bg-white connections">
+        <Input
+          height={24}
+          prefix={<IconSearch />}
+          value={uriKeyword}
+          onChange={setUriKeyword}
+          className="w-[476px]"
+          placeholder="输入关键词进行过滤"
+        />
         <Filters />
       </div>
       <Table
@@ -178,7 +168,7 @@ export const Connections = () => {
         })}
         data={renderConnections}
         columns={columns}
-        noDataElement={<span className="text-gray11">等待请求</span>}
+        noDataElement={<Empty description="等待请求" />}
         style={{
           height: "calc(100% - 88px)",
           overflowY: "scroll",
@@ -226,23 +216,33 @@ const StickyHeader: FC<PropsWithChildren> = ({ children }) => {
 const Status: FC<{
   status: number;
 }> = ({ status }) => {
-  if (status >= 400)
+  if (status >= 400) {
     return (
       <Tag color="#f53f3f" size="small">
         {status}
       </Tag>
     );
-  if (status >= 300)
+  }
+
+  if (status >= 300) {
     return (
       <Tag color="#ff7d00" size="small">
         {status}
       </Tag>
     );
-  if (status >= 200)
+  }
+
+  if (status >= 200) {
     return (
       <Tag color="#7bc616" size="small">
         {status}
       </Tag>
     );
-  return <span>{status}</span>;
+  }
+
+  return (
+    <Tag color="#f1f1f1" size="small">
+      {status}
+    </Tag>
+  );
 };

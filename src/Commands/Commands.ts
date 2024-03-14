@@ -1,10 +1,10 @@
 import { invoke, InvokeArgs } from "@tauri-apps/api/tauri";
 
-export const checkCertInstalled = async () => {
+export const checkTlsCertInstalled = async () => {
   return invokeWithLogging<boolean>("plugin:proxy|check_cert_installed");
 };
 
-export const installCert = async () => {
+export const installTlsCert = async () => {
   return invokeWithLogging<boolean>("plugin:proxy|install_cert");
 };
 

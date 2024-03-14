@@ -1,8 +1,8 @@
 import React, { FC, useEffect, useState } from "react";
 import { Input, Button, Message, Switch, Grid } from "@arco-design/web-react";
 import {
-  checkCertInstalled,
-  installCert,
+  checkTlsCertInstalled,
+  installTlsCert,
   getProxyStatus,
   startProxy,
   stopProxy,
@@ -57,7 +57,7 @@ export const Toolbar: FC = () => {
   }
 
   async function checkCaInstalled() {
-    const installed = await checkCertInstalled();
+    const installed = await checkTlsCertInstalled();
     setInstalled(installed);
     return installed;
   }
@@ -85,7 +85,7 @@ export const Toolbar: FC = () => {
     });
 
     try {
-      const success = await installCert();
+      const success = await installTlsCert();
       if (success) {
         Message.success({
           id: "install_ca",

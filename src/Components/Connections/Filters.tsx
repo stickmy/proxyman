@@ -104,7 +104,7 @@ export const Filters = () => {
   const { setFilter, filter } = useConnActionStore();
 
   return (
-    <div className="mt-2 mb-2 conn-filters">
+    <div className="mt-2 conn-filters">
       <IconFilter className="conn-filter-mark" fontSize={18} />
       <Space size={4}>
         <Tag

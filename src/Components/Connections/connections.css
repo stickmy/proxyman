@@ -3,6 +3,12 @@
   border-radius: 2px;
 }
 
+.conn-filters {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
 .conn-filters .filter:hover {
   background: var(--primary-color);
   color: #f1f1f1;
