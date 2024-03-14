@@ -1,13 +1,10 @@
 use std::{convert::Infallible, sync::Arc};
 
 use bytes::Bytes;
-use http::{
-    uri::{Authority, Scheme},
-    Method, StatusCode, Uri,
-};
+use http::{Method, StatusCode, uri::{Authority, Scheme}, Uri};
 use hyper::{
-    client::connect::Connect, header::Entry, server::conn::Http, service::service_fn,
-    upgrade::Upgraded, Body, Client, Request, Response,
+    Body, Client, client::connect::Connect, header::Entry,
+    Request, Response, server::conn::Http, service::service_fn, upgrade::Upgraded,
 };
 use snafu::ResultExt;
 use tauri::async_runtime::Mutex;
@@ -17,16 +14,16 @@ use tokio::{
     sync::mpsc::Sender,
 };
 use tokio_rustls::TlsAcceptor;
-use tokio_tungstenite::{tungstenite, Connector, WebSocketStream};
+use tokio_tungstenite::{Connector, tungstenite, WebSocketStream};
 use uuid::Uuid;
 
 use crate::{
     ca::CertificateAuthority,
     error::{
-        endpoint_error::{EndpointError, HttpError, WebsocketProtocolError},
-        ClientError, ServerError,
+        ClientError,
+        endpoint_error::{EndpointError, HttpError, WebsocketProtocolError}, ServerError,
     },
-    events::{self, Events, RequestEvent, ResponseEvent},
+    events::{Events, RequestEvent, ResponseEvent},
 };
 
 use super::decoder::{decode_request, decode_response};
@@ -42,9 +39,9 @@ pub struct Tunnel<CA, C, P> {
 }
 
 impl<CA, C, P> Clone for Tunnel<CA, C, P>
-where
-    C: Clone,
-    P: Clone,
+    where
+        C: Clone,
+        P: Clone,
 {
     fn clone(&self) -> Self {
         Tunnel {
@@ -58,10 +55,10 @@ where
 }
 
 impl<CA, C, P> Tunnel<CA, C, P>
-where
-    CA: CertificateAuthority,
-    C: Connect + Clone + Send + Sync + 'static,
-    P: processor::HttpProcessor + std::fmt::Debug,
+    where
+        CA: CertificateAuthority,
+        C: Connect + Clone + Send + Sync + 'static,
+        P: processor::HttpProcessor + std::fmt::Debug,
 {
     async fn send_event(&self, event: Events) {
         if let Err(e) = self.transporter.send(event).await {
@@ -98,7 +95,7 @@ where
                             .await
                             .into(),
                     )
-                    .await;
+                        .await;
                     return Ok(res);
                 }
                 None => req_or_res.req,
@@ -129,7 +126,7 @@ where
                     .await
                     .into(),
             )
-            .await;
+                .await;
 
             Ok(res)
         }
@@ -292,8 +289,8 @@ where
         scheme: Scheme,
         authority: Authority,
     ) -> Result<(), EndpointError>
-    where
-        S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
+        where
+            S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
     {
         let service = service_fn(|mut req| {
             if req.version() == hyper::Version::HTTP_10 || req.version() == hyper::Version::HTTP_11
