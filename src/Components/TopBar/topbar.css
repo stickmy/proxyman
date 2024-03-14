@@ -1,5 +1,5 @@
 .top-bar {
-  background: #fff;
+  background: var(--bg-section-color);
 }
 
 .address .arco-input-inner-wrapper-focus {
@@ -22,13 +22,14 @@
   padding: 5px 8px;
   transition: .1s ease-in background-color;
   &:hover {
-    background-color: #f1f1f1;
+    background-color: var(--bg-color);
   }
 }
 
 .sys-setting {
   font-size: 18px !important;
   cursor: pointer;
+  color: var(--color-text-1) !important;
 
   &:not(:last-child) {
     margin-right: 6px;

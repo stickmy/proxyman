@@ -7,12 +7,12 @@
   }
 
   & > li[data-active="true"] {
-    background: #f1f1f1;
+    background: var(--color-neutral-2);
     font-weight: bold;
   }
 
   & > li:hover {
-    background: #f1f1f1;
+    background: var(--color-neutral-2);
     font-weight: bold;
   }
 }

@@ -1,3 +1,7 @@
+.connections {
+  background-color: var(--bg-section-color);
+}
+
 .connections .arco-input-inner-wrapper-focus {
   outline: 2px var(--primary-color) solid;
   border-radius: 2px;
