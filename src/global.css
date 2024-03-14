@@ -75,7 +75,8 @@ input::-webkit-credentials-auto-fill-button {
 }
 
 .arco-collapse-item-content-box {
-  padding-left: 0;
+  padding-left: 20px;
+  padding-right: 0;
 }
 
 .arco-table-container, .arco-table table thead tr:first-child th:first-child {

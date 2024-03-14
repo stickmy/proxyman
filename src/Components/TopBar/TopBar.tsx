@@ -183,7 +183,7 @@ export const TopBar = () => {
             />
           </div>
         </Tooltip>
-        <Tooltip mini content="清空连接">
+        <Tooltip mini content="清空请求数据">
           <div className="sys-setting-wrap">
             <IconBrush className="sys-setting" onClick={clearConnections} />
           </div>
