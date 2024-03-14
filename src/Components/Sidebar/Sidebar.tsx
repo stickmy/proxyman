@@ -1,6 +1,5 @@
 import React, { FC } from "react";
 import { Collapse, Tooltip } from "@arco-design/web-react";
-import { Toolbar } from "./Toolbar/Toolbar";
 import { Pin } from "@/Components/Sidebar/Pin/Pin";
 import {
   IconCodeBlock,
@@ -12,7 +11,6 @@ import { Rule } from "@/Components/Sidebar/Rule/Rule";
 export const Sidebar: FC = () => {
   return (
     <aside className="w-full aside">
-      <Toolbar />
       <Collapse
         lazyload={false}
         bordered={false}

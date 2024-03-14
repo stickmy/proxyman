@@ -7,7 +7,7 @@ import {
   startProxy,
   stopProxy,
 } from "@/Commands/Commands";
-import { useGlobalProxy } from "./useGlobalProxy";
+import { useSystemProxy } from "./useSystemProxy";
 
 const { Row, Col } = Grid;
 
@@ -19,10 +19,10 @@ export const Toolbar: FC = () => {
   const [port, setPort] = useState<string>(DEFAULT_PORT);
 
   const {
-    globally,
+    enableSystemProxy,
     turnOn: turnOnGlobalProxy,
     turnOff: turnOffGlobalProxy,
-  } = useGlobalProxy(port);
+  } = useSystemProxy(port);
 
   const [installed, setInstalled] = useState<boolean>(false);
   const [installing, setInstalling] = useState<boolean>(false);
@@ -140,9 +140,9 @@ export const Toolbar: FC = () => {
               <span className="mr-2">全局代理</span>
               <Switch
                 size="small"
-                checked={globally}
+                checked={enableSystemProxy}
                 onChange={(value) => {
-                  if (globally) {
+                  if (enableSystemProxy) {
                     void turnOffGlobalProxy();
                   } else {
                     void turnOnGlobalProxy();

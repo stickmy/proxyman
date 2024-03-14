@@ -8,13 +8,13 @@ export const installCert = async () => {
   return invokeWithLogging<boolean>("plugin:proxy|install_cert");
 };
 
-export const turnOnGlobalProxy = async (port: string) => {
+export const turnOnSystemProxy = async (port: string) => {
   return invokeWithLogging<boolean>("plugin:proxy|turn_on_global_proxy", {
     port,
   });
 };
 
-export const turnOffGlobalProxy = async () => {
+export const turnOffSystemProxy = async () => {
   return invokeWithLogging<boolean>("plugin:proxy|turn_off_global_proxy");
 };
 

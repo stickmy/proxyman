@@ -2,6 +2,7 @@ import React from "react";
 import { ResizeBox } from "@arco-design/web-react";
 import { Sidebar } from "@/Components/Sidebar/Sidebar";
 import { Connections } from "@/Components/Connections/Connections";
+import { TopBar } from "@/Components/TopBar/TopBar";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 
@@ -12,16 +13,18 @@ dayjs.locale("zh-cn");
 
 function App() {
   return (
-    <div className="app w-full h-screen flex flex-row">
+    <div className="app w-full h-screen">
+      <TopBar />
       <ResizeBox.Split
-        className="w-full h-full"
+        className="w-full"
+        style={{ height: `calc(100% - 53px)`}}
         direction="horizontal"
         max="600px"
         min="240px"
         size="260px"
         panes={[
           <Sidebar />,
-          <main className="main bg-gray2 w-full relative pl-1">
+          <main className="main bg-gray2">
             <Connections />
           </main>,
         ]}

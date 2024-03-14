@@ -1,22 +1,22 @@
-import { turnOffGlobalProxy, turnOnGlobalProxy } from "@/Commands/Commands";
+import { turnOffSystemProxy, turnOnSystemProxy } from "@/Commands/Commands";
 import { Notification } from "@arco-design/web-react";
 import { useState } from "react";
 
-export const useGlobalProxy = (port: string) => {
-  const [globally, setGlobally] = useState<boolean>(false);
+export const useSystemProxy = (port: string) => {
+  const [enableSystemProxy, setEnableSystemProxy] = useState<boolean>(false);
   const [switching, setSwitching] = useState<boolean>(false);
 
   async function turnOn() {
     if (switching) return;
 
     try {
-      const ret = await turnOnGlobalProxy(port);
+      const ret = await turnOnSystemProxy(port);
       if (ret) {
-        setGlobally(true);
+        setEnableSystemProxy(true);
       }
 
       if (!ret) {
-        Notification.warning({ content: "全局代理开启失败" });
+        Notification.warning({ content: "系统代理开启失败" });
       }
     } catch (error: any) {
       Notification.warning({ content: error });
@@ -29,13 +29,13 @@ export const useGlobalProxy = (port: string) => {
     if (switching) return;
 
     try {
-      const ret = await turnOffGlobalProxy();
+      const ret = await turnOffSystemProxy();
       if (ret) {
-        setGlobally(false);
+        setEnableSystemProxy(false);
       }
 
       if (!ret) {
-        Notification.warning({ content: "全局代理关闭失败" });
+        Notification.warning({ content: "系统代理关闭失败" });
       }
     } catch (error: any) {
       Notification.warning({ content: error });
@@ -45,7 +45,7 @@ export const useGlobalProxy = (port: string) => {
   }
 
   return {
-    globally,
+    enableSystemProxy,
     turnOn,
     turnOff,
   };

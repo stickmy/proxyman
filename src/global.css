@@ -9,6 +9,7 @@ body,
   height: 100%;
   --primary-6: 0, 100, 0;
   --primary-color: darkgreen;
+  --warning-color: rgb(245, 63, 63);
 }
 
 @media (prefers-color-scheme: dark) {

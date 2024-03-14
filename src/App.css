@@ -1,5 +1,5 @@
 .app {
-  background: #f1f1f1;
+  background: #f8f8f8;
 }
 
 .aside {
@@ -9,7 +9,9 @@
 }
 
 .main {
-  height: 100vh;
-  padding: 1rem 0.5rem;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  padding: 0.5rem 0.5rem;
   box-sizing: border-box;
 }

@@ -1,6 +1,7 @@
 import { Divider, Space, Tag } from "@arco-design/web-react";
 import { Connection } from "@/Store/ConnectionStore";
 import { useConnActionStore } from "@/Components/Connections/ConnActionStore";
+import {IconFilter} from "@arco-design/web-react/icon";
 
 interface Filter {
   label: string;
@@ -104,9 +105,10 @@ export const Filters = () => {
 
   return (
     <div className="mt-2 mb-2 conn-filters">
+      <IconFilter className="conn-filter-mark" fontSize={18} />
       <Space size={4}>
         <Tag
-          className="filter cursor-pointer hover:bg-gray-200"
+          className="filter cursor-pointer"
           data-active={filter === filterAll}
           onClick={() =>
             filter === filterAll ? setFilter(undefined) : setFilter(filterAll)
