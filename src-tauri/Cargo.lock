@@ -493,6 +493,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "config-file"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df51e72c150781d2c7d4cbcb0b803277caaa80476786994a62961a8f1010dafb"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+ "toml 0.5.11",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2467,6 +2479,7 @@ dependencies = [
  "bstr",
  "bytes",
  "chrono",
+ "config-file",
  "futures",
  "home",
  "http",

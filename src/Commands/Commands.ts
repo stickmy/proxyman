@@ -1,3 +1,4 @@
+import { ThemeType } from "@/Components/TopBar/useTheme";
 import { invoke, InvokeArgs } from "@tauri-apps/api/tauri";
 
 export const checkTlsCertInstalled = async () => {
@@ -48,6 +49,20 @@ export const removeResponseMapping = async (req: string) => {
     req,
   });
 };
+
+export interface AppSetting {
+  theme: ThemeType;
+}
+
+export const setAppSetting = async (setting: AppSetting) => {
+  return invokeWithLogging("plugin:proxy|set_app_setting", {
+    setting
+  });
+}
+
+export const getAppSetting = async () => {
+  return invokeWithLogging<AppSetting>("plugin:proxy|get_app_setting");
+}
 
 const invokeWithLogging = async <T>(
   cmd: string,

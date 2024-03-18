@@ -129,6 +129,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::processor::remove_response_mapping,
             commands::global_proxy::turn_on_global_proxy,
             commands::global_proxy::turn_off_global_proxy,
+            commands::app_setting::set_app_setting,
+            commands::app_setting::get_app_setting,
         ])
         .build()
 }

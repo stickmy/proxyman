@@ -41,6 +41,7 @@ regex = "1.8.1"
 log = "0.4"
 simplelog = { version = "0.12.1", features = ["paris"] }
 home = "0.5.5"
+config-file = { version = "0.2.3", features = ["json"] }
 
 [features]
 default = ["http2"]
