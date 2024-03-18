@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use sys_events::handle_sys_events;
-use tauri::{Manager};
+use tauri::Manager;
 
 mod app_conf;
 mod ca;
@@ -19,6 +19,8 @@ mod window;
 fn main() {
     let app = tauri::Builder::default()
         .plugin(proxy::init())
+        .menu(window::initial_menu())
+        .on_menu_event(window::register_menu_events)
         .setup(|app| {
             let win = app.get_window("main").unwrap();
 

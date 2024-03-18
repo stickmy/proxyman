@@ -5,7 +5,8 @@ use snafu::Snafu;
 #[snafu(visibility(pub(crate)), context(suffix(Error)))]
 pub enum ConfigurationErrorKind {
     Ssl { source: openssl::error::ErrorStack },
-    AppConf { source: std::io::Error },
+    AppConfIo { source: std::io::Error },
+    AppSettingFmt { msg: String },
     Cert { scenario: &'static str },
     Unknown {},
 }
@@ -21,9 +22,14 @@ impl Serialize for ConfigurationErrorKind {
                 state.serialize_field("message", source.to_string().as_str())?;
                 state.end()
             }
-            Self::AppConf { source } => {
-                let mut state = serializer.serialize_struct("AppConf", 1)?;
+            Self::AppConfIo { source } => {
+                let mut state = serializer.serialize_struct("AppConfIo", 1)?;
                 state.serialize_field("message", source.to_string().as_str())?;
+                state.end()
+            }
+            Self::AppSettingFmt { msg } => {
+                let mut state = serializer.serialize_struct("AppSettingFmt", 1)?;
+                state.serialize_field("message", msg)?;
                 state.end()
             }
             Self::Cert { scenario } => {
