@@ -25,45 +25,58 @@ pub async fn check_cert_installed<R: Runtime>(app: AppHandle<R>) -> Result<bool,
 
 #[tauri::command]
 pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, Error> {
-    let key_chain = get_key_chain().await?;
+    let key_chain_ret = get_key_chain().await;
 
-    let ca_path = get_ca_path(app);
+    match key_chain_ret {
+        Err(err) => {
+            log::error!("get key chain error when install cert: {err}");
+            Err(err)
+        }
+        Ok(key_chain) => {
+            let ca_path = get_ca_path(app);
 
-    let child = Command::new("security")
-        .arg("add-trusted-cert")
-        .arg("-k")
-        .arg(key_chain.as_str())
-        .arg(ca_path.as_os_str())
-        .output()
-        .await;
+            let child = Command::new("security")
+                .arg("add-trusted-cert")
+                .arg("-k")
+                .arg(key_chain.as_str())
+                .arg(ca_path.as_os_str())
+                .output()
+                .await;
 
-    child
-        .map_err(|e| {
-            log::error!(
-                "Install certificate - keychain: {}, ca: {:?}, error: {}",
-                key_chain,
-                ca_path,
-                e
-            );
-            Error::Configuration {
-                scenario: "Install https certificate",
-                source: ConfigurationErrorKind::Cert {
-                    scenario: "Execute 'security add-trusted-cert'",
-                },
+            let ret = child
+                .map_err(|e| Error::Configuration {
+                    scenario: "Install https certificate",
+                    source: ConfigurationErrorKind::Cert {
+                        scenario: "Execute 'security add-trusted-cert'",
+                    },
+                })
+                .and_then(|out| {
+                    String::from_utf8(out.stdout).map_err(|_| Error::Configuration {
+                        scenario: "Read https certificate installation output",
+                        source: ConfigurationErrorKind::Cert {
+                            scenario: "Transform output to uft8",
+                        },
+                    })
+                })
+                .map(|ret| {
+                    log::trace!("Install cert output: {}", ret);
+                    !ret.contains("Error:")
+                });
+
+            match ret {
+                Err(err) => {
+                    log::error!(
+                        "Install certificate - keychain: {}, ca: {:?}, error: {}",
+                        key_chain,
+                        ca_path,
+                        err
+                    );
+                    Err(err)
+                }
+                Ok(success) => Ok(success),
             }
-        })
-        .and_then(|out| {
-            String::from_utf8(out.stdout).map_err(|_| Error::Configuration {
-                scenario: "Read https certificate installation output",
-                source: ConfigurationErrorKind::Cert {
-                    scenario: "Transform output to uft8",
-                },
-            })
-        })
-        .map(|ret| {
-            log::debug!("Install cert output: {}", ret);
-            !ret.contains("Error:")
-        })
+        }
+    }
 }
 
 fn get_ca_path<R: Runtime>(app: AppHandle<R>) -> PathBuf {

@@ -17,10 +17,10 @@ import {
   IconSafe,
   IconSun,
 } from "@arco-design/web-react/icon";
-import { useSystemProxy } from "@/Components/Sidebar/Toolbar/useSystemProxy";
-import "./topbar.css";
+import { useSystemProxy } from "@/Components/TopBar/useSystemProxy";
 import { useConnectionStore } from "@/Store/ConnectionStore";
 import { useTheme } from "@/Components/TopBar/useTheme";
+import "./topbar.css";
 
 const DEFAULT_PORT: string = "9000";
 
