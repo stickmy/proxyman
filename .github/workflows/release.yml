@@ -18,7 +18,7 @@ jobs:
 
       - name: Get version
         id: get_version
-        uses: dhkatz/get-version-action@v3
+        uses: dhkatz/get-version-action@v3.0.0
 
       - name: Get tag message
         id: tag
@@ -59,7 +59,7 @@ jobs:
 
       - name: Get version
         id: get_version
-        uses: dhkatz/get-version-action@v3
+        uses: dhkatz/get-version-action@v3.0.0
 
       - name: setup node
         uses: actions/setup-node@v3
