@@ -14,11 +14,11 @@ jobs:
       release_upload_url: ${{ steps.create-release.outputs.upload_url }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get version
         id: get_version
-        uses: battila7/get-version-action@v2
+        uses: dhkatz/get-version-action@v3
 
       - name: Get tag message
         id: tag
@@ -49,22 +49,22 @@ jobs:
           - os: macos-latest
             arch: x86_64
             rust_target: x86_64-apple-darwin
-          - os: macos-arm64
+          - os: macos-latest
             arch: aarch64
             rust_target: aarch64-apple-darwin
 
     runs-on: ${{ matrix.config.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get version
         id: get_version
-        uses: battila7/get-version-action@v2
+        uses: dhkatz/get-version-action@v3
 
       - name: setup node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -81,7 +81,7 @@ jobs:
         if: matrix.config.os == 'macos-latest' && matrix.config.arch == 'aarch64'
         run: |
           rustup target add aarch64-apple-darwin
-      
+
       - name: install dependencies (x86_64 only)
         if: matrix.config.os == 'macos-latest' && matrix.config.arch == 'x86_64'
         run: |
