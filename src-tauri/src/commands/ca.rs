@@ -48,10 +48,10 @@ pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, Error> 
                 .await;
 
             let ret = child
-                .map_err(|e| Error::Configuration {
+                .map_err(|_| Error::Configuration {
                     scenario: "Install https certificate",
                     source: ConfigurationErrorKind::Cert {
-                        scenario: "Execute 'security add-trusted-cert'",
+                        scenario: "Execute 'security add-trusted-cert'"
                     },
                 })
                 .and_then(|out| {
