@@ -24,7 +24,7 @@
       },
       "fs": {
         "all": false,
-        "scope": ["$RESOURCE/*", "$CONFIG/*/**"],
+        "scope": ["$RESOURCE/ca/*", "$CONFIG/*/**"],
         "writeFile": true,
         "readFile": true,
         "readDir": true,
@@ -48,7 +48,7 @@
       "identifier": "com.proxyman",
       "targets": "all",
       "resources": [
-        "resources/*"
+        "ca/*"
       ]
     },
     "security": {
