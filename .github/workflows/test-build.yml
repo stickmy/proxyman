@@ -52,4 +52,3 @@ jobs:
           name: tauri-client-app-artifact
           path: |
             ${{ fromJSON(steps.tauri-action-mac.outputs.artifactPaths)[0] }}
-            ${{ fromJSON(steps.tauri-action.outputs.artifactPaths)[0] }}
