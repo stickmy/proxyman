@@ -12,13 +12,14 @@ jobs:
     outputs:
       release_id: ${{ steps.create-release.outputs.id }}
       release_upload_url: ${{ steps.create-release.outputs.upload_url }}
+      release_body: "${{ steps.tag.outputs.message }}"
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Get version
         id: get_version
-        uses: dhkatz/get-version-action@v3
+        uses: dhkatz/get-version-action@v3.0.0
 
       - name: Get tag message
         id: tag
@@ -37,8 +38,51 @@ jobs:
           tag: ${{ steps.get_version.outputs.version }}
           body: "${{ steps.tag.outputs.message }}"
 
-  build-tauri:
+  build-frontend:
     needs: create-release
+    permissions:
+      contents: write
+      packages: write
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version
+        id: get_version
+        uses: dhkatz/get-version-action@v3.0.0
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.0
+
+      - name: setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: install frontend dependencies
+        run: pnpm install
+
+      - name: Change version
+        env:
+          VERSION: "${{ steps.get_version.outputs.version-without-v }}"
+        run: make change-version change-package-version
+
+      - uses: oNaiPs/secrets-to-env-action@v1
+        with:
+          secrets: ${{ toJSON(secrets) }}
+
+      - name: build frontend
+        run: pnpm build-frontend
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tauri-frontend
+          path: dist/
+
+  build-tauri:
+    needs: [create-release, build-frontend]
     permissions:
       contents: write
       packages: write
@@ -59,7 +103,7 @@ jobs:
 
       - name: Get version
         id: get_version
-        uses: dhkatz/get-version-action@v3
+        uses: dhkatz/get-version-action@v3.0.0
 
       - uses: pnpm/action-setup@v2
         with:
@@ -69,6 +113,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: 'pnpm'
+
+      - name: install frontend dependencies
+        run: pnpm install
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -81,49 +129,43 @@ jobs:
           key: ${{ matrix.config.rust_target }}
           workspaces: './src-tauri -> target'
 
-      - name: install dependencies (aarch64 only)
-        if: matrix.config.os == 'macos-latest' && matrix.config.arch == 'aarch64'
+      - name: install dependencies (mac aarch64 only)
+        if: matrix.config.os == 'macos-latest'
         run: |
           rustup target add aarch64-apple-darwin
-
-      - name: install dependencies (x86_64 only)
-        if: matrix.config.os == 'macos-latest' && matrix.config.arch == 'x86_64'
-        run: |
-          rustup target add x86_64-apple-darwin
-
-      - uses: actions/cache@v2
-        with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
-
-      - name: install frontend dependencies
-        run: yarn install # change this to npm or pnpm depending on which one you use
 
       - name: Change Version
         env:
           VERSION: "${{ steps.get_version.outputs.version-without-v }}"
-        run: make change-version
+        run: make change-version change-package-version
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: tauri-frontend
+          path: dist
 
       - uses: oNaiPs/secrets-to-env-action@v1
         with:
           secrets: ${{ toJSON(secrets) }}
 
       - name: Build Tauri App (macOS x86_64)
-        uses: tauri-apps/tauri-action@dev
+        uses: tauri-apps/tauri-action@v0
         if: matrix.config.os == 'macos-latest' && matrix.config.arch == 'x86_64'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
+          releaseBody: ${{ needs.create-release.outputs.release_body }}
           args: --target x86_64-apple-darwin
 
       - name: Build Tauri App (macOS aarch64)
-        uses: tauri-apps/tauri-action@dev
+        uses: tauri-apps/tauri-action@v0
         if: matrix.config.os == 'macos-latest' && matrix.config.arch == 'aarch64'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
+          releaseBody: ${{ needs.create-release.outputs.release_body }}
           args: --target aarch64-apple-darwin
 
   publish-release:
