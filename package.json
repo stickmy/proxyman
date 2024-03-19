@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "build": "tsc && vite build -c vite.config.ts",
     "build-frontend": "tsc && vite build -c vite.config.ts",
     "preview": "vite preview",
     "tauri": "tauri"
