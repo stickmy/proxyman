@@ -1,0 +1,55 @@
+name: Test Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest]
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.0
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install dependencies (mac only)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          rustup target add aarch64-apple-darwin
+
+      - name: install frontend dependencies
+        run: pnpm install
+
+      - name: Build Tauri App (MacOS Universal)
+        uses: tauri-apps/tauri-action@dev
+        if: matrix.platform == 'macos-latest'
+        id: tauri-action-mac
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: test-release
+          args: --target universal-apple-darwin
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: tauri-client-app-artifact
+          path: |
+            ${{ fromJSON(steps.tauri-action-mac.outputs.artifactPaths)[0] }}
+            ${{ fromJSON(steps.tauri-action.outputs.artifactPaths)[0] }}
