@@ -34,7 +34,7 @@ fn main() {
                 #[cfg(debug_assertions)]
                     simplelog::LevelFilter::Trace,
                 #[cfg(not(debug_assertions))]
-                    simplelog::LevelFilter::Error,
+                    simplelog::LevelFilter::Debug,
                 simplelog::ConfigBuilder::new()
                     .add_filter_allow_str("proxyman")
                     .build(),

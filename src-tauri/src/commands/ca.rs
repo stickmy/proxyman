@@ -19,6 +19,7 @@ pub async fn check_cert_installed<R: Runtime>(app: AppHandle<R>) -> Result<bool,
         .ok()
         .and_then(|c| String::from_utf8(c.stdout).ok())
         .map_or(false, |output| {
+            log::info!("security verify-cert output: {output}");
             output.contains("certificate verification successful")
         }))
 }
@@ -37,6 +38,9 @@ pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, Error> 
 
             let child = Command::new("security")
                 .arg("add-trusted-cert")
+                .arg("-d")
+                .arg("-r")
+                .arg("trustRoot")
                 .arg("-k")
                 .arg(key_chain.as_str())
                 .arg(ca_path.as_os_str())
@@ -59,7 +63,7 @@ pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, Error> 
                     })
                 })
                 .map(|ret| {
-                    log::trace!("Install cert output: {}", ret);
+                    log::info!("Install certificate output: {ret}");
                     !ret.contains("Error:")
                 });
 
