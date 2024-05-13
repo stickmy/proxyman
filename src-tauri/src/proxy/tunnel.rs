@@ -122,7 +122,7 @@ impl<CA, C, P> Tunnel<CA, C, P>
             res = decode_response(res).unwrap();
 
             self.send_event(
-                ResponseEvent::new(conn_id, &mut res, None)
+                ResponseEvent::new(conn_id, &mut res, req_or_res.hit_rules)
                     .await
                     .into(),
             )
