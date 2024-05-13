@@ -73,7 +73,7 @@ impl ProxyService {
 
         let ssl = Arc::new(Ssl::default());
 
-        let make_service = make_service_fn(move |conn: &AddrStream| {
+        let make_service = make_service_fn(move |_conn: &AddrStream| {
             let client = client.clone();
             let ca = Arc::clone(&ssl);
             let transporter = self.transporter.clone();
