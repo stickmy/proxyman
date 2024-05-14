@@ -21,7 +21,6 @@ futures = "0.3.11"
 async-process = "1.7.0"
 async-trait = "0.1.68"
 async-compression = { version = "0.3.7", features = ["tokio", "brotli", "gzip", "zlib", "zstd"] }
-parking_lot = "0.12.1"
 moka = { version = "0.9.6", features = ["future"] }
 chrono = "0.4.24"
 bstr = "1.4.0"
