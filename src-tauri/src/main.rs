@@ -2,7 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use sys_events::handle_sys_events;
-use tauri::Manager;
 
 mod app_conf;
 mod ca;
@@ -17,15 +16,13 @@ mod window;
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
 fn main() {
+    let context = tauri::generate_context!();
+
     let app = tauri::Builder::default()
         .plugin(proxy::init())
-        .menu(window::initial_menu())
+        .menu(window::initial_menu(tauri::Menu::os_default(&context.package_info().name)))
         .on_menu_event(window::register_menu_events)
-        .setup(|app| {
-            let win = app.get_window("main").unwrap();
-
-            window::initial_window(win);
-
+        .setup(|_app| {
             if let Err(e) = app_conf::init() {
                 return Err(Box::new(e));
             }
@@ -44,7 +41,7 @@ fn main() {
 
             Ok(())
         })
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while running tauri application");
 
     app.run(handle_sys_events);
