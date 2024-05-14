@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "proxyman",
+    "productName": "Proxyman",
     "version": "0.1.0"
   },
   "tauri": {
@@ -60,9 +60,10 @@
         "fullscreen": false,
         "resizable": true,
         "title": "",
-        "width": 1000,
+        "width": 1400,
         "height": 800,
-        "visible": true
+        "visible": true,
+        "center": true
       }
     ]
   }
