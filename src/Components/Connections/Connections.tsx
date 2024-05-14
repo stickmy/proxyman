@@ -3,6 +3,7 @@ import {
   Drawer,
   Empty,
   Input,
+  Message,
   Table,
   TableColumnProps,
   Tag,
@@ -11,6 +12,7 @@ import {
   IconLoading,
   IconPushpin,
   IconSearch,
+  IconCopy,
 } from "@arco-design/web-react/icon";
 import { ConnectionDetail } from "@/Components/Connections/Detail/ConnectionDetail";
 import { useDebounceEffect } from "ahooks";
@@ -98,6 +100,25 @@ export const Connections = () => {
       title: "uri",
       key: "uri",
       dataIndex: "request.uri",
+      render: (col) => (
+        <span className="conn-uri">
+          {col}
+          <IconCopy
+            className="uri-copy"
+            onClick={(evt) => {
+              evt.stopPropagation();
+              navigator.clipboard.writeText(col).then(
+                () => {
+                  Message.success("URI 已复制");
+                },
+                (reason) => {
+                  Message.warning("URI 复制失败");
+                }
+              );
+            }}
+          />
+        </span>
+      ),
     },
 
     {
