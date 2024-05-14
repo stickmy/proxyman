@@ -7,6 +7,19 @@
   border-radius: 2px;
 }
 
+.conn-uri {
+  min-width: 180px;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.uri-copy {
+  margin-left: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .conn-filters {
   display: flex;
   align-items: center;

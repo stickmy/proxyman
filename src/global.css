@@ -17,6 +17,10 @@ body,
   height: 100%;
 }
 
+* {
+  user-select: none;
+}
+
 /* override */
 
 .arco-icon {
