@@ -2,9 +2,19 @@
   background-color: var(--bg-section-color);
 }
 
-.connections .arco-input-inner-wrapper-focus {
-  outline: 2px var(--primary-color) solid;
-  border-radius: 2px;
+.conn-detail-drawer,
+.arco-drawer-content > div {
+  height: 100%;
+}
+
+.conn-detail-drawer,
+.arco-tabs-content-horizontal {
+  height: 100%;
+}
+
+.conn-detail-drawer,
+.arco-tabs-content-inner {
+  height: 100%;
 }
 
 .conn-uri {
@@ -29,7 +39,7 @@
 .conn-filters .filter:hover {
   background: var(--primary-color);
   color: #f1f1f1;
-  transition: .1s ease-in background-color;
+  transition: 0.1s ease-in background-color;
 }
 
 .conn-filters .filter[data-active="true"] {

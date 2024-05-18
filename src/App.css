@@ -3,26 +3,30 @@ body {
   --primary-color: darkgreen;
   --bg-color: #f1f1f1;
   --bg-section-color: #ffffff;
+  --color-bg-3: #FAFAFA;
   --warning-color: rgb(245, 63, 63);
 }
 
 body[arco-theme="dark"] {
-  --primary-6: 0, 100, 0;
-  --primary-color: #11A611;
-  --bg-color: var(--color-bg-2);
-  --bg-section-color: var(--color-bg-2);
+  --primary-6: 23, 201, 100;
+  --primary-color: #0e793c;
+  /*--bg-color: rgb(13, 11, 11); */
+  --bg-color: #27272A;
+  --bg-section-color: #18181B;
+  --color-secondary: rgb(63, 63, 70);
+  --color-secondary-hover: var(--color-secondary);
   --warning-color: rgb(245, 63, 63);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-}
+/*@media (prefers-color-scheme: dark) {*/
+/*  :root {*/
+/*    color: #f6f6f6;*/
+/*    background-color: #2f2f2f;*/
+/*  }*/
+/*}*/
 
 .app {
-  background-color: var(--color-neutral-2);
+  background-color: var(--bg-color);
 }
 
 .aside {

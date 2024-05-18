@@ -5,35 +5,38 @@ import {
   isJson,
   tryStringifyWithSpaces,
 } from "@/Components/Connections/Detail/Helper";
-import { LabelSeparator } from "@/Components/Connections/Detail/Separator";
 import dayjs from "dayjs";
 import { Headers } from "@/Components/Connections/Detail/Headers";
+import { Tabs } from "@arco-design/web-react";
+import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
+import { useTheme } from "@/Components/TopBar/useTheme";
 
 export const Request: FC<{
   request: RequestConnection;
 }> = ({ request }) => {
+  const { theme } = useTheme();
+
   const reqMonacoRef = useRef<monaco.editor.IStandaloneCodeEditor>();
 
   const isJsonReqBody = isJson(request.body);
 
   useLayoutEffect(() => {
-    const target = document.getElementById("req-body");
+    setTimeout(() => {
+      const target = document.getElementById("req-body");
 
-    if (target) {
-      if (!reqMonacoRef.current) {
-        reqMonacoRef.current = monaco.editor.create(target, {
+      if (target) {
+        reqMonacoRef.current = createMonacoEditor(target, {
           value: tryStringifyWithSpaces(request.body),
           language: isJsonReqBody ? "json" : undefined,
-          lineNumbers: "off",
-          minimap: {
-            enabled: false,
-          },
+          readonly: true,
+          theme,
         });
       }
-    }
+    }, 200);
   }, []);
+
   return (
-    <div>
+    <div className="req-res-panel">
       <div className="item">
         <span className="inline-block w-[60px] label">uri</span>
         <span className="value">{request.uri}</span>
@@ -52,12 +55,21 @@ export const Request: FC<{
           {dayjs(request.time).format("YYYY-MM-DD HH:mm:ss:SSS")}
         </span>
       </div>
-      <LabelSeparator label="Headers" />
-      <Headers headers={request.headers} />
-      <LabelSeparator label="Body" />
-      {request.body.length !== 0 && (
-        <div id="req-body" className="w-full h-[500px] relative"></div>
-      )}
+      <Tabs type="line" defaultActiveTab="header" style={{ height: "100%" }}>
+        <Tabs.TabPane title="Header" key="header">
+          <Headers headers={request.headers} />
+        </Tabs.TabPane>
+        <Tabs.TabPane title="Body" key="body">
+          {request.body.length !== 0 ? (
+            <div
+              id="req-body"
+              className="w-full h-full relative border border-gray4"
+            ></div>
+          ) : (
+            <div>无内容</div>
+          )}
+        </Tabs.TabPane>
+      </Tabs>
     </div>
   );
 };

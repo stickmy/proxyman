@@ -8,7 +8,6 @@ import {
   stopProxy,
 } from "@/Commands/Commands";
 import {
-  IconBrush,
   IconCopy,
   IconDesktop,
   IconMoon,
@@ -16,6 +15,7 @@ import {
   IconPlayArrow,
   IconSafe,
   IconSun,
+  IconStop,
 } from "@arco-design/web-react/icon";
 import { useSystemProxy } from "@/Components/TopBar/useSystemProxy";
 import { useConnectionStore } from "@/Store/ConnectionStore";
@@ -131,10 +131,10 @@ export const TopBar = () => {
     navigator.clipboard
       .writeText(`export https_proxy=http://127.0.0.1:${port};`)
       .then(() => {
-        Message.success(`已成功复制到剪贴板`);
+        Message.success(`终端代理命令已复制`);
       })
       .catch((err) => {
-        Message.error(`复制到剪贴板失败`);
+        Message.error(`复制失败`);
       });
   }
 
@@ -209,22 +209,20 @@ export const TopBar = () => {
         </Tooltip>
         <Tooltip mini content="清空请求数据">
           <div className="sys-setting-wrap">
-            <IconBrush className="sys-setting" onClick={clearConnections} />
+            <IconStop className="sys-setting" onClick={clearConnections} />
           </div>
         </Tooltip>
       </div>
       {status ? (
-        <Button
-          icon={<IconPause />}
-          className="proxy-btn proxy-stop"
-          onClick={stop}
-        >
+        <Button icon={<IconPause />} className="proxy-btn" onClick={stop}>
           停止
         </Button>
       ) : (
         <Button
+          type="primary"
+          status="success"
           icon={<IconPlayArrow />}
-          className="proxy-btn proxy-start"
+          className="proxy-btn"
           onClick={start}
         >
           开启

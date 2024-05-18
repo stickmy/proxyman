@@ -2,9 +2,8 @@
   background: var(--bg-section-color);
 }
 
-.address .arco-input-inner-wrapper-focus {
-  outline: 2px var(--primary-color) solid;
-  border-radius: 2px;
+.address .arco-input-group-addbefore {
+  border-right: none;
 }
 
 .address .arco-input {
@@ -20,7 +19,7 @@
   border-radius: 2px;
   display: inline-block;
   padding: 5px 8px;
-  transition: .1s ease-in background-color;
+  transition: 0.1s ease-in background-color;
   &:hover {
     background-color: var(--bg-color);
   }
@@ -46,14 +45,10 @@
   /*box-shadow:  0 2px 2px rgba(0, 0, 0, 0.2);;*/
 }
 
-.proxy-start:hover {
-  color: var(--primary-color) !important;
-  font-weight: 500;
+.proxy-btn:hover {
+  opacity: 0.9;
+  font-weight: 800;
   svg {
     stroke-width: 4;
   }
-}
-
-.proxy-stop:hover {
-  color: var(--warning-1) !important;
 }

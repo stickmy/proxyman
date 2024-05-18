@@ -1,22 +1,25 @@
 import React, { FC, useEffect, useLayoutEffect, useRef, useState } from "react";
+import dayjs from "dayjs";
 import { ResponseConnection, RuleMode } from "@/Events/ConnectionEvents";
 import { monaco } from "@/Monaco/Monaco";
 import { isJsonp } from "@/Components/Connections/Detail/Helper";
-import { Button, Notification } from "@arco-design/web-react";
-import { LabelSeparator } from "@/Components/Connections/Detail/Separator";
+import { Button, Notification, Tabs } from "@arco-design/web-react";
 import { removeResponseMapping, setProcessor } from "@/Commands/Commands";
 import { usePretty } from "./Hooks/usePretty";
-import dayjs from "dayjs";
 import { useConnActionStore } from "@/Components/Connections/ConnActionStore";
 import { Headers } from "@/Components/Connections/Detail/Headers";
+import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
+import { useTheme } from "@/Components/TopBar/useTheme";
 
 export const Response: FC<{
   uri: string;
   response: ResponseConnection;
 }> = ({ uri, response }) => {
-  const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+  const { theme } = useTheme();
 
-  const { isPretty, pretty } = usePretty(monacoRef, response.body);
+  const resMonacoRef = useRef<monaco.editor.IStandaloneCodeEditor>();
+
+  const { isPretty, pretty } = usePretty(resMonacoRef, response.body);
 
   const contentTypeKey = Object.keys(response.headers).find(
     (x) => x.toLowerCase() === "content-type"
@@ -29,20 +32,11 @@ export const Response: FC<{
       if (target) {
         const { body, language } = getBodyModel(response);
 
-        monacoRef.current = monaco.editor.create(target, {
+        resMonacoRef.current = createMonacoEditor(target, {
           value: body,
-          language: language,
-          lineNumbers: "off",
-          inlayHints: {
-            enabled: "off",
-          },
-          minimap: {
-            enabled: false,
-          },
-          scrollbar: {
-            verticalScrollbarSize: 4,
-          },
-          readOnly: true,
+          readonly: true,
+          language,
+          theme,
         });
       }
     }, 200);
@@ -50,9 +44,9 @@ export const Response: FC<{
 
   const [beEditing, setBeEditing] = useState<boolean>(false);
   const onEditClick = () => {
-    if (!monacoRef.current) return;
+    if (!resMonacoRef.current) return;
 
-    monacoRef.current.updateOptions({
+    resMonacoRef.current.updateOptions({
       readOnly: beEditing,
     });
 
@@ -60,9 +54,9 @@ export const Response: FC<{
   };
   useEffect(() => {
     if (!beEditing) {
-      if (!monacoRef.current) return;
+      if (!resMonacoRef.current) return;
 
-      const body = monacoRef.current.getValue();
+      const body = resMonacoRef.current.getValue();
 
       if (body === response.body) return;
 
@@ -102,7 +96,7 @@ export const Response: FC<{
   );
 
   return (
-    <div>
+    <div className="req-res-panel">
       <div className="item">
         <span className="inline-block w-[60px] label">version</span>
         <span className="value">{response.version}</span>
@@ -117,45 +111,49 @@ export const Response: FC<{
           {dayjs(response.time).format("YYYY-MM-DD HH:mm:ss:SSS")}
         </span>
       </div>
-      <LabelSeparator label="Headers" />
-      <Headers headers={response.headers} />
-      <LabelSeparator label="Body" />
-      <div className="mb-[10px]">
-        <Button
-          onClick={pretty}
-          size="mini"
-          type={isPretty ? "primary" : "default"}
-          className="mr-1"
-        >
-          Pretty
-        </Button>
-        <Button
-          size="mini"
-          type={beEditing ? "primary" : "default"}
-          onClick={onEditClick}
-        >
-          {beEditing ? "Save as next return" : "Edit"}
-        </Button>
-        {response.hitRules?.includes(RuleMode.Response) && (
-          <Button
-            size="mini"
-            type="dashed"
-            className="ml-1"
-            onClick={dropEditedResponse}
-          >
-            Drop edited response
-          </Button>
-        )}
-      </div>
-      {notStringLike
-        ? "Media type not supported"
-        : response.body.length !== 0 && (
-            <div
-              id="res-body"
-              className="w-full h-[500px] relative border border-gray4 data-[editing=true]:border-dashed data-[editing=true]:border-blue9"
-              data-editing={beEditing}
-            ></div>
-          )}
+      <Tabs type="line" defaultActiveTab="body" style={{ height: "100%" }}>
+        <Tabs.TabPane title="Header" key="header">
+          <Headers headers={response.headers} />
+        </Tabs.TabPane>
+        <Tabs.TabPane title="Body" key="body">
+          <div className="mb-[10px]">
+            <Button
+              onClick={pretty}
+              size="mini"
+              type={isPretty ? "primary" : "default"}
+              className="mr-1"
+            >
+              Pretty
+            </Button>
+            <Button
+              size="mini"
+              type={beEditing ? "primary" : "default"}
+              onClick={onEditClick}
+            >
+              {beEditing ? "Save as next return" : "Edit"}
+            </Button>
+            {response.hitRules?.includes(RuleMode.Response) && (
+              <Button
+                size="mini"
+                type="dashed"
+                className="ml-1"
+                onClick={dropEditedResponse}
+              >
+                Drop edited response
+              </Button>
+            )}
+          </div>
+          {notStringLike
+            ? "Media type not supported"
+            : response.body.length !== 0 && (
+                <div
+                  id="res-body"
+                  className="w-full h-full relative border border-gray4 data-[editing=true]:border-dashed data-[editing=true]:border-blue9"
+                  data-editing={beEditing}
+                ></div>
+              )}
+        </Tabs.TabPane>
+      </Tabs>
     </div>
   );
 };

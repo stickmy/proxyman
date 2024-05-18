@@ -4,6 +4,7 @@
 
 .label {
   @apply text-gray10;
+  user-select: none !important;
 }
 
 .value {
@@ -22,4 +23,16 @@
     color: var(--primary-color);
     stroke-width: 4;
   }
+}
+
+.detail-panels {
+  height: 100%;
+}
+
+.detail-panels, .arco-tabs-pane {
+  height: 100%;
+}
+
+.req-res-panel {
+  height: 100%;
 }
