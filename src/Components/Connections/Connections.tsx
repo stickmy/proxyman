@@ -182,7 +182,6 @@ export const Connections = () => {
         <Filters />
       </div>
       <Table
-        virtualized
         rowKey="id"
         onRow={(record) => ({
           onClick: () => setDetailConnection(record),
@@ -190,6 +189,7 @@ export const Connections = () => {
         data={renderConnections}
         columns={columns}
         noDataElement={<Empty description="等待请求" />}
+        border={false}
         style={{
           height: "calc(100% - 88px)",
           overflowY: "scroll",
@@ -207,9 +207,11 @@ export const Connections = () => {
         }}
       />
       <Drawer
+        data-selectable
         title={null}
         footer={null}
-        width={800}
+        width={"60vw"}
+        wrapClassName="conn-detail-drawer"
         visible={detailVisible}
         closable={false}
         onCancel={() => setDetailConnection(undefined)}

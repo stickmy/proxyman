@@ -22,6 +22,7 @@ export const Headers: FC<{
       </div>
       {showTable ? (
         <Table
+          size="small"
           pagination={false}
           border={{
             wrapper: true,
@@ -32,7 +33,7 @@ export const Headers: FC<{
               key: "name",
               title: "name",
               dataIndex: "name",
-              width: 200,
+              width: 300,
               headerCellStyle: {
                 display: "none",
               },
