@@ -16,10 +16,6 @@
         "all": false,
         "open": true
       },
-      "window": {
-        "center": true,
-        "all": true
-      },
       "fs": {
         "all": false,
         "scope": ["$RESOURCE/ca/*", "$CONFIG/*/**"],
