@@ -1,8 +1,9 @@
+use std::str::FromStr;
+
 use async_trait::async_trait;
 use http::Uri;
 use hyper::{Body, Request};
-use regex::{NoExpand, Regex};
-use std::str::FromStr;
+use regex::Regex;
 
 use crate::{processors::Processor, proxy::processor::RequestOrResponse};
 
@@ -33,16 +34,13 @@ impl Processor for RequestRedirectProcessor {
 impl HttpRequestProcessor for RequestRedirectProcessor {
     async fn process_request(&self, mut req: Request<Body>) -> (RequestOrResponse, bool) {
         if let Some(ref mappings) = self.mappings {
-            for [source, dest] in mappings.iter() {
-                let re = Regex::new(source.as_str()).unwrap();
-                let uri = req.uri().to_string();
-
-                if !re.is_match(&uri) {
-                    continue;
+            for [reg_str, dest] in mappings.iter() {
+                match replace_with_reg_str(reg_str, dest, req.uri().to_string()) {
+                    None => continue,
+                    Some(ret) => {
+                        *req.uri_mut() = Uri::from_str(&ret).unwrap();
+                    }
                 }
-
-                let result = re.replace(uri.as_str(), NoExpand(dest));
-                *req.uri_mut() = Uri::from_str((*result).as_ref()).unwrap();
 
                 return (req.into(), true);
             }
@@ -52,10 +50,19 @@ impl HttpRequestProcessor for RequestRedirectProcessor {
     }
 }
 
+fn replace_with_reg_str(reg_str: &String, dest: &String, source: String) -> Option<String> {
+    let re = Regex::new(reg_str.as_str()).unwrap();
+
+    match re.is_match(&source) {
+        false => None,
+        true => Some(re.replace(source.as_str(), dest).to_string())
+    }
+}
+
 impl ProcessorRuleParser for RequestRedirectProcessor {
     type Rule = Vec<[String; 2]>;
 
-    /// Parse configuation like this:
+    /// Parse configuration like this:
     /// ```shell
     /// # strip this line
     /// https://www.x.com https://www.y.com
@@ -106,3 +113,20 @@ impl From<String> for RequestRedirectProcessor {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_replace_with_reg_str() {
+        let reg_str = "https://www.google.com/(.*)";
+        let dest = "https://www.baidu.com/$1";
+        let source = "https://www.google.com/a=1&b=2";
+
+        let result = replace_with_reg_str(&reg_str.to_string(), &dest.to_string(), source.to_string());
+
+        assert_eq!(result, Some("https://www.baidu.com/a=1&b=2".to_string()));
+    }
+}
+

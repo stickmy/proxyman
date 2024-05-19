@@ -26,10 +26,10 @@ fn app_setting_file() -> PathBuf {
 }
 
 pub fn get_app_setting() -> AppSetting {
-    read_app_setting(app_setting_file()).unwrap_or(AppSetting::default())
+    read_app_setting(app_setting_file()).unwrap_or_default()
 }
 
-pub fn save_app_setting(conf: AppSetting) -> () {
+pub fn save_app_setting(conf: AppSetting) {
     if let Err(err) = write_app_setting(app_setting_file(), conf) {
         log::error!("save app setting error: {}", err);
     }
@@ -42,6 +42,9 @@ fn get_app_path(name: &str) -> PathBuf {
 }
 
 pub fn app_dir() -> PathBuf {
+    #[cfg(debug_assertions)]
+    const APP_DOT: &str = ".proxyman_debug";
+    #[cfg(not(debug_assertions))]
     const APP_DOT: &str = ".proxyman";
 
     let mut app_dir = home::home_dir().unwrap();
