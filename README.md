@@ -44,5 +44,5 @@ https://uri.com 200
 - If you get error messages such as broken dmg files with Apple Silicon machines. Please enter the following command in terminal and restart proxyman.
 
 ```sh
-sudo xattr -d com.apple.quarantine /Applications/proxyman.app
+sudo xattr -d com.apple.quarantine /Applications/Proxyman.app
 ```
