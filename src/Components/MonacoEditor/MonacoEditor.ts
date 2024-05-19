@@ -19,6 +19,10 @@ export const createMonacoEditor = (
     lineNumbers = "off",
   } = options;
 
+  if (!elem.hasAttribute("data-selectable")) {
+    elem.setAttribute("data-selectable", "true");
+  }
+
   return monaco.editor.create(elem, {
     value,
     language,

@@ -32,30 +32,32 @@ export const useRuleEditor = (
   });
 
   useLayoutEffect(() => {
-    const node = document.getElementById(elemId);
+    setTimeout(() => {
+      const node = document.getElementById(elemId);
 
-    if (!node || editorRef.current) return;
+      if (!node || editorRef.current) return;
 
-    (async () => {
-      const editor = createMonacoEditor(node, {
-        theme,
-        value: undefined,
-        language: "shell",
-        lineNumbers: "on",
-      });
-      editorRef.current = editor;
+      (async () => {
+        const editor = createMonacoEditor(node, {
+          theme,
+          value: undefined,
+          language: "shell",
+          lineNumbers: "on",
+        });
+        editorRef.current = editor;
 
-      try {
-        const content = await getProcessorContent(serializationKey);
-        if (content) {
-          editor.setValue(content);
-        } else if (defaultValue) {
-          editor.setValue(defaultValue);
+        try {
+          const content = await getProcessorContent(serializationKey);
+          if (content) {
+            editor.setValue(content);
+          } else if (defaultValue) {
+            editor.setValue(defaultValue);
+          }
+        } catch (error: any) {
+          // Notification.error({ content: "get rule content failed" });
         }
-      } catch (error: any) {
-        // Notification.error({ content: "get rule content failed" });
-      }
-    })();
+      })();
+    }, 200);
   }, []);
 };
 

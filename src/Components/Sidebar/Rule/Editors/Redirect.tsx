@@ -8,7 +8,7 @@ export const Redirect: FC<RuleEditorProps> = ({ setSaveAction }) => {
     "redirect-editor",
     RuleMode.Redirect,
     setSaveAction,
-    "# Example\n# https://uri.com https://redirect.com"
+    "# Example\n# https://uri.com/(.*) https://redirect.com/$1"
   );
 
   return <div id="redirect-editor" className="w-full h-full"></div>;
