@@ -12,13 +12,10 @@ pub fn initial_menu(menu: Menu) -> Menu {
 }
 
 pub fn register_menu_events(event: WindowMenuEvent) {
-    match event.menu_item_id() {
-        "openlog" => {
-            Command::new("open")
-                .arg(app_conf::app_dir().as_os_str())
-                .output()
-                .unwrap();
-        }
-        _ => {}
+    if let "openlog" = event.menu_item_id() {
+        Command::new("open")
+            .arg(app_conf::app_dir().as_os_str())
+            .output()
+            .unwrap();
     };
 }

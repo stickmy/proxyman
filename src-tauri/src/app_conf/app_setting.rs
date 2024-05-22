@@ -1,11 +1,12 @@
+use std::{fs, path::Path};
+
+use serde::{Deserialize, Serialize};
+use snafu::ResultExt;
+
 use crate::error::{
-    self,
     configuration_error::{AppConfIoError, ConfigurationErrorKind},
     ConfigurationError, Error,
 };
-use serde::{Deserialize, Serialize};
-use snafu::ResultExt;
-use std::{fs, path::Path};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct AppSetting {
@@ -20,7 +21,7 @@ impl Default for AppSetting {
     }
 }
 
-pub(super) fn read_app_setting<P: AsRef<Path>>(path: P) -> Result<AppSetting, error::Error> {
+pub(super) fn read_app_setting<P: AsRef<Path>>(path: P) -> Result<AppSetting, Error> {
     let content_raw = fs::read(path)
         .context(AppConfIoError {})
         .context(ConfigurationError {
@@ -48,7 +49,7 @@ pub(super) fn read_app_setting<P: AsRef<Path>>(path: P) -> Result<AppSetting, er
 pub(super) fn write_app_setting<P: AsRef<Path>>(
     path: P,
     conf: AppSetting,
-) -> Result<(), error::Error> {
+) -> Result<(), Error> {
     let str = serde_json::to_string(&conf).map_err(|err| Error::Configuration {
         scenario: "serialized as string",
         source: ConfigurationErrorKind::AppSettingFmt {

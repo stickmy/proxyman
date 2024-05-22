@@ -36,7 +36,7 @@ impl<T> Rewind<T> {
 
     #[allow(dead_code)]
     pub(crate) fn into_inner(self) -> (T, Bytes) {
-        (self.inner, self.prefix.unwrap_or_else(Bytes::new))
+        (self.inner, self.prefix.unwrap_or_default())
     }
 }
 

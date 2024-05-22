@@ -1,9 +1,9 @@
-use std::collections::HashMap;
 use std::{str, string};
+use std::collections::HashMap;
 
 use bytes::Bytes;
 use http::{HeaderMap, Method, StatusCode, Uri, Version};
-use hyper::{body::to_bytes, Body, Request, Response};
+use hyper::{Body, body::to_bytes, Request, Response};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -134,10 +134,6 @@ impl ToHashMap for HeaderMap {
 }
 
 fn transform_bytes_to_string(bytes: Bytes) -> String {
-    match String::from_utf8(bytes.into())
-        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned())
-    {
-        Ok(v) => v,
-        Err(_) => "parsing failed".into(),
-    }
+    String::from_utf8(bytes.into())
+        .map_err(|non_utf8| String::from_utf8_lossy(non_utf8.as_bytes()).into_owned()).unwrap_or_else(|_| "parsing failed".into())
 }

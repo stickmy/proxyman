@@ -50,8 +50,8 @@ impl HttpRequestProcessor for RequestRedirectProcessor {
     }
 }
 
-fn replace_with_reg_str(reg_str: &String, dest: &String, source: String) -> Option<String> {
-    let re = Regex::new(reg_str.as_str()).unwrap();
+fn replace_with_reg_str(reg_str: &str, dest: &String, source: String) -> Option<String> {
+    let re = Regex::new(reg_str).unwrap();
 
     match re.is_match(&source) {
         false => None,
@@ -124,7 +124,7 @@ mod tests {
         let dest = "https://www.baidu.com/$1";
         let source = "https://www.google.com/a=1&b=2";
 
-        let result = replace_with_reg_str(&reg_str.to_string(), &dest.to_string(), source.to_string());
+        let result = replace_with_reg_str(reg_str, &dest.to_string(), source.to_string());
 
         assert_eq!(result, Some("https://www.baidu.com/a=1&b=2".to_string()));
     }
