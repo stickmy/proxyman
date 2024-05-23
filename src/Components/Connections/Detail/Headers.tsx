@@ -10,7 +10,7 @@ export const Headers: FC<{
 
   return (
     <div className="headers">
-      <div className="mb-1">
+      <div className="mb-1 headers-tools">
         <IconNav
           className={cls("header-pretty", { active: showTable })}
           onClick={() => setShowTable(true)}

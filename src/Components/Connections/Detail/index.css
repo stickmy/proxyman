@@ -11,8 +11,22 @@
   @apply break-all;
 }
 
+.headers::-webkit-scrollbar {
+  display: none;
+}
+
 .headers {
   position: relative;
+  height: 100%;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+
+  .headers-tools {
+    position: sticky;
+    top: 0;
+    z-index: 99;
+    background: var(--color-bg-3);
+  }
 
   .header-pretty {
     margin-right: 4px;
@@ -29,10 +43,12 @@
   height: 100%;
 }
 
-.detail-panels, .arco-tabs-pane {
+.detail-panels .arco-tabs-pane {
   height: 100%;
 }
 
 .req-res-panel {
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }

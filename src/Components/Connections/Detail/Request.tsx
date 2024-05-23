@@ -55,7 +55,7 @@ export const Request: FC<{
           {dayjs(request.time).format("YYYY-MM-DD HH:mm:ss:SSS")}
         </span>
       </div>
-      <Tabs type="line" defaultActiveTab="header" style={{ height: "100%" }}>
+      <Tabs type="line" defaultActiveTab="header" justify style={{ height: "100%" }}>
         <Tabs.TabPane title="Header" key="header">
           <Headers headers={request.headers} />
         </Tabs.TabPane>

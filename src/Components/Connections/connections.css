@@ -2,18 +2,21 @@
   background-color: var(--bg-section-color);
 }
 
-.conn-detail-drawer,
-.arco-drawer-content > div {
+.conn-detail-drawer .arco-drawer-content > div {
   height: 100%;
 }
 
-.conn-detail-drawer,
-.arco-tabs-content-horizontal {
-  height: 100%;
+.req-res-panel .arco-tabs-content-horizontal {
+  /* 40px: Tab Header height */
+  height: calc(100% - 40px) !important;
 }
 
-.conn-detail-drawer,
-.arco-tabs-content-inner {
+.conn-detail-drawer .arco-tabs-content-horizontal {
+  /* 32px: Tab Header height */
+  height: calc(100% - 32px);
+}
+
+.conn-detail-drawer .arco-tabs-content-inner {
   height: 100%;
 }
 
