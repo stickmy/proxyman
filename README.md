@@ -12,10 +12,21 @@ A http network debugging tool written by rust.
 - Support http1, http2, https connections.
 - Support request redirect, request delay, modify response.
 
-
 ## Platform support
 
-Support macos(x64, aarch64) only, the Windows is not supported currently.
+Support macOS(x64, aarch64) only, the Windows is not supported currently.
+
+## chrome with https proxy
+![](./screenshots/chrome_https_issue.png)
+
+If you turned on the global system proxy, when you visit websites based on https, you'll get `NET::ERR_CERT_AUTHORITY_INVALID` error, due to the proxyman using self-signed tls certificates, which chrome does not validate for security reason.
+
+To resolve this issue, follow these steps blow.
+- First, click on the website page with your mouse.
+- Second, typing the following 12 characters: `thisisunsafe` on keyboard, yeah, you'll not see any reaction, just like typing a password on a linux terminal.
+- Third, press `enter` and the website will be load.
+
+
 
 ## Rules usages
 
