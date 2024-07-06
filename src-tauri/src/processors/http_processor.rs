@@ -7,19 +7,14 @@ use self::{
     delay::RequestDelayProcessor, redirect::RequestRedirectProcessor, response::ResponseProcessor,
 };
 
-use super::{processor_id::ProcessorID, Processor};
+use super::{processor_id::ProcessorID, processor_pack::ProcessorPack, Processor};
 
 pub mod delay;
 pub mod redirect;
 pub mod response;
 
-pub trait ProcessorRuleParser {
-    type Rule;
-    fn parse_rule(content: &str) -> Self::Rule;
-}
-
 #[async_trait]
-pub trait HttpRequestProcessor: Send + Sync + std::fmt::Debug + Processor {
+pub trait HttpRequestProcessor: Send + Sync + std::fmt::Debug {
     async fn process_request(&self, req: Request<Body>) -> (RequestOrResponse, bool);
 }
 
@@ -30,65 +25,98 @@ pub trait HttpResponseProcessor: Send + Sync + std::fmt::Debug + Processor {
 
 #[derive(Debug, Clone)]
 pub struct HttpProcessor {
-    pub(crate) redirect: Option<RequestRedirectProcessor>,
-    pub(crate) delay: Option<RequestDelayProcessor>,
-    pub(crate) response: Option<ResponseProcessor>,
+    pub(crate) packs: Vec<ProcessorPack>,
 }
 
 impl HttpProcessor {
-    pub fn builder() -> Self {
-        Self {
-            redirect: None,
-            delay: None,
-            response: None,
+    pub fn new(packs: Vec<ProcessorPack>) -> Self {
+        Self { packs }
+    }
+
+    pub fn disable_pack(&mut self, pack_name: String) {
+        for pack in self.packs.iter_mut() {
+            if pack.pack_name == pack_name {
+                pack.disbale()
+            }
         }
     }
 
-    pub(crate) fn set_redirect_processor(mut self, redirect: RequestRedirectProcessor) -> Self {
-        self.redirect = Some(redirect);
-        self
+    pub fn enable_pack(&mut self, pack_name: String) {
+        for pack in self.packs.iter_mut() {
+            if pack.pack_name == pack_name {
+                pack.enable()
+            }
+        }
     }
 
-    pub(crate) fn set_delay_processor(mut self, delay: RequestDelayProcessor) -> Self {
-        self.delay = Some(delay);
-        self
+    pub fn add_pack(&mut self, pack: ProcessorPack) {
+        self.packs.push(pack);
     }
 
-    pub(crate) fn set_response_processor(mut self, response: ResponseProcessor) -> Self {
-        self.response = Some(response);
-        self
+    pub fn remove_pack(&mut self, pack_name: String) {
+        self.packs.retain(|x| x.pack_name != pack_name);
+    }
+
+    pub(crate) fn get_redirect_mut(
+        &mut self,
+        pack_name: String,
+    ) -> Option<&mut RequestRedirectProcessor> {
+        for pack in self.packs.iter_mut() {
+            if pack.pack_name == pack_name {
+                return Some(pack.get_redirect_mut());
+            }
+        }
+
+        None
+    }
+
+    pub(crate) fn get_delay_mut(
+        &mut self,
+        pack_name: String,
+    ) -> Option<&mut RequestDelayProcessor> {
+        for pack in self.packs.iter_mut() {
+            if pack.pack_name == pack_name {
+                return Some(pack.get_delay_mut());
+            }
+        }
+
+        None
+    }
+
+    pub(crate) fn get_response_mut(&mut self, pack_name: String) -> Option<&mut ResponseProcessor> {
+        for pack in self.packs.iter_mut() {
+            if pack.pack_name == pack_name {
+                return Some(pack.get_response_mut());
+            }
+        }
+
+        None
     }
 }
 
 #[async_trait]
 impl processor::HttpProcessor for HttpProcessor {
     async fn process_request(&self, req: Request<Body>) -> RequestOrResponse {
-        // --------------------- collect processors ---------------------
-        let mut processors: Vec<&dyn HttpRequestProcessor> = Vec::new();
-        if let Some(ref response) = self.response {
-            processors.push(response);
-        }
-        if let Some(ref redirect) = self.redirect {
-            processors.push(redirect);
-        }
-        if let Some(ref delay) = self.delay {
-            processors.push(delay);
-        }
-
-        // process request
         let mut processed_ret: RequestOrResponse = req.into();
         let mut hit_rules: Vec<String> = Vec::new();
 
-        for processor in processors.iter() {
-            let (req_or_res, caught) = processor.process_request(processed_ret.req).await;
+        for pack in self.packs.iter() {
+            // process request
+            let processors: Vec<&dyn Processor> =
+                vec![pack.get_response(), pack.get_redirect(), pack.get_delay()];
 
-            if caught {
-                hit_rules.push(processor.name().0.to_string());
-            }
+            for processor in processors.iter() {
+                let (req_or_res, caught) = processor.process_request(processed_ret.req).await;
 
-            processed_ret.req = req_or_res.req;
-            if let Some(res) = req_or_res.res {
-                processed_ret.res = Some(res);
+                if caught {
+                    // TODO: 是否要加入 pack 信息
+                    hit_rules.push(processor.name().0.to_string());
+                }
+
+                processed_ret.req = req_or_res.req;
+                if let Some(res) = req_or_res.res {
+                    processed_ret.res = Some(res);
+                }
             }
         }
 

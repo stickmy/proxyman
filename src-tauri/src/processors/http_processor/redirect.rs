@@ -6,8 +6,9 @@ use hyper::{Body, Request};
 use regex::Regex;
 
 use crate::{processors::Processor, proxy::processor::RequestOrResponse};
+use crate::processors::parser::ProcessorRuleParser;
 
-use super::{HttpRequestProcessor, ProcessorID, ProcessorRuleParser};
+use super::{HttpRequestProcessor, ProcessorID};
 
 impl ProcessorID {
     pub const REDIRECT: ProcessorID = ProcessorID("Redirect");
@@ -47,15 +48,6 @@ impl HttpRequestProcessor for RequestRedirectProcessor {
         }
 
         (req.into(), false)
-    }
-}
-
-fn replace_with_reg_str(reg_str: &str, dest: &String, source: String) -> Option<String> {
-    let re = Regex::new(reg_str).unwrap();
-
-    match re.is_match(&source) {
-        false => None,
-        true => Some(re.replace(source.as_str(), dest).to_string())
     }
 }
 
@@ -111,6 +103,15 @@ impl From<String> for RequestRedirectProcessor {
                 Some(mappings)
             },
         }
+    }
+}
+
+fn replace_with_reg_str(reg_str: &str, dest: &String, source: String) -> Option<String> {
+    let re = Regex::new(reg_str).unwrap();
+
+    match re.is_match(&source) {
+        false => None,
+        true => Some(re.replace(source.as_str(), dest).to_string())
     }
 }
 

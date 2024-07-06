@@ -4,7 +4,7 @@ use snafu::Snafu;
 #[derive(Debug, Snafu)]
 #[snafu(visibility(pub(crate)), context(suffix(Error)))]
 pub enum ProcessorErrorKind {
-    Save { source: std::io::Error },
+    Write { source: std::io::Error },
     Read { source: std::io::Error },
     NotFound {},
     Unsupport {},
@@ -17,8 +17,8 @@ impl Serialize for ProcessorErrorKind {
         S: serde::Serializer,
     {
         match self {
-            Self::Save { source } => {
-                let mut state = serializer.serialize_struct("Save", 1)?;
+            Self::Write { source } => {
+                let mut state = serializer.serialize_struct("Write", 1)?;
                 state.serialize_field("message", source.to_string().as_str())?;
                 state.end()
             }

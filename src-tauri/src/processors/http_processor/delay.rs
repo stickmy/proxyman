@@ -4,7 +4,8 @@ use std::time::Duration;
 use regex::Regex;
 use tokio::time::sleep;
 
-use super::{HttpRequestProcessor, ProcessorID, ProcessorRuleParser};
+use super::{HttpRequestProcessor, ProcessorID};
+use crate::processors::parser::ProcessorRuleParser;
 use crate::{processors::Processor, proxy::processor::RequestOrResponse};
 
 impl ProcessorID {

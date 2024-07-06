@@ -6,8 +6,9 @@ use async_trait::async_trait;
 use http::{header::CONTENT_LENGTH, HeaderName, HeaderValue, StatusCode, Version};
 use hyper::{Body, Request, Response};
 use regex::Regex;
+use crate::processors::parser::ProcessorRuleParser;
 
-use super::{HttpRequestProcessor, ProcessorID, ProcessorRuleParser};
+use super::{HttpRequestProcessor, ProcessorID};
 
 impl ProcessorID {
     pub const RESPONSE: ProcessorID = ProcessorID("Response");

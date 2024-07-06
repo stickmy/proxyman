@@ -43,7 +43,7 @@ fn get_app_path(name: &str) -> PathBuf {
 
 pub fn app_dir() -> PathBuf {
     #[cfg(debug_assertions)]
-    const APP_DOT: &str = ".proxyman_debug";
+    const APP_DOT: &str = ".proxyman_multi_conf_debug";
     #[cfg(not(debug_assertions))]
     const APP_DOT: &str = ".proxyman";
 
