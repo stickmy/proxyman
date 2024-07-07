@@ -27,6 +27,10 @@ pub enum Error {
         id: ProcessorID,
         source: ProcessorErrorKind,
     },
+    #[snafu(display("Processor status error"))]
+    ProcessorStatus {
+        source: ProcessorErrorKind,
+    },
     #[snafu(display("Error occurred with the server in {}: {}", scenario, source))]
     Server {
         scenario: &'static str,
@@ -62,6 +66,13 @@ impl Serialize for Error {
                 state.serialize_field("cause", source)?;
                 state.end()
             }
+            Self::ProcessorStatus { source } => {
+                let mut state = serializer.serialize_struct("Error", 2)?;
+
+                state.serialize_field("type", "ProcessorStatusError")?;
+                state.serialize_field("cause", source)?;
+                state.end()
+            }
             Self::Client { scenario, source } => {
                 let mut state = serializer.serialize_struct_variant("Error", 0, "Client", 3)?;
 
@@ -71,7 +82,7 @@ impl Serialize for Error {
                 state.end()
             }
             Self::Server { scenario, source } => {
-                let mut state = serializer.serialize_struct_variant("Error", 0, "Server", 3)?;
+                let mut state = serializer.serialize_struct_variant("Error", 0, "Server", 2)?;
 
                 state.serialize_field("message", *scenario)?;
                 state.serialize_field("cause", source)?;

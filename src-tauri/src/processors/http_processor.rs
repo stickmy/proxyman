@@ -101,21 +101,23 @@ impl processor::HttpProcessor for HttpProcessor {
         let mut hit_rules: Vec<String> = Vec::new();
 
         for pack in self.packs.iter() {
-            // process request
-            let processors: Vec<&dyn Processor> =
-                vec![pack.get_response(), pack.get_redirect(), pack.get_delay()];
+            if pack.is_enable() {
+                // process request
+                let processors: Vec<&dyn Processor> =
+                    vec![pack.get_response(), pack.get_redirect(), pack.get_delay()];
 
-            for processor in processors.iter() {
-                let (req_or_res, caught) = processor.process_request(processed_ret.req).await;
+                for processor in processors.iter() {
+                    let (req_or_res, caught) = processor.process_request(processed_ret.req).await;
 
-                if caught {
-                    // TODO: 是否要加入 pack 信息
-                    hit_rules.push(processor.name().0.to_string());
-                }
+                    if caught {
+                        // TODO: 是否要加入 pack 信息
+                        hit_rules.push(processor.name().0.to_string());
+                    }
 
-                processed_ret.req = req_or_res.req;
-                if let Some(res) = req_or_res.res {
-                    processed_ret.res = Some(res);
+                    processed_ret.req = req_or_res.req;
+                    if let Some(res) = req_or_res.res {
+                        processed_ret.res = Some(res);
+                    }
                 }
             }
         }

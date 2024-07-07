@@ -6,7 +6,10 @@ use snafu::Snafu;
 pub enum ProcessorErrorKind {
     Write { source: std::io::Error },
     Read { source: std::io::Error },
+    WriteStatus { source: std::io::Error },
+    ReadStatus { source: std::io::Error },
     NotFound {},
+    Fmt {},
     Unsupport {},
     Unknown {},
 }
@@ -27,6 +30,21 @@ impl Serialize for ProcessorErrorKind {
                 state.serialize_field("message", source.to_string().as_str())?;
                 state.end()
             }
+            Self::WriteStatus { source } => {
+                let mut state = serializer.serialize_struct("WriteStatus", 1)?;
+                state.serialize_field("message", source.to_string().as_str())?;
+                state.end()
+            }
+            Self::ReadStatus { source } => {
+                let mut state = serializer.serialize_struct("ReadStatus", 1)?;
+                state.serialize_field("message", source.to_string().as_str())?;
+                state.end()
+            }
+            Self::Fmt {  } => {
+                let mut state = serializer.serialize_struct("Format", 1)?;
+                state.serialize_field("message", "Format error")?;
+                state.end()
+            },
             Self::NotFound {} => {
                 let mut state = serializer.serialize_struct("NotFound", 1)?;
                 state.serialize_field("message", "Not found")?;

@@ -20,6 +20,10 @@ impl ProcessorPack {
         }
     }
 
+    pub(crate) fn is_enable(&self) -> bool {
+        self.enable
+    }
+
     pub(crate) fn enable(&mut self) {
         self.enable = true;
     }

@@ -1,13 +1,11 @@
-// 1. 创建 pack
-// 2. 更新 pack 中的文件
-// 3. 存储 pack 的 enable 状态
-// 4. 删除 pack
-// 5. 一次性读取所有的 pack
+use std::collections::HashMap;
 use std::{fs, io::Write, path};
 
 use snafu::ResultExt;
 
 use crate::app_conf;
+use crate::error::processor_error::{ReadStatusError, WriteStatusError};
+use crate::error::ProcessorStatusError;
 use crate::error::{
     self,
     processor_error::{ProcessorErrorKind, ReadError},
@@ -18,10 +16,41 @@ use super::http_processor::delay::RequestDelayProcessor;
 use super::http_processor::redirect::RequestRedirectProcessor;
 use super::{processor_id::ProcessorID, processor_pack::ProcessorPack};
 
-// Read interceptors from app dir
-pub fn read_interceptors_from_appdir() -> Vec<ProcessorPack> {
+pub type PrcessorPackStatus = HashMap<String, bool>;
+
+pub fn read_processor_packs_status() -> Result<PrcessorPackStatus, Error> {
+    let str = fs::read_to_string(app_conf::app_processor_pack_status_file())
+        .context(ReadStatusError {})
+        .context(ProcessorStatusError {})?;
+
+    serde_json::from_str(str.as_str()).map_err(|err| Error::ProcessorStatus {
+        source: ProcessorErrorKind::Fmt {},
+    })
+}
+
+pub fn write_processor_pack_status(
+    pack_name: &str,
+    enable: bool,
+) -> Result<PrcessorPackStatus, Error> {
+    let content_raw = fs::read_to_string(app_conf::app_processor_pack_status_file())
+        .context(WriteStatusError {})
+        .context(ProcessorStatusError {})?;
+
+    let mut status: PrcessorPackStatus =
+        serde_json::from_str(content_raw.as_str()).map_err(|err| Error::ProcessorStatus {
+            source: ProcessorErrorKind::Fmt {},
+        })?;
+
+    status.insert(pack_name.to_string(), enable);
+
+    Ok(status)
+}
+
+pub fn read_processors_from_appdir() -> Vec<ProcessorPack> {
+    let pack_status = read_processor_packs_status();
+
     // TODO: refactor with Result<Vec<Interceptor>, std::io::Error> inner fn.
-    let interceptors = Vec::<ProcessorPack>::new();
+    let packs = Vec::<ProcessorPack>::new();
 
     let children = fs::read_dir(app_conf::app_rule_dir());
 
@@ -31,7 +60,14 @@ pub fn read_interceptors_from_appdir() -> Vec<ProcessorPack> {
             if let Ok(metadata) = metadata {
                 if metadata.is_dir() {
                     if let Ok(dir_name) = dir.file_name().into_string() {
-                        let mut inteceptor = ProcessorPack::new(dir_name);
+                        let mut pack = ProcessorPack::new(dir_name);
+
+                        // initialize pack enable status
+                        if let Ok(ref status) = pack_status {
+                            if status.get(pack.pack_name.as_str()) == Some(&true) {
+                                pack.enable();
+                            }
+                        }
 
                         let files = fs::read_dir(dir.path());
                         if let Ok(files) = files {
@@ -43,10 +79,10 @@ pub fn read_interceptors_from_appdir() -> Vec<ProcessorPack> {
 
                                         if let Ok(content) = content {
                                             match processor_id {
-                                                ProcessorID::REDIRECT => inteceptor.set_redirect(
+                                                ProcessorID::REDIRECT => pack.set_redirect(
                                                     RequestRedirectProcessor::from(content),
                                                 ),
-                                                ProcessorID::DELAY => inteceptor.set_delay(
+                                                ProcessorID::DELAY => pack.set_delay(
                                                     RequestDelayProcessor::from(content),
                                                 ),
                                                 _ => {
@@ -66,21 +102,20 @@ pub fn read_interceptors_from_appdir() -> Vec<ProcessorPack> {
         }
     }
 
-    interceptors
+    packs
 }
 
-pub fn create_pack_dir(pack_name: String) -> std::io::Result<()> {
+pub fn create_pack_dir(pack_name: &str) -> std::io::Result<()> {
     let dir = app_conf::app_rule_dir().join(pack_name);
     ensure_dir(&dir)
 }
 
-pub fn delete_pack_dir(pack_name: String) -> std::io::Result<()> {
+pub fn delete_pack_dir(pack_name: &str) -> std::io::Result<()> {
     let dir = app_conf::app_rule_dir().join(pack_name);
     fs::remove_dir_all(dir)
 }
 
 pub fn write_processor(id: ProcessorID, content: &str, pack_name: &str) -> std::io::Result<()> {
-    // let dir = app_conf::app_rule_dir().join(pack_name).join(id.to_string());
     let mut file = ensure_processor_file(pack_name, id)?;
     file.write(content.as_bytes()).map(|_| ())
 }

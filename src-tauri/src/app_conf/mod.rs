@@ -21,6 +21,10 @@ pub fn app_rule_dir() -> PathBuf {
     get_app_path("rule")
 }
 
+pub fn app_processor_pack_status_file() -> PathBuf {
+    get_app_path("processor_pack_status.json")
+}
+
 fn app_setting_file() -> PathBuf {
     get_app_path("settings.json")
 }

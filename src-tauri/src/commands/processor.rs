@@ -4,6 +4,8 @@ use tauri::{async_runtime::Mutex, State};
 use tokio::sync::mpsc::{self, Sender};
 
 use crate::processors::parser::ProcessorRuleParser;
+use crate::processors::persist::{create_pack_dir, delete_pack_dir, write_processor_pack_status};
+use crate::processors::processor_pack::ProcessorPack;
 use crate::{
     error::{processor_error::ProcessorErrorKind, Error},
     processors::{
@@ -13,7 +15,7 @@ use crate::{
             response::{ResponseMapping, ResponseProcessor},
             HttpProcessor,
         },
-        persist::{read_interceptors_from_appdir, read_processor, write_processor},
+        persist::{read_processor, read_processors_from_appdir, write_processor},
         processor_id::ProcessorID,
     },
     proxy::ProxyState,
@@ -24,6 +26,9 @@ pub(crate) enum ProcessorChannelMessage {
     Delay(String, RequestDelayRule),
     Response(String, ResponseMapping),
     RemoveResponse(String, String),
+    AddPack(String),
+    RemovePack(String),
+    UpdatePackStatus(String, bool),
 }
 
 pub(crate) fn init() -> (
@@ -31,7 +36,7 @@ pub(crate) fn init() -> (
     Sender<ProcessorChannelMessage>,
     impl Future<Output = ()>,
 ) {
-    let packs = read_interceptors_from_appdir();
+    let packs = read_processors_from_appdir();
 
     let processor = Arc::new(Mutex::new(HttpProcessor::new(packs)));
 
@@ -45,6 +50,19 @@ pub(crate) fn init() -> (
             let mut processor_setter = processor_setter.lock().await;
 
             match message {
+                ProcessorChannelMessage::AddPack(pack_name) => {
+                    processor_setter.add_pack(ProcessorPack::new(pack_name));
+                }
+                ProcessorChannelMessage::RemovePack(pack_name) => {
+                    processor_setter.remove_pack(pack_name);
+                }
+                ProcessorChannelMessage::UpdatePackStatus(pack_name, status) => {
+                    if status {
+                        processor_setter.enable_pack(pack_name);
+                    } else {
+                        processor_setter.disable_pack(pack_name);
+                    }
+                }
                 ProcessorChannelMessage::Redirect(pack_name, mapping) => {
                     if let Some(redirect) = processor_setter.get_redirect_mut(pack_name) {
                         redirect.set_redirects_mapping(mapping);
@@ -188,4 +206,92 @@ pub fn get_processor_content(mode: String, pack_name: String) -> Result<String, 
     };
 
     ret.map_err(|e| e.to_json())
+}
+
+#[tauri::command]
+pub async fn add_processor_pack(
+    state: State<'_, ProxyState>,
+    pack_name: String,
+) -> Result<(), String> {
+    let ret = create_pack_dir(pack_name.as_str());
+
+    if let Err(err) = ret {
+        return Err(format!("create pack dir failed: {err}"));
+    }
+
+    let mut state = state.lock().await;
+
+    if state.is_some() {
+        let msg = ProcessorChannelMessage::AddPack(pack_name);
+
+        match state.as_mut() {
+            Some((_, sender, _, _, _)) => {
+                if let Err(err) = sender.send(msg).await {
+                    return Err(format!("mpsc send message failed: {err}"));
+                }
+            }
+            None => return Err("get mpsc message sender failed".to_string()),
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn remove_processor_pack(
+    state: State<'_, ProxyState>,
+    pack_name: String,
+) -> Result<(), String> {
+    let ret = delete_pack_dir(pack_name.as_str());
+
+    if let Err(err) = ret {
+        return Err(format!("remove pack dir failed: {err}"));
+    }
+
+    let mut state = state.lock().await;
+
+    if state.is_some() {
+        let msg = ProcessorChannelMessage::RemovePack(pack_name);
+
+        match state.as_mut() {
+            Some((_, sender, _, _, _)) => {
+                if let Err(err) = sender.send(msg).await {
+                    return Err(format!("mpsc send message failed: {err}"));
+                }
+            }
+            None => return Err("get mpsc message sender failed".to_string()),
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_processor_pack_status(
+    state: State<'_, ProxyState>,
+    pack_name: String,
+    status: bool,
+) -> Result<(), String> {
+    let ret = write_processor_pack_status(pack_name.as_str(), status);
+
+    if let Err(err) = ret {
+        return Err(format!("write pack status failed: {err}"));
+    }
+
+    let mut state = state.lock().await;
+
+    if state.is_some() {
+        let msg = ProcessorChannelMessage::UpdatePackStatus(pack_name, status);
+
+        match state.as_mut() {
+            Some((_, sender, _, _, _)) => {
+                if let Err(err) = sender.send(msg).await {
+                    return Err(format!("mpsc send message failed: {err}"));
+                }
+            }
+            None => return Err("get mpsc message sender failed".to_string()),
+        }
+    }
+
+    Ok(())
 }
