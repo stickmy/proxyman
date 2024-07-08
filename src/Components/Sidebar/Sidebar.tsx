@@ -7,9 +7,9 @@ import {
   IconPushpin,
 } from "@arco-design/web-react/icon";
 import { Rule } from "@/Components/Sidebar/Rule/Rule";
-import "./sidebar.css";
 import { RuleHeader } from "./Rule/RuleHeader";
 import { Title } from "./Title/Title";
+import "./sidebar.css";
 
 export const Sidebar: FC = () => {
   return (

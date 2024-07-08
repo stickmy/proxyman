@@ -34,6 +34,12 @@ dependencies:
   react-dom:
     specifier: ^18.2.0
     version: 18.2.0(react@18.2.0)
+  react-router:
+    specifier: ^6.24.1
+    version: 6.24.1(react@18.2.0)
+  react-router-dom:
+    specifier: ^6.24.1
+    version: 6.24.1(react-dom@18.2.0)(react@18.2.0)
   react-sticky:
     specifier: ^6.0.3
     version: 6.0.3(react-dom@18.2.0)(react@18.2.0)
@@ -982,6 +988,11 @@ packages:
     resolution: {integrity: sha512-d0O68AYy/9oeEy1DdC07bz1/ZXX+DqCskRd3i4JzLSTXwefzaepQrKjXC7aNM8lTHjFLDO0pDgaEiQ7jEk+HVg==}
     dependencies:
       '@babel/runtime': 7.24.0
+    dev: false
+
+  /@remix-run/router@1.17.1:
+    resolution: {integrity: sha512-mCOMec4BKd6BRGBZeSnGiIgwsbLGp3yhVqAD8H+PxiRNEHgDpZb8J1TnrSDlg97t0ySKMQJTHCWBCmBpSmkF6Q==}
+    engines: {node: '>=14.0.0'}
     dev: false
 
   /@tauri-apps/api@1.2.0:
@@ -2013,6 +2024,29 @@ packages:
       tslib: 2.6.2
       use-callback-ref: 1.3.1(@types/react@18.0.15)(react@18.2.0)
       use-sidecar: 1.1.2(@types/react@18.0.15)(react@18.2.0)
+    dev: false
+
+  /react-router-dom@6.24.1(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-U19KtXqooqw967Vw0Qcn5cOvrX5Ejo9ORmOtJMzYWtCT4/WOfFLIZGGsVLxcd9UkBO0mSTZtXqhZBsWlHr7+Sg==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+    dependencies:
+      '@remix-run/router': 1.17.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      react-router: 6.24.1(react@18.2.0)
+    dev: false
+
+  /react-router@6.24.1(react@18.2.0):
+    resolution: {integrity: sha512-PTXFXGK2pyXpHzVo3rR9H7ip4lSPZZc0bHG5CARmj65fTT6qG7sTngmb6lcYu1gf3y/8KxORoy9yn59pGpCnpg==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      react: '>=16.8'
+    dependencies:
+      '@remix-run/router': 1.17.1
+      react: 18.2.0
     dev: false
 
   /react-sticky@6.0.3(react-dom@18.2.0)(react@18.2.0):

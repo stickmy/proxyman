@@ -169,7 +169,7 @@ export const Connections = () => {
   ];
 
   return (
-    <>
+    <div className="flex flex-col">
       <div className="z-20 px-2 py-2 mb-2 flex flex-col select-none connections">
         <Input
           height={24}
@@ -218,7 +218,7 @@ export const Connections = () => {
       >
         {detailConn && <ConnectionDetail connection={detailConn} />}
       </Drawer>
-    </>
+    </div  >
   );
 };
 
