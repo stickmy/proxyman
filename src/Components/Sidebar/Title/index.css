@@ -1,0 +1,15 @@
+.sidebar-title {
+  padding: 8px 12px;
+  position: relative;
+  color: var(--color-text-1);
+  background: var(--color-bg-2);
+  margin-bottom: 4px;
+  border-radius: 4px;
+}
+
+.sidebar-tip {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}

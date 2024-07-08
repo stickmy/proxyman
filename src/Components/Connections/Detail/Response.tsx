@@ -3,18 +3,21 @@ import dayjs from "dayjs";
 import { ResponseConnection, RuleMode } from "@/Events/ConnectionEvents";
 import { monaco } from "@/Monaco/Monaco";
 import { isJsonp } from "@/Components/Connections/Detail/Helper";
-import { Button, Notification, Tabs } from "@arco-design/web-react";
+import { Button, Message, Notification, Tabs } from "@arco-design/web-react";
 import { removeResponseMapping, setProcessor } from "@/Commands/Commands";
 import { usePretty } from "./Hooks/usePretty";
 import { useConnActionStore } from "@/Components/Connections/ConnActionStore";
 import { Headers } from "@/Components/Connections/Detail/Headers";
 import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
 import { useTheme } from "@/Components/TopBar/useTheme";
+import { usePackStore } from "@/Components/Sidebar/Rule/Hooks/usePacks";
 
 export const Response: FC<{
   uri: string;
   response: ResponseConnection;
 }> = ({ uri, response }) => {
+  const { packs } = usePackStore();
+
   const { theme } = useTheme();
 
   const resMonacoRef = useRef<monaco.editor.IStandaloneCodeEditor>();
@@ -54,6 +57,14 @@ export const Response: FC<{
   };
   useEffect(() => {
     if (!beEditing) {
+      // Response 规则的生命周期是 session 周期, 它的设置也不需要指定 pack, 因此选取任一开启的 pack 即可
+      const pack = packs.find(x => x.enable);
+
+      if (!pack) {
+        Message.info("请开启任一规则");
+        return;
+      }
+
       if (!resMonacoRef.current) return;
 
       const body = resMonacoRef.current.getValue();
@@ -64,7 +75,7 @@ export const Response: FC<{
 
       (async () => {
         try {
-          await setProcessor(RuleMode.Response, rule);
+          await setProcessor(pack.packName, RuleMode.Response, rule);
           setDetailVisible(false);
         } catch (error: any) {
           Notification.error({
@@ -78,8 +89,15 @@ export const Response: FC<{
   const { setDetailVisible } = useConnActionStore();
 
   const dropEditedResponse = async () => {
+    const pack = packs.find(x => x.enable);
+
+    if (!pack) {
+      Message.info("请开启任一规则");
+      return;
+    }
+
     try {
-      await removeResponseMapping(uri);
+      await removeResponseMapping(pack.packName, uri);
       setDetailVisible(false);
     } catch (error: any) {
       Notification.error({

@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import { RuleEditorProps } from "@/Components/Sidebar/Rule/Rule";
-import { useRuleEditor } from "@/Components/Sidebar/Rule/useRuleEditor";
+import { useRuleEditor } from "@/Components/Sidebar/Rule/Hooks/useRuleEditor";
 import { RuleMode } from "@/Events/ConnectionEvents";
 
 export const Redirect: FC<RuleEditorProps> = ({ setSaveAction }) => {

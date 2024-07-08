@@ -27,6 +27,10 @@ pub enum Error {
         id: ProcessorID,
         source: ProcessorErrorKind,
     },
+    #[snafu(display("ProcessorPack error"))]
+    ProcessorPack {
+        source: ProcessorErrorKind,
+    },
     #[snafu(display("Processor status error"))]
     ProcessorStatus {
         source: ProcessorErrorKind,
@@ -55,6 +59,13 @@ impl Serialize for Error {
 
                 state.serialize_field("type", "ConfigurationError")?;
                 state.serialize_field("message", *scenario)?;
+                state.serialize_field("cause", source)?;
+                state.end()
+            }
+            Self::ProcessorPack { source } => {
+                let mut state = serializer.serialize_struct("Error", 2)?;
+
+                state.serialize_field("type", "ProcessorError")?;
                 state.serialize_field("cause", source)?;
                 state.end()
             }

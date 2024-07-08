@@ -127,6 +127,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::processor::set_processor,
             commands::processor::get_processor_content,
             commands::processor::remove_response_mapping,
+            commands::processor::get_processor_packs,
             commands::processor::add_processor_pack,
             commands::processor::remove_processor_pack,
             commands::processor::update_processor_pack_status,

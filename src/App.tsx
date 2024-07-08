@@ -21,7 +21,7 @@ function App() {
         direction="horizontal"
         max="300px"
         min="180px"
-        size="200px"
+        size="240px"
         panes={[
           <Sidebar />,
           <main className="main">

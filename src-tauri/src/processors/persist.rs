@@ -4,7 +4,7 @@ use std::{fs, io::Write, path};
 use snafu::ResultExt;
 
 use crate::app_conf;
-use crate::error::processor_error::{ReadStatusError, WriteStatusError};
+use crate::error::processor_error::ReadStatusError;
 use crate::error::ProcessorStatusError;
 use crate::error::{
     self,
@@ -16,9 +16,9 @@ use super::http_processor::delay::RequestDelayProcessor;
 use super::http_processor::redirect::RequestRedirectProcessor;
 use super::{processor_id::ProcessorID, processor_pack::ProcessorPack};
 
-pub type PrcessorPackStatus = HashMap<String, bool>;
+pub type ProcessorPackStatus = HashMap<String, bool>;
 
-pub fn read_processor_packs_status() -> Result<PrcessorPackStatus, Error> {
+pub fn read_processor_packs_status() -> Result<ProcessorPackStatus, Error> {
     let str = fs::read_to_string(app_conf::app_processor_pack_status_file())
         .context(ReadStatusError {})
         .context(ProcessorStatusError {})?;
@@ -28,29 +28,27 @@ pub fn read_processor_packs_status() -> Result<PrcessorPackStatus, Error> {
     })
 }
 
-pub fn write_processor_pack_status(
-    pack_name: &str,
-    enable: bool,
-) -> Result<PrcessorPackStatus, Error> {
-    let content_raw = fs::read_to_string(app_conf::app_processor_pack_status_file())
-        .context(WriteStatusError {})
-        .context(ProcessorStatusError {})?;
-
-    let mut status: PrcessorPackStatus =
-        serde_json::from_str(content_raw.as_str()).map_err(|err| Error::ProcessorStatus {
-            source: ProcessorErrorKind::Fmt {},
-        })?;
+pub fn write_processor_pack_status(pack_name: &str, enable: bool) -> Result<(), Error> {
+    let mut status = read_processor_packs_status().unwrap_or(HashMap::default());
 
     status.insert(pack_name.to_string(), enable);
 
-    Ok(status)
+    let str = serde_json::to_string::<ProcessorPackStatus>(&status).map_err(|err| {
+        Error::ProcessorPack {
+            source: ProcessorErrorKind::Fmt {},
+        }
+    })?;
+
+    fs::write(app_conf::app_processor_pack_status_file(), str).map_err(|err| Error::ProcessorPack {
+        source: ProcessorErrorKind::Write { source: err },
+    })
 }
 
 pub fn read_processors_from_appdir() -> Vec<ProcessorPack> {
     let pack_status = read_processor_packs_status();
 
     // TODO: refactor with Result<Vec<Interceptor>, std::io::Error> inner fn.
-    let packs = Vec::<ProcessorPack>::new();
+    let mut packs = Vec::<ProcessorPack>::new();
 
     let children = fs::read_dir(app_conf::app_rule_dir());
 
@@ -64,7 +62,7 @@ pub fn read_processors_from_appdir() -> Vec<ProcessorPack> {
 
                         // initialize pack enable status
                         if let Ok(ref status) = pack_status {
-                            if status.get(pack.pack_name.as_str()) == Some(&true) {
+                            if status.get(&pack.pack_name) == Some(&true) {
                                 pack.enable();
                             }
                         }
@@ -96,6 +94,8 @@ pub fn read_processors_from_appdir() -> Vec<ProcessorPack> {
                                 }
                             }
                         }
+
+                        packs.push(pack);
                     }
                 }
             }
@@ -106,6 +106,7 @@ pub fn read_processors_from_appdir() -> Vec<ProcessorPack> {
 }
 
 pub fn create_pack_dir(pack_name: &str) -> std::io::Result<()> {
+    ensure_dir(&app_conf::app_rule_dir())?;
     let dir = app_conf::app_rule_dir().join(pack_name);
     ensure_dir(&dir)
 }

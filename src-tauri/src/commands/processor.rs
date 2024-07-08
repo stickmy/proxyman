@@ -1,5 +1,6 @@
 use std::{future::Future, sync::Arc};
 
+use serde::Serialize;
 use tauri::{async_runtime::Mutex, State};
 use tokio::sync::mpsc::{self, Sender};
 
@@ -206,6 +207,26 @@ pub fn get_processor_content(mode: String, pack_name: String) -> Result<String, 
     };
 
     ret.map_err(|e| e.to_json())
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProcessorPackTransfer {
+    pack_name: String,
+    enable: bool,
+}
+
+#[tauri::command]
+pub fn get_processor_packs() -> Vec<ProcessorPackTransfer> {
+    let packs = read_processors_from_appdir();
+
+    let mut ret: Vec<ProcessorPackTransfer> = Vec::new();
+
+    for ref pack in packs {
+        ret.push(ProcessorPackTransfer { pack_name: pack.pack_name.to_string(), enable: pack.is_enable() })
+    }
+
+    ret
 }
 
 #[tauri::command]

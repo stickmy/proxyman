@@ -28,6 +28,7 @@ export const Headers: FC<{
             wrapper: true,
             cell: true,
           }}
+          rowKey="key"
           columns={[
             {
               key: "name",

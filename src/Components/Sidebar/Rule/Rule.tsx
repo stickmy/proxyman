@@ -1,8 +1,10 @@
 import React, { useRef, useState } from "react";
-import { Drawer } from "@arco-design/web-react";
+import { Drawer, Collapse, Switch, Message } from "@arco-design/web-react";
 import { Redirect } from "@/Components/Sidebar/Rule/Editors/Redirect";
 import { Delay } from "@/Components/Sidebar/Rule/Editors/Delay";
 import { RuleMode } from "@/Events/ConnectionEvents";
+import { usePackStore } from "./Hooks/usePacks";
+import { updateProcessPackStatus } from "@/Commands/Commands";
 import "./rule.css";
 
 const rules = [
@@ -20,7 +22,10 @@ export const Rule = () => {
   const [openStatus, setOpenStatus] = useState<boolean>(false);
   const [ruleMode, setRuleMode] = useState<RuleMode>();
 
-  const openRuleEditor = (mode: RuleMode) => {
+  const packStore = usePackStore();
+
+  const openRuleEditor = (mode: RuleMode, packName: string) => {
+    packStore.setCurrentPack(packName);
     setOpenStatus(true);
     setRuleMode(mode);
   };
@@ -33,7 +38,9 @@ export const Rule = () => {
     if (editorSaveHandler.current) {
       try {
         await editorSaveHandler.current();
-      } catch (error: any) {}
+      } catch (error: any) {
+        Message.error(`保存失败: ${error}`)
+      }
     }
   };
 
@@ -41,20 +48,46 @@ export const Rule = () => {
     editorSaveHandler.current = handler;
   };
 
+  const updatePackStatus = async (packName: string, enable: boolean) => {
+    try {
+      const ret = await updateProcessPackStatus(packName, enable);
+      packStore.updatePackStatus(packName, enable);
+    } catch (error) {
+      Message.error(`${enable ? "开启" : "关闭"}规则失败`);
+    }
+  };
+
   return (
     <>
-      <ul className="sidebar-item">
-        {rules.map(({ label, mode }) => (
-          <li
-            key={mode}
-            data-active={mode === ruleMode}
-            className="transition cursor-pointer"
-            onClick={() => openRuleEditor(mode)}
+      <Collapse lazyload={false} bordered={false}>
+        {packStore.packs.map((pack) => (
+          <Collapse.Item
+            name={pack.packName}
+            key={pack.packName}
+            header={<span>{pack.packName}</span>}
+            extra={
+              <Switch
+                size="small"
+                checked={pack.enable}
+                onChange={(enable) => updatePackStatus(pack.packName, enable)}
+              />
+            }
           >
-            {label}
-          </li>
+            <ul className="sidebar-item">
+              {rules.map(({ label, mode }) => (
+                <li
+                  key={mode}
+                  data-active={mode === ruleMode}
+                  className="transition cursor-pointer"
+                  onClick={() => openRuleEditor(mode, pack.packName)}
+                >
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </Collapse.Item>
         ))}
-      </ul>
+      </Collapse>
       <Drawer
         title={null}
         footer={null}

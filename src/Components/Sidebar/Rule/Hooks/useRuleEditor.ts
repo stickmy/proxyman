@@ -5,6 +5,7 @@ import { getProcessorContent, setProcessor } from "@/Commands/Commands";
 import { RuleMode } from "@/Events/ConnectionEvents";
 import { useTheme } from "@/Components/TopBar/useTheme";
 import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
+import { usePackStore } from "./usePacks";
 
 export const useRuleEditor = (
   elemId: string,
@@ -12,6 +13,8 @@ export const useRuleEditor = (
   setSaveAction: RuleEditorProps["setSaveAction"],
   defaultValue?: string
 ) => {
+  const { currentPack } = usePackStore();
+
   const { theme } = useTheme();
 
   const serializationKey = getRuleModeSerializationKey(mode);
@@ -20,12 +23,16 @@ export const useRuleEditor = (
   const valueRef = useRef<string>();
 
   setSaveAction(async () => {
+    if (!currentPack) {
+      return;
+    }
+
     if (editorRef.current) {
       const value = editorRef.current.getValue();
 
       if (value === valueRef.current) return;
 
-      await setProcessor(serializationKey, value);
+      await setProcessor(currentPack, serializationKey, value);
 
       valueRef.current = value;
     }
@@ -47,7 +54,9 @@ export const useRuleEditor = (
         editorRef.current = editor;
 
         try {
-          const content = await getProcessorContent(serializationKey);
+          const content = currentPack
+            ? await getProcessorContent(currentPack, serializationKey)
+            : undefined;
           if (content) {
             editor.setValue(content);
           } else if (defaultValue) {

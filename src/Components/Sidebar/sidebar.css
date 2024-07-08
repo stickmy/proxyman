@@ -2,3 +2,8 @@
   border: none !important;
   background-color: var(--color-neutral-2);
 }
+
+.arco-collapse-item-header-title {
+    width: 100%;
+    display: inline-block;
+}
