@@ -58,7 +58,7 @@ pub fn read_processors_from_appdir() -> Vec<ProcessorPack> {
             if let Ok(metadata) = metadata {
                 if metadata.is_dir() {
                     if let Ok(dir_name) = dir.file_name().into_string() {
-                        let mut pack = ProcessorPack::new(dir_name);
+                        let mut pack = ProcessorPack::new(dir_name, false);
 
                         // initialize pack enable status
                         if let Ok(ref status) = pack_status {

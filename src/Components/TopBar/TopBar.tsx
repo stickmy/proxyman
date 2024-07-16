@@ -1,5 +1,6 @@
-import { Button, Input, Message, Tooltip } from "@arco-design/web-react";
-import { MouseEvent, useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { Input, Button, Tooltip } from "@nextui-org/react";
+import { MouseEvent, useEffect, useState, ChangeEvent } from "react";
 import {
   checkTlsCertInstalled,
   getProxyStatus,
@@ -7,25 +8,30 @@ import {
   startProxy,
   stopProxy,
 } from "@/Commands/Commands";
-import {
-  IconCopy,
-  IconDesktop,
-  IconMoon,
-  IconPause,
-  IconPlayArrow,
-  IconSafe,
-  IconSun,
-  IconStop,
-} from "@arco-design/web-react/icon";
 import { useSystemProxy } from "@/Components/TopBar/useSystemProxy";
 import { useConnectionStore } from "@/Store/ConnectionStore";
 import { useTheme } from "@/Components/TopBar/useTheme";
-import "./topbar.css";
+import {
+  CopyIcon,
+  SunIcon,
+  MoonIcon,
+  NetworkIcon,
+  SecureIcon,
+  ClearIcon,
+  PauseIcon,
+  PlayIcon,
+  RightLayoutIcon,
+  BottomLayoutIcon,
+} from "@/Icons";
+import { useLayout } from "./useLayout";
+import "./index.css";
 
 const DEFAULT_PORT: string = "9000";
 
 export const TopBar = () => {
   const { theme, setTheme } = useTheme();
+  const [layout, setLayout] = useLayout();
+
   const { clearConnections } = useConnectionStore();
   const [status, setStatus] = useState<boolean>(false);
 
@@ -40,13 +46,13 @@ export const TopBar = () => {
     turnOff: turnOffSystemProxy,
   } = useSystemProxy(port);
 
-  function onPortChange(value: string) {
+  function onPortChange(event: ChangeEvent<HTMLInputElement>) {
     if (status) {
-      Message.info(`请先停止代理服务, 再修改端口号`);
+      toast(`请先停止代理服务, 再修改端口号`);
       return;
     }
 
-    setPort(value);
+    setPort(event.target.value);
   }
 
   async function getStatus() {
@@ -67,30 +73,19 @@ export const TopBar = () => {
 
     setInstalling(true);
 
-    Message.loading({
-      id: "install_ca",
-      content: "TLS 证书安装中",
+    const installTlsDefer = installTlsCert();
+
+    toast.promise(installTlsDefer, {
+      loading: "TLS 证书安装中",
+      success: "安装成功",
+      error: "安装失败",
     });
 
     try {
-      const success = await installTlsCert();
+      const success = await installTlsDefer;
       if (success) {
-        Message.success({
-          id: "install_ca",
-          content: "安装成功",
-        });
         setCaInstalled(true);
-      } else {
-        Message.error({
-          id: "install_ca",
-          content: "安装失败",
-        });
       }
-    } catch (error: any) {
-      Message.error({
-        id: "install_ca",
-        content: error,
-      });
     } finally {
       setInstalling(false);
     }
@@ -101,7 +96,7 @@ export const TopBar = () => {
 
     const caInstalled = await checkTlsInstalled();
     if (!caInstalled) {
-      Message.info(`请先安装 TLS 证书`);
+      toast(`请先安装 TLS 证书`);
       return;
     }
 
@@ -109,8 +104,7 @@ export const TopBar = () => {
       await startProxy(parseInt(port));
       setStatus(true);
     } catch (error: any) {
-      Message.error({
-        content: error,
+      toast.error(error, {
         duration: 3000,
       });
     }
@@ -131,59 +125,60 @@ export const TopBar = () => {
     navigator.clipboard
       .writeText(`export https_proxy=http://127.0.0.1:${port};`)
       .then(() => {
-        Message.success(`终端代理命令已复制`);
+        toast.success(`终端代理命令已复制`);
       })
       .catch((err) => {
-        Message.error(`复制失败`);
+        toast.error(`复制失败`);
       });
   }
 
   return (
-    <div className="pl-2 pr-2 pb-2 pt-2 flex flex-row items-center top-bar">
+    <div className="pl-2 pr-2 pb-2 pt-2 flex flex-row items-center bg-content1">
       <Input
-        size="small"
-        className="address"
-        addBefore="代理地址"
+        radius="sm"
+        size="sm"
         value={port}
         onChange={onPortChange}
-        prefix={<span>127.0.0.1:</span>}
-        suffix={
-          <Tooltip mini content="复制终端代理命令">
-            <IconCopy
-              className="copy-terminal"
-              onClick={copyTerminalProxyCmd}
-            />
-          </Tooltip>
+        startContent={
+          <div className="pointer-events-none flex items-center">
+            <span className="text-default-400 text-small">127.0.0.1:</span>
+          </div>
+        }
+        endContent={
+          <div
+            className="flex items-center pl-2 cursor-pointer"
+            onClick={copyTerminalProxyCmd}
+          >
+            <CopyIcon />
+          </div>
         }
       />
-      <div className="mr-4 ml-4 shrink-0">
+      <div className="flex mr-4 ml-4 shrink-0">
         <Tooltip
-          mini
+          size="sm"
           content={theme === "light" ? "切换暗黑模式" : "切换亮色模式"}
         >
           <div className="sys-setting-wrap">
             {theme === "light" ? (
-              <IconSun
-                className="sys-setting"
-                data-enable={true}
+              <MoonIcon
+                className="sys-setting cursor-pointer"
                 onClick={() => setTheme("dark")}
               />
             ) : (
-              <IconMoon
-                className="sys-setting"
-                data-enable={true}
+              <SunIcon
+                className="sys-setting cursor-pointer"
                 onClick={() => setTheme("light")}
               />
             )}
           </div>
         </Tooltip>
         <Tooltip
-          mini
+          size="sm"
           content={enableSystemProxy ? "系统代理已开启" : "系统代理未开启"}
         >
           <div className="sys-setting-wrap">
-            <IconDesktop
-              className="sys-setting"
+            <NetworkIcon
+              className="sys-setting cursor-pointer"
               data-enable={enableSystemProxy}
               onClick={() => {
                 if (enableSystemProxy) {
@@ -196,33 +191,63 @@ export const TopBar = () => {
           </div>
         </Tooltip>
         <Tooltip
-          mini
+          size="sm"
           content={caInstalled ? "TLS 证书已安装" : "TLS 证书未安装"}
         >
           <div className="sys-setting-wrap">
-            <IconSafe
-              className="sys-setting"
+            <SecureIcon
+              className="sys-setting cursor-pointer"
               data-enable={caInstalled}
               onClick={installCa}
             />
           </div>
         </Tooltip>
-        <Tooltip mini content="清空请求数据">
+        <Tooltip
+          size="sm"
+          content={
+            layout === "bottom" ? "切换至详情右侧布局" : "切换至详情底部布局"
+          }
+        >
           <div className="sys-setting-wrap">
-            <IconStop className="sys-setting" onClick={clearConnections} />
+            {layout === "bottom" ? (
+              <RightLayoutIcon
+                className="sys-setting cursor-pointer"
+                onClick={() => setLayout("right")}
+              />
+            ) : (
+              <BottomLayoutIcon
+                className="sys-setting cursor-pointer"
+                onClick={() => setLayout("bottom")}
+              />
+            )}
+          </div>
+        </Tooltip>
+        <Tooltip size="sm" content="清空请求数据">
+          <div className="sys-setting-wrap">
+            <ClearIcon
+              className="sys-setting cursor-pointer"
+              onClick={clearConnections}
+            />
           </div>
         </Tooltip>
       </div>
       {status ? (
-        <Button icon={<IconPause />} className="proxy-btn" onClick={stop}>
+        <Button
+          size="md"
+          className="h-8"
+          variant="solid"
+          startContent={<PauseIcon size={24} className="text-primary-foreground" />}
+          onClick={stop}
+        >
           停止
         </Button>
       ) : (
         <Button
-          type="primary"
-          status="success"
-          icon={<IconPlayArrow />}
-          className="proxy-btn"
+          size="md"
+          className="h-8"
+          variant="solid"
+          color="primary"
+          startContent={<PlayIcon size={24} className="text-primary-foreground" />}
           onClick={start}
         >
           开启

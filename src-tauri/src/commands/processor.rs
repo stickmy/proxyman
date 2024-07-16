@@ -27,7 +27,7 @@ pub(crate) enum ProcessorChannelMessage {
     Delay(String, RequestDelayRule),
     Response(String, ResponseMapping),
     RemoveResponse(String, String),
-    AddPack(String),
+    AddPack(String, bool),
     RemovePack(String),
     UpdatePackStatus(String, bool),
 }
@@ -51,8 +51,8 @@ pub(crate) fn init() -> (
             let mut processor_setter = processor_setter.lock().await;
 
             match message {
-                ProcessorChannelMessage::AddPack(pack_name) => {
-                    processor_setter.add_pack(ProcessorPack::new(pack_name));
+                ProcessorChannelMessage::AddPack(pack_name, enable) => {
+                    processor_setter.add_pack(ProcessorPack::new(pack_name, enable));
                 }
                 ProcessorChannelMessage::RemovePack(pack_name) => {
                     processor_setter.remove_pack(pack_name);
@@ -233,6 +233,7 @@ pub fn get_processor_packs() -> Vec<ProcessorPackTransfer> {
 pub async fn add_processor_pack(
     state: State<'_, ProxyState>,
     pack_name: String,
+    enable: bool,
 ) -> Result<(), String> {
     let ret = create_pack_dir(pack_name.as_str());
 
@@ -243,7 +244,7 @@ pub async fn add_processor_pack(
     let mut state = state.lock().await;
 
     if state.is_some() {
-        let msg = ProcessorChannelMessage::AddPack(pack_name);
+        let msg = ProcessorChannelMessage::AddPack(pack_name, enable);
 
         match state.as_mut() {
             Some((_, sender, _, _, _)) => {

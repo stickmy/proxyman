@@ -10,10 +10,10 @@ pub struct ProcessorPack {
 }
 
 impl ProcessorPack {
-    pub(crate) fn new(pack_name: String) -> Self {
+    pub(crate) fn new(pack_name: String, enable: bool) -> Self {
         Self {
             pack_name,
-            enable: false,
+            enable,
             redirect: RequestRedirectProcessor::default(),
             delay: RequestDelayProcessor::default(),
             response: ResponseProcessor::default(),

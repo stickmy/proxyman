@@ -1,0 +1,57 @@
+.connections {
+  background-color: var(--bg-section-color);
+}
+
+.conn-detail-drawer .arco-drawer-content > div {
+  height: 100%;
+}
+
+.req-res-panel .arco-tabs-content-horizontal {
+  /* 40px: Tab Header height */
+  height: calc(100% - 40px) !important;
+}
+
+.conn-detail-drawer .arco-tabs-content-horizontal {
+  /* 32px: Tab Header height */
+  height: calc(100% - 32px);
+}
+
+.conn-detail-drawer .arco-tabs-content-inner {
+  height: 100%;
+}
+
+.conn-uri {
+  min-width: 180px;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.uri-copy {
+  margin-left: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.conn-filters {
+}
+
+body.dark .conn-filters .filter:hover {
+  background: hsl(var(--nextui-success-200));
+  transition: 0.1s ease-in background-color;
+}
+
+body.dark .conn-filters .filter[data-active="true"] {
+  background: hsl(var(--nextui-success-200));
+  transition: 0.1s ease-in background-color;
+}
+
+body.light .conn-filters .filter:hover {
+  background: hsl(var(--nextui-success-500));
+  transition: 0.1s ease-in background-color;
+}
+
+body.light .conn-filters .filter[data-active="true"] {
+  background: hsl(var(--nextui-success-500));
+  transition: 0.1s ease-in background-color;
+}

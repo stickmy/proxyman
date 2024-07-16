@@ -71,9 +71,10 @@ export const getProcessorPacks = async () => {
   );
 };
 
-export const addProcessPack = async (packName: string) => {
+export const addProcessPack = async (packName: string, enable?: boolean) => {
   return invokeWithLogging("plugin:proxy|add_processor_pack", {
     packName,
+    enable: enable ?? false,
   });
 };
 
@@ -89,6 +90,7 @@ export const updateProcessPackStatus = async (
 
 export interface AppSetting {
   theme: ThemeType;
+  layout: "bottom" | "right",
 }
 
 export const setAppSetting = async (setting: AppSetting) => {

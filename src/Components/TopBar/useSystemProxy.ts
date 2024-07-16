@@ -1,5 +1,5 @@
 import { turnOffSystemProxy, turnOnSystemProxy } from "@/Commands/Commands";
-import { Notification } from "@arco-design/web-react";
+import { toast } from "react-hot-toast";
 import { useState } from "react";
 
 export const useSystemProxy = (port: string) => {
@@ -16,10 +16,10 @@ export const useSystemProxy = (port: string) => {
       }
 
       if (!ret) {
-        Notification.warning({ content: "系统代理开启失败" });
+        toast.error("系统代理开启失败");
       }
     } catch (error: any) {
-      Notification.warning({ content: error });
+      toast.error(error);
     } finally {
       setSwitching(false);
     }
@@ -35,10 +35,10 @@ export const useSystemProxy = (port: string) => {
       }
 
       if (!ret) {
-        Notification.warning({ content: "系统代理关闭失败" });
+        toast.error("系统代理关闭失败");
       }
     } catch (error: any) {
-      Notification.warning({ content: error });
+      toast.error(error);
     } finally {
       setSwitching(false);
     }

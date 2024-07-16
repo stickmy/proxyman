@@ -11,12 +11,14 @@ use crate::error::{
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct AppSetting {
     theme: String,
+    layout: String,
 }
 
 impl Default for AppSetting {
     fn default() -> Self {
         Self {
             theme: String::from("dark"),
+            layout: String::from("right"),
         }
     }
 }

@@ -1,0 +1,20 @@
+.sidebar {
+  width: var(--sidebar-width);
+}
+
+.sidebar > ul > li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  height: var(--sidebar-width);
+}
+
+.sidebar > ul > li:hover {
+  background-color: hsl(var(--nextui-default-100));
+}
+
+.arco-collapse-item-header-title {
+  width: 100%;
+  display: inline-block;
+}

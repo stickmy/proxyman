@@ -5,46 +5,37 @@ import {
   RouterProvider,
   Route,
 } from "react-router-dom";
-import { ResizeBox } from "@arco-design/web-react";
-import { Sidebar } from "@/Components/Sidebar/Sidebar";
-import { Connections } from "@/Components/Connections/Connections";
+import { Toaster } from "react-hot-toast";
+import { Connections } from "@/Routes/Connections/Connections";
 import { TopBar } from "@/Components/TopBar/TopBar";
 import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
-
-import "@arco-design/web-react/dist/css/arco.css";
-import "./App.css";
 import { Root } from "./Routes/Root";
+import { Pack } from "./Routes/Pack/Pack";
+import { Rule } from "./Routes/Rule/Rule";
+import "./App.css";
 
 dayjs.locale("zh-cn");
 
 function App() {
   return (
-    <div className="app w-full h-screen">
+    <div className="w-full h-screen">
+      <Toaster toastOptions={{
+        className: "text-tiny"
+      }} />
       <TopBar />
       <RouterProvider
         router={createBrowserRouter(
           createRoutesFromElements(
             <Route path="/" element={<Root />}>
               <Route element={<Connections />} index />
+              <Route element={<Pack />} path="pack/:packName?">
+                <Route element={<Rule />} path=":mode?" />
+              </Route>
             </Route>
           )
         )}
       />
-      {/* <ResizeBox.Split
-        className="w-full"
-        style={{ height: `calc(100% - 53px)` }}
-        direction="horizontal"
-        max="300px"
-        min="180px"
-        size="240px"
-        panes={[
-          <Sidebar />,
-          <main className="main">
-            <Connections />
-          </main>,
-        ]}
-      /> */}
     </div>
   );
 }
