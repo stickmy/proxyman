@@ -5,14 +5,6 @@
 html,
 body,
 #root {
-  /* color: #0f0f0f; */
-  /* background-color: #f6f6f6; */
-/*
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%; */
   width: 100%;
   height: 100%;
 }
@@ -38,75 +30,6 @@ li {
   user-select: text !important;
 }
 
-/* override */
-
-.arco-message {
-  border: none;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-body[arco-theme="dark"] .arco-message {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-}
-
-.arco-tooltip-content {
-  border: none !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
-}
-
-body[arco-theme="dark"] .arco-tooltip-content {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important;
-}
-
-.arco-tooltip-arrow {
-  border-color: transparent !important;
-}
-
-.arco-icon {
-  font-size: 14px;
-  stroke-width: 2;
-}
-
-.arco-input-group-addbefore {
-  color: #606278;
-}
-
-.arco-input-inner-wrapper {
-  border-width: 2px !important;
-}
-
-.arco-input-inner-wrapper-focus {
-  border-radius: 0 !important;
-}
-
-/*.arco-input-inner-wrapper-focus {*/
-/*  !*border-color: rgb(242, 243, 245) !important;*!*/
-/*  !*border-width: 1px !important;*!*/
-/*  !*background: var(--color-fill-3) !important;*!*/
-/*  border-radius: 0 !important;*/
-/*  outline: 2px var(--primary-color) solid;*/
-/*  border: none !important;*/
-/*}*/
-
-/*.arco-input-inner-wrapper:focus,*/
-/*.arco-input-inner-wrapper-focus {*/
-/*  border: none !important;;*/
-/*}*/
-
-.arco-input-inner-wrapper-small {
-  height: 32px !important;
-}
-
-.arco-input-size-small {
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-.arco-collapse-item-header {
-  user-select: none;
-  border-bottom: none;
-}
-
 input {
   -webkit-appearance: textfield;
 }
@@ -121,40 +44,4 @@ input::-webkit-credentials-auto-fill-button {
   position: absolute;
   pointer-events: none;
   right: 0;
-}
-
-.arco-collapse-item-content-box {
-  padding-left: 0;
-  padding-right: 0;
-}
-
-/* Acro Table overriding */
-.arco-table-border .arco-table-container {
-  border-top: none;
-  border-right: none;
-}
-
-.arco-table-border .arco-table-container::before {
-  display: none;
-}
-
-/*.arco-table-container,*/
-.arco-table table thead tr:first-child th:first-child {
-  border-radius: 0;
-}
-
-.arco-table-size-mini .arco-table-td {
-  padding: 6px 16px;
-}
-
-.arco-table-border .arco-table-td:first-child {
-  border-left: none;
-}
-
-.arco-table-td {
-  border-bottom: none !important;
-}
-
-.arco-table table thead tr:first-child th:first-child {
-  border-radius: var(--border-radius-medium) 0 0 0;
 }

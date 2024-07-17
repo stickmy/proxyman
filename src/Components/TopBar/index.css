@@ -1,23 +1,10 @@
-.address .arco-input-group-addbefore {
-  border-right: none;
-}
-
-.address .arco-input {
-  padding-left: 2px !important;
-  line-height: 29px;
-}
-
-.copy-terminal {
-  cursor: pointer;
-}
-
 .sys-setting-wrap {
   border-radius: 2px;
   display: inline-block;
   padding: 5px 8px;
   transition: 0.1s ease-in background-color;
   &:hover {
-    background-color: var(--bg-color);
+    background-color: hsl(var(--nextui-default-100));
   }
 }
 
@@ -29,16 +16,4 @@
 
 .sys-setting[data-enable="true"] {
   color: hsl(var(--nextui-success-500));
-}
-
-.proxy-btn {
-  /*box-shadow:  0 2px 2px rgba(0, 0, 0, 0.2);;*/
-}
-
-.proxy-btn:hover {
-  opacity: 0.9;
-  font-weight: 800;
-  svg {
-    stroke-width: 4;
-  }
 }
