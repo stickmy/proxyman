@@ -1,10 +1,11 @@
 import React, { FC, useEffect, useLayoutEffect, useRef, useState } from "react";
+import cls from "classnames";
 import dayjs from "dayjs";
 import { ResponseConnection, RuleMode } from "@/Events/ConnectionEvents";
 import { monaco } from "@/Monaco/Monaco";
 import { isJsonp } from "@/Routes/Connections/Detail/Helper";
 import toast from "react-hot-toast";
-import { Tabs, Tab } from "@nextui-org/react";
+import { Tabs, Tab, Chip } from "@nextui-org/react";
 import { removeResponseMapping, setProcessor } from "@/Commands/Commands";
 import { usePretty } from "./Hooks/usePretty";
 import { useConnActionStore } from "@/Routes/Connections/ConnActionStore";
@@ -136,8 +137,8 @@ export const Response: FC<{
         onSelectionChange={setActiveTab}
         radius="full"
         className="mt-3"
-        classNames = {{
-          panel: "h-full"
+        classNames={{
+          panel: "h-full",
         }}
       >
         <Tab title="Header" key="header">
@@ -145,6 +146,17 @@ export const Response: FC<{
         </Tab>
         <Tab title="Body" key="body">
           <div className="mb-[10px]">
+            <Chip
+              onClick={pretty}
+              size="sm"
+              className={cls(
+                "mr-1",
+                "cursor-pointer",
+                isPretty ? "bg-success-300" : "bg-default-100"
+              )}
+            >
+              格式化
+            </Chip>
             {/* <Button
               onClick={pretty}
               size="mini"

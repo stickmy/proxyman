@@ -18,7 +18,7 @@ export const Headers: FC<{
 
   return (
     <div className="headers scrollbar-hide">
-      <div className="mb-3 headers-tools flex flex-row items-center">
+      <div className="mb-3 headers-tools flex flex-row items-center bg-content1 z-10">
         <TableIcon
           className={cls("mr-1 cursor-pointer", { active: showTable })}
           onClick={() => setShowTable(true)}
@@ -29,7 +29,7 @@ export const Headers: FC<{
         />
       </div>
       {showTable ? (
-        <Table aria-label="Connection headers" hideHeader removeWrapper>
+        <Table aria-label="Connection headers" hideHeader removeWrapper fullWidth={false} layout="fixed">
           <TableHeader columns={columns}>
             {(column) => (
               <TableColumn key={column.key}>{column.label}</TableColumn>
@@ -46,8 +46,8 @@ export const Headers: FC<{
                 {(columnKey) => (
                   <TableCell
                     className={cls(
-                      "text-tiny border-1 border-default-400 border-solid rtl:first:border-r-0",
-                      columnKey === "name" ? "w-[300px]" : ""
+                      "text-tiny border-1 border-default-400 border-solid rtl:first:border-r-0 break-all",
+                      columnKey === "name" ? "w-[180px]" : ""
                     )}
                   >
                     {getKeyValue(item, columnKey)}
@@ -59,9 +59,9 @@ export const Headers: FC<{
         </Table>
       ) : (
         Object.keys(headers).map((key) => (
-          <div className="item" key={key}>
+          <div className="text-tiny mb-2" key={key}>
             <span className="inline-block mr-2 label">{key}</span>
-            <span className="value">{headers[key]}</span>
+            <span className="value break-all">{headers[key]}</span>
           </div>
         ))
       )}

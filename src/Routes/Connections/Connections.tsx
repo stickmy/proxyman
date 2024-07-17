@@ -97,7 +97,12 @@ export const Connections = () => {
           const value = get(conn, columnKey);
 
           return (
-            <Snippet symbol="" className="w-full" size="sm">
+            <Snippet
+              hideSymbol
+              className="w-full"
+              size="sm"
+              classNames={{ pre: "whitespace-normal break-all" }}
+            >
               {value}
             </Snippet>
           );
@@ -137,6 +142,9 @@ export const Connections = () => {
     <div className="flex flex-col h-full">
       <div className="z-20 px-2 py-2 bt-2 mb-2 flex flex-col select-none connections bg-content1">
         <Input
+          classNames={{
+            input: ["text-tiny"],
+          }}
           size="sm"
           startContent={
             <div className="flex items-center pr-2">
@@ -156,6 +164,9 @@ export const Connections = () => {
           height: "calc(100% - 96px)",
           position: "relative",
         }}
+        classNames={{
+          base: "overflow-hidden",
+        }}
         selectionMode="single"
         color="success"
         radius="sm"
@@ -166,10 +177,7 @@ export const Connections = () => {
       >
         <TableHeader columns={columns}>
           {(column) => (
-            <TableColumn
-              key={column.key}
-              width={column.key === "request.uri" ? 180 : undefined}
-            >
+            <TableColumn key={column.key} width={column.width}>
               {column.label}
             </TableColumn>
           )}
@@ -188,6 +196,7 @@ export const Connections = () => {
       </Table>
       <Drawer
         data-selectable
+        backdrop="transparent"
         placement={layout}
         className={
           layout === "bottom"
@@ -244,14 +253,17 @@ const columns = [
   {
     key: "PIN",
     label: "PIN",
+    width: 24,
   },
   {
     key: "response.status",
     label: "STATUS",
+    width: 64,
   },
   {
     key: "request.uri",
     label: "URI",
+    width: 400,
   },
   {
     key: "request.method",

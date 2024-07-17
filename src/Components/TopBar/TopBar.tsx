@@ -134,14 +134,20 @@ export const TopBar = () => {
 
   return (
     <div className="pl-2 pr-2 pb-2 pt-2 flex flex-row items-center bg-content1">
+      <span className="flex-shrink-0 text-tiny text-default-400 mr-2">
+        代理地址
+      </span>
       <Input
+        classNames={{
+          input: ["text-tiny"],
+        }}
         radius="sm"
         size="sm"
         value={port}
         onChange={onPortChange}
         startContent={
           <div className="pointer-events-none flex items-center">
-            <span className="text-default-400 text-small">127.0.0.1:</span>
+            <span className="text-default-400 text-tiny">127.0.0.1:</span>
           </div>
         }
         endContent={
@@ -149,7 +155,7 @@ export const TopBar = () => {
             className="flex items-center pl-2 cursor-pointer"
             onClick={copyTerminalProxyCmd}
           >
-            <CopyIcon />
+            <CopyIcon size={12} />
           </div>
         }
       />
@@ -236,18 +242,22 @@ export const TopBar = () => {
           size="md"
           className="h-8"
           variant="solid"
-          startContent={<PauseIcon size={24} className="text-primary-foreground" />}
+          startContent={
+            <PauseIcon size={24} className="text-primary-foreground" />
+          }
           onClick={stop}
         >
           停止
         </Button>
       ) : (
         <Button
-          size="md"
+          size="sm"
           className="h-8"
           variant="solid"
           color="primary"
-          startContent={<PlayIcon size={24} className="text-primary-foreground" />}
+          startContent={
+            <PlayIcon size={32} className="text-primary-foreground" />
+          }
           onClick={start}
         >
           开启

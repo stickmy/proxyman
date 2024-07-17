@@ -1,4 +1,5 @@
 import React, { FC, useLayoutEffect, useRef, useState } from "react";
+import cls from "classnames";
 import { RequestConnection } from "@/Events/ConnectionEvents";
 import { monaco } from "@/Monaco/Monaco";
 import {
@@ -7,9 +8,10 @@ import {
 } from "@/Routes/Connections/Detail/Helper";
 import dayjs from "dayjs";
 import { Headers } from "@/Routes/Connections/Detail/Headers";
-import { Tabs, Tab, Snippet } from "@nextui-org/react";
+import { Tabs, Tab, Snippet, Chip } from "@nextui-org/react";
 import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
 import { useTheme } from "@/Components/TopBar/useTheme";
+import { useDecodeURIComponent } from "./Hooks/useDecodeURIComponent";
 
 export const Request: FC<{
   request: RequestConnection;
@@ -20,8 +22,12 @@ export const Request: FC<{
 
   const reqMonacoRef = useRef<monaco.editor.IStandaloneCodeEditor>();
 
-  const isJsonReqBody = isJson(request.body);
+  const { isDecoded, decode } = useDecodeURIComponent(
+    reqMonacoRef,
+    request.body
+  );
 
+  const isJsonReqBody = isJson(request.body);
   useLayoutEffect(() => {
     if (activeTab !== "body") return;
 
@@ -75,11 +81,21 @@ export const Request: FC<{
           <Headers headers={request.headers} />
         </Tab>
         <Tab title="Body" key="body">
+          <div className="mb-[10px]">
+            <Chip
+              size="sm"
+              className={cls(
+                "cursor-pointer",
+                "mr-1",
+                isDecoded ? "bg-success-300" : "bg-default-100"
+              )}
+              onClick={decode}
+            >
+              decodeURIComponent
+            </Chip>
+          </div>
           {request.body.length !== 0 ? (
-            <div
-              id="req-body"
-              className="w-full h-full relative border border-gray4"
-            ></div>
+            <div id="req-body" className="w-full h-full relative"></div>
           ) : (
             <div>Empty</div>
           )}
