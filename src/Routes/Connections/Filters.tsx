@@ -2,6 +2,7 @@ import { Chip, Divider } from "@nextui-org/react";
 import { Connection } from "@/Store/ConnectionStore";
 import { useConnActionStore } from "@/Routes/Connections/ConnActionStore";
 import { FilterIcon } from "@/Icons/FilterIcon";
+import { usePinUriStore } from "@/Store/PinUriStore";
 
 interface Filter {
   label: string;
@@ -17,6 +18,11 @@ const status: Array<Filter> = ["100", "200", "300", "400", "500"].map(
         : false,
   })
 );
+
+const pin: Filter = {
+  label: "pin",
+  filter: (conn) => usePinUriStore.getState().pins.includes(conn.request.uri),
+};
 
 const versions: Array<Filter> = [
   {
@@ -117,6 +123,17 @@ export const Filters = () => {
         }
       >
         All
+      </Chip>
+      <Chip
+        variant="flat"
+        size="sm"
+        className="filter cursor-pointer px-2"
+        data-active={filter === pin.filter}
+        onClick={() =>
+          filter === pin.filter ? setFilter(undefined) : setFilter(pin.filter)
+        }
+      >
+        {pin.label}
       </Chip>
       <Divider orientation="vertical" />
       {versions.map((x) => (

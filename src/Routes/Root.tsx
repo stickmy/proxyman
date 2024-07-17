@@ -6,7 +6,7 @@ export const Root: FC = () => {
   return (
     <div
       className="flex flex-row box-border"
-      style={{ height: `calc(100% - 53px)` }}
+      style={{ height: `calc(100% - var(--topbar-height))` }}
     >
       <Sidebar />
       <div

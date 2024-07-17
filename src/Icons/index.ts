@@ -15,3 +15,4 @@ export * from "./BottomLayoutIcon";
 export * from "./RightLayoutIcon";
 export * from "./SearchIcon";
 export * from "./AddIcon";
+export * from "./PinIcon";

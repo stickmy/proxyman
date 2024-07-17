@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import {
   Input,
   Chip,
@@ -20,9 +20,10 @@ import { usePinUriStore } from "@/Store/PinUriStore";
 import dayjs from "dayjs";
 import { Filters } from "@/Routes/Connections/Filters";
 import { useConnActionStore } from "@/Routes/Connections/ConnActionStore";
-import { Drawer } from "../../Components/Drawer/Drawer";
-import { useLayout } from "../../Components/TopBar/useLayout";
+import { Drawer } from "@/Components/Drawer/Drawer";
+import { useLayout } from "@/Components/TopBar/useLayout";
 import { SearchIcon } from "@/Icons";
+import { Pin } from "./Pin";
 import "./index.css";
 
 export const Connections = () => {
@@ -30,7 +31,7 @@ export const Connections = () => {
 
   const { connections } = useConnectionStore();
   const { filter } = useConnActionStore();
-  const { currentPin, pinUri, unpinUri, pins } = usePinUriStore();
+  const { currentPin } = usePinUriStore();
 
   const { detailVisible, setDetailVisible } = useConnActionStore();
   const [detailConn, setDetailConnection] = useState<Connection>();
@@ -88,7 +89,8 @@ export const Connections = () => {
     (conn: Connection, columnKey: (typeof columns)[number]["key"] | number) => {
       switch (columnKey) {
         case "PIN":
-          return pins.includes(conn.request.uri) ? "Y" : "N";
+          const uri = conn.request.uri;
+          return <Pin uri={uri} />;
         case "response.status": {
           const value = get(conn, columnKey);
           return value ? <Status status={value} /> : <Spinner size="sm" />;
@@ -140,20 +142,20 @@ export const Connections = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="z-20 px-2 py-2 bt-2 mb-2 flex flex-col select-none connections bg-content1">
+      <div className="z-20 px-2 py-2 bt-2 mb-2 flex flex-col select-none bg-content1">
         <Input
-          classNames={{
-            input: ["text-tiny"],
-          }}
           size="sm"
+          classNames={{
+            input: "text-tiny",
+          }}
+          className="w-[600px]"
           startContent={
             <div className="flex items-center pr-2">
               <SearchIcon />
             </div>
           }
           value={uriKeyword}
-          onChange={(evt) => setUriKeyword(evt.target.value)}
-          className="w-[476px]"
+          onValueChange={setUriKeyword}
           placeholder="输入关键词进行过滤"
         />
         <Filters />
@@ -177,12 +179,12 @@ export const Connections = () => {
       >
         <TableHeader columns={columns}>
           {(column) => (
-            <TableColumn key={column.key} width={column.width}>
+            <TableColumn key={column.key} maxWidth={column.maxWidth}>
               {column.label}
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody items={connections} emptyContent={`Empty connections`}>
+        <TableBody items={renderConnections} emptyContent={`Empty connections`}>
           {(item) => (
             <TableRow key={item.id}>
               {(columnKey) => (
@@ -264,6 +266,7 @@ const columns = [
     key: "request.uri",
     label: "URI",
     width: 400,
+    maxWidth: 600,
   },
   {
     key: "request.method",

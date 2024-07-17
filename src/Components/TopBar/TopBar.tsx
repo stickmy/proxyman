@@ -133,7 +133,7 @@ export const TopBar = () => {
   }
 
   return (
-    <div className="pl-2 pr-2 pb-2 pt-2 flex flex-row items-center bg-content1">
+    <div className="pl-2 pr-2 pb-2 pt-2 flex flex-row items-center bg-content1" style={{ height: "var(--topbar-height)" }}>
       <span className="flex-shrink-0 text-tiny text-default-400 mr-2">
         代理地址
       </span>
@@ -239,11 +239,11 @@ export const TopBar = () => {
       </div>
       {status ? (
         <Button
-          size="md"
+          size="sm"
           className="h-8"
           variant="solid"
           startContent={
-            <PauseIcon size={24} className="text-primary-foreground" />
+            <PauseIcon size={32} className="text-primary-foreground" />
           }
           onClick={stop}
         >

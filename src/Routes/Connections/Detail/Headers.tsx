@@ -46,7 +46,7 @@ export const Headers: FC<{
                 {(columnKey) => (
                   <TableCell
                     className={cls(
-                      "text-tiny border-1 border-default-400 border-solid rtl:first:border-r-0 break-all",
+                      "text-tiny border-1 border-default-200 border-solid rtl:first:border-r-0 break-all",
                       columnKey === "name" ? "w-[180px]" : ""
                     )}
                   >

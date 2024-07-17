@@ -9,8 +9,12 @@
     top: 0;
     z-index: 99;
   }
+}
 
-  .active {
-    color: hsl(var(--nextui-success-200));
-  }
+body.dark .headers .active {
+  color: hsl(var(--nextui-success-200));
+}
+
+body.light .headers .active {
+  color: hsl(var(--nextui-success-400));
 }
