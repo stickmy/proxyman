@@ -1,5 +1,5 @@
-import { ThemeType } from "@/Components/TopBar/useTheme";
-import { invoke, InvokeArgs } from "@tauri-apps/api/tauri";
+import type { ThemeType } from "@/Components/TopBar/useTheme";
+import { type InvokeArgs, invoke } from "@tauri-apps/api/tauri";
 
 export const checkTlsCertInstalled = async () => {
   return invokeWithLogging<boolean>("plugin:proxy|check_cert_installed");
@@ -33,7 +33,7 @@ export const getProxyStatus = async (): Promise<boolean> => {
 
 export const getProcessorContent = async (
   packName: string,
-  mode: string
+  mode: string,
 ): Promise<string> => {
   return invokeWithLogging<string>("plugin:proxy|get_processor_content", {
     packName,
@@ -42,9 +42,9 @@ export const getProcessorContent = async (
 };
 
 export const setProcessor = async (
-  packName: String,
+  packName: string,
   mode: string,
-  content: string
+  content: string,
 ) => {
   return invokeWithLogging("plugin:proxy|set_processor", {
     packName,
@@ -67,7 +67,7 @@ export interface ProcessorPackTransfer {
 
 export const getProcessorPacks = async () => {
   return invokeWithLogging<ProcessorPackTransfer[]>(
-    "plugin:proxy|get_processor_packs"
+    "plugin:proxy|get_processor_packs",
   );
 };
 
@@ -80,7 +80,7 @@ export const addProcessPack = async (packName: string, enable?: boolean) => {
 
 export const updateProcessPackStatus = async (
   packName: string,
-  enable: boolean
+  enable: boolean,
 ) => {
   return invokeWithLogging("plugin:proxy|update_processor_pack_status", {
     packName,
@@ -90,7 +90,7 @@ export const updateProcessPackStatus = async (
 
 export interface AppSetting {
   theme: ThemeType;
-  layout: "bottom" | "right",
+  layout: "bottom" | "right";
 }
 
 export const setAppSetting = async (setting: AppSetting) => {
@@ -105,7 +105,7 @@ export const getAppSetting = async () => {
 
 const invokeWithLogging = async <T>(
   cmd: string,
-  args?: InvokeArgs
+  args?: InvokeArgs,
 ): Promise<T> => {
   console.debug("Invoke command - ", cmd, args);
 

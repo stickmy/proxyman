@@ -1,8 +1,8 @@
-import React, { FC } from "react";
-import { Tabs, Tab, Spinner } from "@nextui-org/react";
-import { Connection } from "@/Store/ConnectionStore";
 import { Request } from "@/Routes/Connections/Detail/Request";
 import { Response } from "@/Routes/Connections/Detail/Response";
+import type { Connection } from "@/Store/ConnectionStore";
+import { Spinner, Tab, Tabs } from "@nextui-org/react";
+import React, { type FC } from "react";
 import "./index.css";
 
 export const ConnectionDetail: FC<{
@@ -12,7 +12,7 @@ export const ConnectionDetail: FC<{
     <Tabs
       aria-label="Connection detail"
       classNames={{
-        tabList: "w-full"
+        tabList: "w-full",
       }}
     >
       <Tab key="request" title="Request" className="h-full">

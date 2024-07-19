@@ -1,18 +1,24 @@
-import React, { FC, useEffect, useLayoutEffect, useRef, useState } from "react";
-import cls from "classnames";
-import dayjs from "dayjs";
-import { ResponseConnection, RuleMode } from "@/Events/ConnectionEvents";
-import { monaco } from "@/Monaco/Monaco";
-import { isJsonp } from "@/Routes/Connections/Detail/Helper";
-import toast from "react-hot-toast";
-import { Tabs, Tab, Chip } from "@nextui-org/react";
 import { removeResponseMapping, setProcessor } from "@/Commands/Commands";
-import { usePretty } from "./Hooks/usePretty";
-import { useConnActionStore } from "@/Routes/Connections/ConnActionStore";
-import { Headers } from "@/Routes/Connections/Detail/Headers";
 import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
 import { useTheme } from "@/Components/TopBar/useTheme";
+import { type ResponseConnection, RuleMode } from "@/Events/ConnectionEvents";
+import type { monaco } from "@/Monaco/Monaco";
+import { useConnActionStore } from "@/Routes/Connections/ConnActionStore";
+import { Headers } from "@/Routes/Connections/Detail/Headers";
+import { isJsonp } from "@/Routes/Connections/Detail/Helper";
 import { usePackStore } from "@/Routes/Rule/usePacks";
+import { Chip, Tab, Tabs } from "@nextui-org/react";
+import cls from "classnames";
+import dayjs from "dayjs";
+import React, {
+  type FC,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import toast from "react-hot-toast";
+import { usePretty } from "./Hooks/usePretty";
 
 export const Response: FC<{
   uri: string;
@@ -29,7 +35,7 @@ export const Response: FC<{
   const { isPretty, pretty } = usePretty(resMonacoRef, response.body);
 
   const contentTypeKey = Object.keys(response.headers).find(
-    (x) => x.toLowerCase() === "content-type"
+    x => x.toLowerCase() === "content-type",
   );
 
   useLayoutEffect(() => {
@@ -64,7 +70,7 @@ export const Response: FC<{
   useEffect(() => {
     if (!beEditing) {
       // Response 规则的生命周期是 session 周期, 它的设置也不需要指定 pack, 因此选取任一开启的 pack 即可
-      const pack = packs.find((x) => x.enable);
+      const pack = packs.find(x => x.enable);
 
       if (!pack) {
         toast("请开启任一规则");
@@ -78,7 +84,6 @@ export const Response: FC<{
       if (body === response.body) return;
 
       const rule = asProcessorRule(uri, response, body);
-
       (async () => {
         try {
           await setProcessor(pack.packName, RuleMode.Response, rule);
@@ -93,7 +98,7 @@ export const Response: FC<{
   const { setDetailVisible } = useConnActionStore();
 
   const dropEditedResponse = async () => {
-    const pack = packs.find((x) => x.enable);
+    const pack = packs.find(x => x.enable);
 
     if (!pack) {
       toast("请开启任一规则");
@@ -104,14 +109,14 @@ export const Response: FC<{
       await removeResponseMapping(pack.packName, uri);
       setDetailVisible(false);
     } catch (error: any) {
-      toast.error(`重置失败`);
+      toast.error("重置失败");
     }
   };
 
   const notStringLike = !!(
     contentTypeKey &&
-    ["image", "octet-stream", "media"].some((type) =>
-      response.headers[contentTypeKey].includes(type)
+    ["image", "octet-stream", "media"].some(type =>
+      response.headers[contentTypeKey].includes(type),
     )
   );
 
@@ -152,7 +157,7 @@ export const Response: FC<{
               className={cls(
                 "mr-1",
                 "cursor-pointer",
-                isPretty ? "bg-success-300" : "bg-default-100"
+                isPretty ? "bg-success-300" : "bg-default-100",
               )}
             >
               格式化
@@ -192,7 +197,7 @@ export const Response: FC<{
               display:
                 !notStringLike && response.body.length !== 0 ? "block" : "none",
             }}
-          ></div>
+          />
         </Tab>
       </Tabs>
     </div>
@@ -201,7 +206,7 @@ export const Response: FC<{
 
 function getBodyLanguage(response: ResponseConnection): string {
   const contentTypeKey = Object.keys(response.headers).find(
-    (x) => x.toLowerCase() === "content-type"
+    x => x.toLowerCase() === "content-type",
   );
   if (!contentTypeKey) return "text";
 
@@ -213,11 +218,11 @@ function getBodyLanguage(response: ResponseConnection): string {
     contentType.startsWith("application/manifest+json")
   ) {
     return "json";
-  } else if (contentType.startsWith("text/html")) {
-    return "html";
-  } else {
-    return "text";
   }
+  if (contentType.startsWith("text/html")) {
+    return "html";
+  }
+  return "text";
 }
 
 function getBodyModel(response: ResponseConnection) {
@@ -241,7 +246,7 @@ function getBodyModel(response: ResponseConnection) {
 function asProcessorRule(
   uri: string,
   response: ResponseConnection,
-  body: string
+  body: string,
 ): string {
   // req pattern
   // version status
@@ -249,10 +254,11 @@ function asProcessorRule(
   // header2
   // empty line(body parts separator)
   // body parts
-  let versionStatus = `${response.version} ${response.status}`;
-  let headers = Object.entries(response.headers)
+  const versionStatus = `${response.version} ${response.status}`;
+  const headers = Object.entries(response.headers)
     .map(([k, v]) => `${k}:${v}`)
     .join("\n");
 
+  // biome-ignore lint: the format is more clearly.
   return uri + "\n" + versionStatus + "\n" + headers + "\n\n" + body;
 }

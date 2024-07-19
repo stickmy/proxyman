@@ -1,6 +1,6 @@
-import { FC, useEffect } from "react";
-import { useRuleEditor } from "@/Routes/Rule/useRuleEditor";
 import { RuleMode } from "@/Events/ConnectionEvents";
+import { useRuleEditor } from "@/Routes/Rule/useRuleEditor";
+import { type FC, useEffect } from "react";
 import { NavLink, useNavigate, useParams } from "react-router-dom";
 
 const RULE_EDITOR_ELEM_ID = "rule-editor";
@@ -11,7 +11,7 @@ export const Rule: FC = () => {
 
   const { setMode, setPackName } = useRuleEditor(
     RULE_EDITOR_ELEM_ID,
-    packName!
+    packName!,
   );
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export const Rule: FC = () => {
     if (!mode) {
       navigate(RuleMode.Redirect, { replace: true });
     }
-  }, [mode, packName]);
+  }, [mode, packName, navigate]);
 
   return (
     <div className="w-full h-full flex flex-row">
@@ -51,7 +51,7 @@ export const Rule: FC = () => {
         id={RULE_EDITOR_ELEM_ID}
         className="w-full h-full"
         style={{ display: mode ? "block" : "none" }}
-      ></div>
+      />
     </div>
   );
 };

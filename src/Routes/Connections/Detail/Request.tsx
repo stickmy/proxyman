@@ -1,16 +1,16 @@
-import React, { FC, useLayoutEffect, useRef, useState } from "react";
-import cls from "classnames";
-import { RequestConnection } from "@/Events/ConnectionEvents";
-import { monaco } from "@/Monaco/Monaco";
+import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
+import { useTheme } from "@/Components/TopBar/useTheme";
+import type { RequestConnection } from "@/Events/ConnectionEvents";
+import type { monaco } from "@/Monaco/Monaco";
+import { Headers } from "@/Routes/Connections/Detail/Headers";
 import {
   isJson,
   tryStringifyWithSpaces,
 } from "@/Routes/Connections/Detail/Helper";
+import { Chip, Snippet, Tab, Tabs } from "@nextui-org/react";
+import cls from "classnames";
 import dayjs from "dayjs";
-import { Headers } from "@/Routes/Connections/Detail/Headers";
-import { Tabs, Tab, Snippet, Chip } from "@nextui-org/react";
-import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
-import { useTheme } from "@/Components/TopBar/useTheme";
+import React, { type FC, useLayoutEffect, useRef, useState } from "react";
 import { useDecodeURIComponent } from "./Hooks/useDecodeURIComponent";
 
 export const Request: FC<{
@@ -24,7 +24,7 @@ export const Request: FC<{
 
   const { isDecoded, decode } = useDecodeURIComponent(
     reqMonacoRef,
-    request.body
+    request.body,
   );
 
   const isJsonReqBody = isJson(request.body);
@@ -43,7 +43,7 @@ export const Request: FC<{
         });
       }
     }, 100);
-  }, [activeTab]);
+  }, [activeTab, isJsonReqBody, request.body]);
 
   return (
     <div className="flex flex-col h-full">
@@ -87,7 +87,7 @@ export const Request: FC<{
               className={cls(
                 "cursor-pointer",
                 "mr-1",
-                isDecoded ? "bg-success-300" : "bg-default-100"
+                isDecoded ? "bg-success-300" : "bg-default-100",
               )}
               onClick={decode}
             >
@@ -95,7 +95,7 @@ export const Request: FC<{
             </Chip>
           </div>
           {request.body.length !== 0 ? (
-            <div id="req-body" className="w-full h-full relative"></div>
+            <div id="req-body" className="w-full h-full relative" />
           ) : (
             <div>Empty</div>
           )}

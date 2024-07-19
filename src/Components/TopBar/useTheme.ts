@@ -4,10 +4,10 @@ import { create } from "zustand";
 export type ThemeType = "light" | "dark";
 
 const getSystemPreferColorScheme = (
-  delayUpdator: (theme: ThemeType) => void
+  delayUpdator: (theme: ThemeType) => void,
 ): ThemeType => {
   // 初始化返回系统偏好, 随后采用用户设置中的主题配置
-  getAppSetting().then((setting) => {
+  getAppSetting().then(setting => {
     delayUpdator(setting.theme);
   });
 
@@ -21,8 +21,8 @@ export const useTheme = create<{
   setTheme: (theme: ThemeType) => void;
   onThemeChange: (fn: (theme: ThemeType) => void) => void;
   offThemeChange: (fn: (theme: ThemeType) => void) => void;
-}>((set) => ({
-  theme: getSystemPreferColorScheme((theme) => {
+}>(set => ({
+  theme: getSystemPreferColorScheme(theme => {
     document.body.className = `${theme} text-foreground bg-background`;
     set({ theme });
   }),
@@ -34,18 +34,18 @@ export const useTheme = create<{
       fn(theme);
     }
 
-    getAppSetting().then((setting) => {
+    getAppSetting().then(setting => {
       setAppSetting({ ...setting, theme });
     });
   },
-  onThemeChange: (fn) => {
+  onThemeChange: fn => {
     for (const listener of themeListeners) {
       if (listener === fn) return;
     }
 
     themeListeners.push(fn);
   },
-  offThemeChange: (fn) => {
+  offThemeChange: fn => {
     for (let i = 0; i < themeListeners.length; i++) {
       if (themeListeners[i] === fn) {
         themeListeners.splice(i, 1);

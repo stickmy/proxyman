@@ -1,10 +1,10 @@
-import { FC, ChangeEvent, useEffect } from "react";
-import toast from "react-hot-toast";
+import { updateProcessPackStatus } from "@/Commands/Commands";
+import { AddIcon } from "@/Icons";
 import { usePackStore } from "@/Routes/Rule/usePacks";
 import { Button, Switch, useDisclosure } from "@nextui-org/react";
-import { updateProcessPackStatus } from "@/Commands/Commands";
+import { type ChangeEvent, type FC, useEffect } from "react";
+import toast from "react-hot-toast";
 import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
-import { AddIcon } from "@/Icons";
 import { CreatePack } from "./CreatePack";
 
 export const Pack: FC = () => {
@@ -19,11 +19,11 @@ export const Pack: FC = () => {
     if (!packName && packs.length !== 0) {
       navigate(`/pack/${packs[0].packName}`);
     }
-  }, [packName, packs]);
+  }, [packName, packs, navigate]);
 
   const onSwitch = async (
     evt: ChangeEvent<HTMLInputElement>,
-    packName: string
+    packName: string,
   ) => {
     evt.stopPropagation();
 
@@ -55,7 +55,7 @@ export const Pack: FC = () => {
         </Button>
         <CreatePack isOpen={isOpen} onOpenChange={onOpenChange} />
         <ul>
-          {packs.map((pack) => (
+          {packs.map(pack => (
             <li key={pack.packName} className="[&:not(:last-child)]:mb-2">
               <NavLink
                 to={`/pack/${pack.packName}`}
@@ -69,7 +69,7 @@ export const Pack: FC = () => {
                   color="success"
                   size="sm"
                   isSelected={pack.enable}
-                  onChange={(evt) => onSwitch(evt, pack.packName)}
+                  onChange={evt => onSwitch(evt, pack.packName)}
                 />
               </NavLink>
             </li>

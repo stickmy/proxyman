@@ -1,5 +1,5 @@
+import type { ThemeType } from "@/Components/TopBar/useTheme";
 import { monaco } from "@/Monaco/Monaco";
-import { ThemeType } from "@/Components/TopBar/useTheme";
 
 export const createMonacoEditor = (
   elem: HTMLElement,
@@ -9,7 +9,7 @@ export const createMonacoEditor = (
     theme?: ThemeType;
     readonly?: boolean;
     lineNumbers?: "on" | "off";
-  }
+  },
 ) => {
   const {
     value,

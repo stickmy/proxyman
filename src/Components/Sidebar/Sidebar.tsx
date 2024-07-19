@@ -1,8 +1,8 @@
-import React, { FC } from "react";
-import { NavLink } from "react-router-dom";
-import { Tooltip } from "@nextui-org/react";
-import { HttpIcon, RuleIcon } from "@/Icons";
 import { useTheme } from "@/Components/TopBar/useTheme";
+import { HttpIcon, RuleIcon } from "@/Icons";
+import { Tooltip } from "@nextui-org/react";
+import React, { type FC } from "react";
+import { NavLink } from "react-router-dom";
 import "./index.css";
 
 export const Sidebar: FC = () => {

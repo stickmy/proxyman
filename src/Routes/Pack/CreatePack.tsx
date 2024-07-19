@@ -8,8 +8,8 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@nextui-org/react";
+import { type FC, useState } from "react";
 import { toast } from "react-hot-toast";
-import { FC, useState } from "react";
 import { useCreatePack } from "./useCreatePack";
 
 export const CreatePack: FC<{
@@ -32,7 +32,7 @@ export const CreatePack: FC<{
       return;
     }
 
-    const exists = packs.some((pack) => pack.packName === name);
+    const exists = packs.some(pack => pack.packName === name);
     if (exists) {
       setIsInvalid(true);
       setInvalidMessage(`规则组(${name})已存在`);
@@ -44,13 +44,13 @@ export const CreatePack: FC<{
 
   const createPackAndClose = async (onClose: () => void) => {
     if (!packName || isInvalid) {
-      toast.error("请检查规则组名称", { duration: 20000});
+      toast.error("请检查规则组名称", { duration: 20000 });
       return;
     }
 
     try {
       await createPack(packName);
-      toast.success("创建成功")
+      toast.success("创建成功");
       onClose();
     } catch (error) {
       toast.error(error as string);
@@ -65,7 +65,7 @@ export const CreatePack: FC<{
       backdrop="opaque"
     >
       <ModalContent>
-        {(onClose) => (
+        {onClose => (
           <>
             <ModalHeader className="flex flex-col gap-1 text-tiny">
               创建规则组

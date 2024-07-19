@@ -1,6 +1,3 @@
-import toast from "react-hot-toast";
-import { Input, Button, Tooltip } from "@nextui-org/react";
-import { MouseEvent, useEffect, useState, ChangeEvent } from "react";
 import {
   checkTlsCertInstalled,
   getProxyStatus,
@@ -9,20 +6,23 @@ import {
   stopProxy,
 } from "@/Commands/Commands";
 import { useSystemProxy } from "@/Components/TopBar/useSystemProxy";
-import { useConnectionStore } from "@/Store/ConnectionStore";
 import { useTheme } from "@/Components/TopBar/useTheme";
 import {
+  BottomLayoutIcon,
+  ClearIcon,
   CopyIcon,
-  SunIcon,
   MoonIcon,
   NetworkIcon,
-  SecureIcon,
-  ClearIcon,
   PauseIcon,
   PlayIcon,
   RightLayoutIcon,
-  BottomLayoutIcon,
+  SecureIcon,
+  SunIcon,
 } from "@/Icons";
+import { useConnectionStore } from "@/Store/ConnectionStore";
+import { Button, Input, Tooltip } from "@nextui-org/react";
+import { type ChangeEvent, type MouseEvent, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { useLayout } from "./useLayout";
 import "./index.css";
 
@@ -48,7 +48,7 @@ export const TopBar = () => {
 
   function onPortChange(event: ChangeEvent<HTMLInputElement>) {
     if (status) {
-      toast(`请先停止代理服务, 再修改端口号`);
+      toast("请先停止代理服务, 再修改端口号");
       return;
     }
 
@@ -96,12 +96,12 @@ export const TopBar = () => {
 
     const caInstalled = await checkTlsInstalled();
     if (!caInstalled) {
-      toast(`请先安装 TLS 证书`);
+      toast("请先安装 TLS 证书");
       return;
     }
 
     try {
-      await startProxy(parseInt(port));
+      await startProxy(Number.parseInt(port));
       setStatus(true);
     } catch (error: any) {
       toast.error(error, {
@@ -125,21 +125,24 @@ export const TopBar = () => {
     navigator.clipboard
       .writeText(`export https_proxy=http://127.0.0.1:${port};`)
       .then(() => {
-        toast.success(`终端代理命令已复制`);
+        toast.success("终端代理命令已复制");
       })
-      .catch((err) => {
-        toast.error(`复制失败`);
+      .catch(err => {
+        toast.error("复制失败");
       });
   }
 
   return (
-    <div className="pl-2 pr-2 pb-2 pt-2 flex flex-row items-center bg-content1" style={{ height: "var(--topbar-height)" }}>
+    <div
+      className="pl-2 pr-2 pb-2 pt-2 flex flex-row items-center bg-content1"
+      style={{ height: "var(--topbar-height)" }}
+    >
       <span className="flex-shrink-0 text-tiny text-default-400 mr-2">
         代理地址
       </span>
       <Input
         classNames={{
-          input: ["text-tiny"],
+          input: "text-tiny",
         }}
         radius="sm"
         size="sm"

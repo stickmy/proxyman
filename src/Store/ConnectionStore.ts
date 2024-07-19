@@ -1,13 +1,13 @@
-import { create } from "zustand";
 import {
-  ConnectionEvent,
+  type ConnectionEvent,
+  type RequestConnection,
+  type ResponseConnection,
   isRequestEvent,
   isResponseEvent,
-  RequestConnection,
-  ResponseConnection,
 } from "@/Events/ConnectionEvents";
-import { unstable_batchedUpdates } from "react-dom";
 import { listen } from "@tauri-apps/api/event";
+import { unstable_batchedUpdates } from "react-dom";
+import { create } from "zustand";
 
 export interface Connection {
   id: string;
@@ -18,7 +18,7 @@ export interface Connection {
 export const useConnectionStore = create<{
   connections: Connection[];
   clearConnections: () => void;
-}>((set) => ({
+}>(set => ({
   connections: [] as Connection[],
   clearConnections: () => set({ connections: [] }),
 }));
@@ -30,7 +30,7 @@ const processConnections = (event: ConnectionEvent) => {
     // TODO: perf optimization
     unstable_batchedUpdates(() =>
       useConnectionStore.setState(({ connections }) => {
-        if (connections.find((x) => x.id === reqConn.id)) {
+        if (connections.find(x => x.id === reqConn.id)) {
           console.warn("Duplicate connection:", reqConn.uri);
         }
 
@@ -40,18 +40,18 @@ const processConnections = (event: ConnectionEvent) => {
         };
 
         return { connections: [...connections, conn] };
-      })
+      }),
     );
   } else if (isResponseEvent(event)) {
     const resConn = event.NewResponse;
 
     unstable_batchedUpdates(() => {
       useConnectionStore.setState(({ connections }) => {
-        const conn = connections.find((x) => x.id === resConn.id);
+        const conn = connections.find(x => x.id === resConn.id);
 
         if (!conn) {
           console.warn(
-            "Orphan response(None matched request connection found)"
+            "Orphan response(None matched request connection found)",
           );
           return { connections: connections };
         }
@@ -63,8 +63,8 @@ const processConnections = (event: ConnectionEvent) => {
         };
 
         return {
-          connections: connections.map((x) =>
-            x.id === conn.id ? updatedConn : x
+          connections: connections.map(x =>
+            x.id === conn.id ? updatedConn : x,
           ),
         };
       });
@@ -73,17 +73,15 @@ const processConnections = (event: ConnectionEvent) => {
 };
 
 // @ts-ignore
-if (true) {
-  const unlisten = listen<ConnectionEvent>("proxy_event", (event) => {
-    const payload = event.payload;
-    console.debug("connections", payload);
-    processConnections(payload);
-  });
+const unlisten = listen<ConnectionEvent>("proxy_event", event => {
+  const payload = event.payload;
+  console.debug("connections", payload);
+  processConnections(payload);
+});
 
-  window.addEventListener("beforeunload", () => {
-    unlisten.then((f) => f());
-  });
+window.addEventListener("beforeunload", () => {
+  unlisten.then(f => f());
+});
 
-  // @ts-ignore
-  window._unlisten = unlisten;
-}
+// @ts-ignore
+window._unlisten = unlisten;

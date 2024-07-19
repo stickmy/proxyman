@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use async_trait::async_trait;
 use http::StatusCode;
 use hyper::{Body, Request, Response};
@@ -5,11 +7,13 @@ use tokio_tungstenite::tungstenite::Message;
 
 use crate::error::Error;
 
+pub type RuleHit = HashMap<String /* pack name */, Vec<String> /* pack hit rules */>;
+
 #[derive(Debug)]
 pub struct RequestOrResponse {
     pub req: Request<Body>,
     pub res: Option<Response<Body>>,
-    pub hit_rules: Option<Vec<String>>,
+    pub hit_rules: Option<RuleHit>,
 }
 
 impl From<Request<Body>> for RequestOrResponse {

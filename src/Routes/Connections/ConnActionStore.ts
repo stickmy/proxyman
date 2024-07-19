@@ -1,5 +1,5 @@
+import type { Connection } from "@/Store/ConnectionStore";
 import { create } from "zustand";
-import { Connection } from "@/Store/ConnectionStore";
 
 export const useConnActionStore = create<{
   filter?: (conn: Connection) => boolean;
@@ -7,8 +7,8 @@ export const useConnActionStore = create<{
   //
   detailVisible: boolean;
   setDetailVisible: (visible: boolean) => void;
-}>((set) => ({
-  setFilter: (filter) => set({ filter }),
+}>(set => ({
+  setFilter: filter => set({ filter }),
   detailVisible: false,
   setDetailVisible: (detailVisible: boolean) => set({ detailVisible }),
 }));

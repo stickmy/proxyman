@@ -1,17 +1,20 @@
 import { create } from "zustand";
 
-import { getProcessorPacks, ProcessorPackTransfer } from "@/Commands/Commands";
+import {
+  type ProcessorPackTransfer,
+  getProcessorPacks,
+} from "@/Commands/Commands";
 
 export const usePackStore = create<{
   packs: ProcessorPackTransfer[];
   addPack: (packName: string, enable?: boolean) => void;
   setPacks: (packs: ProcessorPackTransfer[]) => void;
   updatePackStatus: (packName: string, status: boolean) => void;
-}>((set) => ({
+}>(set => ({
   packs: [],
-  setPacks: (packs: ProcessorPackTransfer[]) => set((state) => ({ packs })),
+  setPacks: (packs: ProcessorPackTransfer[]) => set(state => ({ packs })),
   addPack: (packName: string, enable?: boolean) =>
-    set((state) => ({
+    set(state => ({
       packs: [
         {
           packName,
@@ -21,16 +24,16 @@ export const usePackStore = create<{
       ],
     })),
   updatePackStatus: (packName: string, status: boolean) =>
-    set((state) => ({
-      packs: state.packs.map((pack) =>
+    set(state => ({
+      packs: state.packs.map(pack =>
         pack.packName === packName
           ? {
               packName,
               enable: status,
             }
-          : pack
+          : pack,
       ),
     })),
 }));
 
-getProcessorPacks().then((packs) => usePackStore.setState({ packs }));
+getProcessorPacks().then(packs => usePackStore.setState({ packs }));

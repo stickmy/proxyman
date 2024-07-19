@@ -1,4 +1,4 @@
-import { HTMLAttributes, MouseEvent } from "react";
+import type { HTMLAttributes, MouseEvent } from "react";
 
 export interface IconProps extends HTMLAttributes<SVGElement> {
   size?: number;

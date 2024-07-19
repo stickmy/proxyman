@@ -7,6 +7,8 @@ use hyper::{Body, body::to_bytes, Request, Response};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::proxy::processor::RuleHit;
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Events {
     NewRequest(RequestEvent),
@@ -72,7 +74,7 @@ pub struct ResponseEvent {
     #[serde(with = "http_serde::header_map")]
     headers: HeaderMap,
     body: String,
-    hit_rules: Option<Vec<String>>,
+    hit_rules: Option<RuleHit>,
     time: i64,
 }
 
@@ -80,7 +82,7 @@ impl ResponseEvent {
     pub async fn new(
         id: Uuid,
         res: &mut Response<Body>,
-        hit_rules: Option<Vec<String>>,
+        hit_rules: Option<RuleHit>,
     ) -> Self {
         let mut body = res.body_mut();
         let body_bytes = to_bytes(&mut body).await.unwrap_or_default();

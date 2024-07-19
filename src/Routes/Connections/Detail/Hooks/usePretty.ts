@@ -1,9 +1,9 @@
-import { monaco } from "@/Monaco/Monaco";
-import { RefObject, useState } from "react";
+import type { monaco } from "@/Monaco/Monaco";
+import { type RefObject, useState } from "react";
 
 export const usePretty = (
   editor: RefObject<monaco.editor.IStandaloneCodeEditor | undefined>,
-  value: string
+  value: string,
 ) => {
   const [isPretty, _setPrettyStatus] = useState<boolean>(false);
 

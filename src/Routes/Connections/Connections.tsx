@@ -1,28 +1,28 @@
-import { FC, useCallback, useEffect, useState } from "react";
-import {
-  Input,
-  Chip,
-  Table,
-  TableHeader,
-  TableBody,
-  TableColumn,
-  TableRow,
-  TableCell,
-  Snippet,
-  Spinner,
-  Selection,
-} from "@nextui-org/react";
-import get from "lodash/get";
-import { ConnectionDetail } from "@/Routes/Connections/Detail/ConnectionDetail";
-import { useDebounceEffect } from "ahooks";
-import { Connection, useConnectionStore } from "@/Store/ConnectionStore";
-import { usePinUriStore } from "@/Store/PinUriStore";
-import dayjs from "dayjs";
-import { Filters } from "@/Routes/Connections/Filters";
-import { useConnActionStore } from "@/Routes/Connections/ConnActionStore";
 import { Drawer } from "@/Components/Drawer/Drawer";
 import { useLayout } from "@/Components/TopBar/useLayout";
 import { SearchIcon } from "@/Icons";
+import { useConnActionStore } from "@/Routes/Connections/ConnActionStore";
+import { ConnectionDetail } from "@/Routes/Connections/Detail/ConnectionDetail";
+import { Filters } from "@/Routes/Connections/Filters";
+import { type Connection, useConnectionStore } from "@/Store/ConnectionStore";
+import { usePinUriStore } from "@/Store/PinUriStore";
+import {
+  Chip,
+  Input,
+  type Selection,
+  Snippet,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+} from "@nextui-org/react";
+import { useDebounceEffect } from "ahooks";
+import dayjs from "dayjs";
+import get from "lodash/get";
+import { type FC, useCallback, useEffect, useState } from "react";
 import { Pin } from "./Pin";
 import "./index.css";
 
@@ -43,7 +43,7 @@ export const Connections = () => {
     if (selection === "all") return;
 
     const id: string = selection.keys().next().value;
-    setDetailConnection(connections.find((x) => x.id === id));
+    setDetailConnection(connections.find(x => x.id === id));
   };
 
   const clearCurrentConn = () => {
@@ -53,7 +53,7 @@ export const Connections = () => {
 
   useEffect(() => {
     setDetailVisible(!!detailConn);
-  }, [detailConn]);
+  }, [detailConn, setDetailVisible]);
 
   const [uriKeyword, setUriKeyword] = useState<string>();
   const [renderConnections, setRenderConnections] = useState<Connection[]>([]);
@@ -63,7 +63,7 @@ export const Connections = () => {
       // Ignore other searches when a pined uri exists.
       if (currentPin) {
         setRenderConnections(
-          connections.filter((x) => x.request.uri.startsWith(currentPin))
+          connections.filter(x => x.request.uri.startsWith(currentPin)),
         );
         return;
       }
@@ -71,26 +71,27 @@ export const Connections = () => {
       let filtered = connections;
 
       if (uriKeyword) {
-        filtered = connections.filter((x) =>
-          x.request.uri.toLowerCase().includes(uriKeyword.toLowerCase())
+        filtered = connections.filter(x =>
+          x.request.uri.toLowerCase().includes(uriKeyword.toLowerCase()),
         );
       }
       if (filter) {
-        filtered = filtered.filter((x) => filter(x));
+        filtered = filtered.filter(x => filter(x));
       }
 
       setRenderConnections(filtered);
     },
     [uriKeyword, connections, currentPin, filter],
-    { wait: 150 }
+    { wait: 150 },
   );
 
   const renderCell = useCallback(
     (conn: Connection, columnKey: (typeof columns)[number]["key"] | number) => {
       switch (columnKey) {
-        case "PIN":
+        case "PIN": {
           const uri = conn.request.uri;
           return <Pin uri={uri} />;
+        }
         case "response.status": {
           const value = get(conn, columnKey);
           return value ? <Status status={value} /> : <Spinner size="sm" />;
@@ -130,14 +131,32 @@ export const Connections = () => {
         }
         case "response.hitRules": {
           const value = get(conn, columnKey);
-          return value ? value.join(", ") : "-";
+          if (!value) return "/";
+          return (
+            <div>
+              {Object.entries(value).map(([packName, rules]) => (
+                <div key={packName}>
+                  <span className="inline-block text-primary-400">
+                    {packName}
+                  </span>
+                  <ul className="pl-6">
+                    {rules.map(rule => (
+                      <li key={rule} className="list-disc">
+                        {rule}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          );
         }
         default: {
           return get(conn, columnKey);
         }
       }
     },
-    []
+    [],
   );
 
   return (
@@ -178,16 +197,16 @@ export const Connections = () => {
         onSelectionChange={updateCurrentConn}
       >
         <TableHeader columns={columns}>
-          {(column) => (
+          {column => (
             <TableColumn key={column.key} maxWidth={column.maxWidth}>
               {column.label}
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody items={renderConnections} emptyContent={`Empty connections`}>
-          {(item) => (
+        <TableBody items={renderConnections} emptyContent="Empty connections">
+          {item => (
             <TableRow key={item.id}>
-              {(columnKey) => (
+              {columnKey => (
                 <TableCell className="text-tiny">
                   {renderCell(item, columnKey)}
                 </TableCell>

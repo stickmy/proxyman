@@ -11,7 +11,7 @@ export function isJsonp(body: string): string | false {
   const re = /^[^(]*\((.*)\)$/;
   const parts = body.match(re);
 
-  if (parts && parts[1]) {
+  if (parts?.[1]) {
     const json = isJson(parts[1]);
     return json ? parts[1] : false;
   }

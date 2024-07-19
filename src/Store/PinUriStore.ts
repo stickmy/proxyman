@@ -8,12 +8,12 @@ export const usePinUriStore = create<{
 
   currentPin: string | undefined;
   setCurrentPin: (uri: string | undefined) => void;
-}>((set) => ({
+}>(set => ({
   pins: [],
-  pinUri: (uri: string) => set((state) => ({ pins: [...state.pins, uri] })),
+  pinUri: (uri: string) => set(state => ({ pins: [...state.pins, uri] })),
   unpinUri: (uri: string) =>
-    set((state) => ({
-      pins: state.pins.filter((x) => x !== uri),
+    set(state => ({
+      pins: state.pins.filter(x => x !== uri),
       currentPin: state.currentPin === uri ? undefined : state.currentPin,
     })),
   clearPins: () => set({ pins: [] }),

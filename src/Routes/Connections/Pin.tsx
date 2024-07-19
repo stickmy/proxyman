@@ -1,8 +1,8 @@
-import { FC, MouseEvent } from "react";
 import { PinIcon } from "@/Icons";
-import cls from "classnames";
 import { usePinUriStore } from "@/Store/PinUriStore";
 import { Button } from "@nextui-org/react";
+import cls from "classnames";
+import type { FC, MouseEvent } from "react";
 
 export const Pin: FC<{
   uri: string;
@@ -31,7 +31,7 @@ export const Pin: FC<{
       <PinIcon
         className={cls(
           "transition-transform",
-          pins.includes(uri) ? "-rotate-45 pin" : ""
+          pins.includes(uri) ? "-rotate-45 pin" : "",
         )}
       />
     </Button>

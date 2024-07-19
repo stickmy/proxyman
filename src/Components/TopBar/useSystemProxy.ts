@@ -1,6 +1,6 @@
 import { turnOffSystemProxy, turnOnSystemProxy } from "@/Commands/Commands";
-import { toast } from "react-hot-toast";
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 
 export const useSystemProxy = (port: string) => {
   const [enableSystemProxy, setEnableSystemProxy] = useState<boolean>(false);

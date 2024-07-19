@@ -1,4 +1,4 @@
-import { AppSetting } from "@/Commands/Commands";
+import type { AppSetting } from "@/Commands/Commands";
 import { useAppSetting } from "@/Store/useAppSetting";
 
 export type LayoutType = AppSetting["layout"];

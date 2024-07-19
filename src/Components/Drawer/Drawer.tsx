@@ -1,14 +1,12 @@
-import { useMemo, FC } from "react";
+import { TRANSITION_EASINGS } from "@nextui-org/framer-utils";
 import {
   Modal,
-  ModalContent,
-  ModalHeader,
   ModalBody,
-  ModalFooter,
-  ModalProps,
+  ModalContent,
+  type ModalProps,
   useDisclosure,
 } from "@nextui-org/react";
-import { TRANSITION_EASINGS } from "@nextui-org/framer-utils";
+import { type FC, useMemo } from "react";
 
 type DrawerProps = Omit<ModalProps, "placement" | "scrollBehavior"> & {
   placement?: "top" | "right" | "bottom" | "left";
@@ -73,10 +71,10 @@ export const Drawer: FC<DrawerProps> = ({
     };
     switch (placement) {
       case "right": {
-        return `absolute inset-y-0 right-0 m-0 sm:m-0 max-h-[none] overflow-y-auto rounded-r-none`;
+        return "absolute inset-y-0 right-0 m-0 sm:m-0 max-h-[none] overflow-y-auto rounded-r-none";
       }
       case "left": {
-        return `absolute inset-y-0 left-0 m-0 sm:m-0 max-h-[none] overflow-y-auto rounded-l-none`;
+        return "absolute inset-y-0 left-0 m-0 sm:m-0 max-h-[none] overflow-y-auto rounded-l-none";
       }
       case "top": {
         return `absolute inset-x-0 top-0 m-0 sm:m-0 max-w-[none] ${sizeSource[size]} overflow-y-auto rounded-t-none`;
@@ -100,7 +98,7 @@ export const Drawer: FC<DrawerProps> = ({
       motionProps={motionProps}
     >
       <ModalContent>
-        {(onClose) => <ModalBody>{children}</ModalBody>}
+        {onClose => <ModalBody>{children}</ModalBody>}
       </ModalContent>
     </Modal>
   );

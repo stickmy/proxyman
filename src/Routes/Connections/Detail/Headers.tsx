@@ -1,15 +1,15 @@
-import React, { FC, useState } from "react";
-import cls from "classnames";
+import { CodeIcon, TableIcon } from "@/Icons";
 import {
-  getKeyValue,
   Table,
   TableBody,
   TableCell,
   TableColumn,
   TableHeader,
   TableRow,
+  getKeyValue,
 } from "@nextui-org/react";
-import { CodeIcon, TableIcon } from "@/Icons";
+import cls from "classnames";
+import React, { type FC, useState } from "react";
 
 export const Headers: FC<{
   headers: Record<string, string>;
@@ -29,25 +29,31 @@ export const Headers: FC<{
         />
       </div>
       {showTable ? (
-        <Table aria-label="Connection headers" hideHeader removeWrapper fullWidth={false} layout="fixed">
+        <Table
+          aria-label="Connection headers"
+          hideHeader
+          removeWrapper
+          fullWidth={false}
+          layout="fixed"
+        >
           <TableHeader columns={columns}>
-            {(column) => (
+            {column => (
               <TableColumn key={column.key}>{column.label}</TableColumn>
             )}
           </TableHeader>
           <TableBody
-            items={Object.keys(headers).map((key) => ({
+            items={Object.keys(headers).map(key => ({
               name: key,
               value: headers[key],
             }))}
           >
-            {(item) => (
+            {item => (
               <TableRow key={item.name}>
-                {(columnKey) => (
+                {columnKey => (
                   <TableCell
                     className={cls(
                       "text-tiny border-1 border-default-200 border-solid rtl:first:border-r-0 break-all",
-                      columnKey === "name" ? "w-[180px]" : ""
+                      columnKey === "name" ? "w-[180px]" : "",
                     )}
                   >
                     {getKeyValue(item, columnKey)}
@@ -58,7 +64,7 @@ export const Headers: FC<{
           </TableBody>
         </Table>
       ) : (
-        Object.keys(headers).map((key) => (
+        Object.keys(headers).map(key => (
           <div className="text-tiny mb-2" key={key}>
             <span className="inline-block mr-2 label">{key}</span>
             <span className="value break-all">{headers[key]}</span>

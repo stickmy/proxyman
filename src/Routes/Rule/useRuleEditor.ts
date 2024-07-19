@@ -1,22 +1,22 @@
+import { getProcessorContent, setProcessor } from "@/Commands/Commands";
+import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
+import { type ThemeType, useTheme } from "@/Components/TopBar/useTheme";
+import { RuleMode } from "@/Events/ConnectionEvents";
+import { monaco } from "@/Monaco/Monaco";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { monaco } from "@/Monaco/Monaco";
-import { getProcessorContent, setProcessor } from "@/Commands/Commands";
-import { RuleMode } from "@/Events/ConnectionEvents";
-import { ThemeType, useTheme } from "@/Components/TopBar/useTheme";
-import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
 
 export const useRuleEditor = (
   elemId: string,
   packName: string,
-  defaultValue?: string
+  defaultValue?: string,
 ) => {
   const [mode, setMode] = useState<RuleMode>(RuleMode.Redirect);
   const [currentPackName, setPackName] = useState<string>(packName);
 
   const serializationKey = useMemo(
     () => getRuleModeSerializationKey(mode),
-    [mode]
+    [mode],
   );
 
   const { theme, onThemeChange, offThemeChange } = useTheme();
@@ -77,7 +77,6 @@ export const useRuleEditor = (
     setTimeout(() => {
       const node = document.getElementById(elemId);
       if (!node) return;
-
       (async () => {
         if (!editorRef.current) {
           const editor = createMonacoEditor(node, {

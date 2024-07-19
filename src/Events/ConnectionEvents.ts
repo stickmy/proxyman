@@ -21,7 +21,7 @@ export interface ResponseConnection extends BaseConnection {
   headers: Record<string, string>;
   status: number;
   version: string;
-  hitRules?: RuleMode[];
+  hitRules?: Record<string, RuleMode[]>;
 }
 
 export interface RequestEvent {
@@ -38,13 +38,13 @@ export interface ResponseEvent {
 export type ConnectionEvent = RequestEvent | ResponseEvent;
 
 export const isRequestEvent = (
-  event: ConnectionEvent
+  event: ConnectionEvent,
 ): event is RequestEvent => {
   return "NewRequest" in event;
 };
 
 export const isResponseEvent = (
-  event: ConnectionEvent
+  event: ConnectionEvent,
 ): event is ResponseEvent => {
   return "NewResponse" in event;
 };

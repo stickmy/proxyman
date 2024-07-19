@@ -1,8 +1,8 @@
-import { Chip, Divider } from "@nextui-org/react";
-import { Connection } from "@/Store/ConnectionStore";
-import { useConnActionStore } from "@/Routes/Connections/ConnActionStore";
 import { FilterIcon } from "@/Icons/FilterIcon";
+import { useConnActionStore } from "@/Routes/Connections/ConnActionStore";
+import type { Connection } from "@/Store/ConnectionStore";
 import { usePinUriStore } from "@/Store/PinUriStore";
+import { Chip, Divider } from "@nextui-org/react";
 
 interface Filter {
   label: string;
@@ -10,31 +10,31 @@ interface Filter {
 }
 
 const status: Array<Filter> = ["100", "200", "300", "400", "500"].map(
-  (status) => ({
+  status => ({
     label: status,
-    filter: (conn) =>
+    filter: conn =>
       conn.response
         ? conn.response.status.toString().startsWith(status[0])
         : false,
-  })
+  }),
 );
 
 const pin: Filter = {
-  label: "pin",
-  filter: (conn) => usePinUriStore.getState().pins.includes(conn.request.uri),
+  label: "PIN",
+  filter: conn => usePinUriStore.getState().pins.includes(conn.request.uri),
 };
 
 const versions: Array<Filter> = [
   {
     label: "HTTP1",
-    filter: (conn) =>
+    filter: conn =>
       conn.response
         ? conn.response.version.toLowerCase().startsWith("http/1")
         : false,
   },
   {
     label: "HTTP2",
-    filter: (conn) =>
+    filter: conn =>
       conn.response
         ? conn.response.version.toLowerCase().startsWith("http/2")
         : false,
@@ -44,35 +44,35 @@ const versions: Array<Filter> = [
 const responseTypes: Array<Filter> = [
   {
     label: "JSON",
-    filter: (conn) =>
+    filter: conn =>
       conn.response
         ? conn.response.headers["content-type"]?.toLowerCase().includes("json")
         : false,
   },
   {
     label: "XML",
-    filter: (conn) =>
+    filter: conn =>
       conn.response
         ? conn.response.headers["content-type"]?.toLowerCase().includes("xml")
         : false,
   },
   {
     label: "TEXT",
-    filter: (conn) =>
+    filter: conn =>
       conn.response
         ? conn.response.headers["content-type"]?.toLowerCase() === "text/plain"
         : false,
   },
   {
     label: "HTML",
-    filter: (conn) =>
+    filter: conn =>
       conn.response
         ? conn.response.headers["content-type"]?.toLowerCase().includes("html")
         : false,
   },
   {
     label: "JS",
-    filter: (conn) =>
+    filter: conn =>
       conn.response
         ? conn.response.headers["content-type"]
             ?.toLowerCase()
@@ -81,21 +81,21 @@ const responseTypes: Array<Filter> = [
   },
   {
     label: "CSS",
-    filter: (conn) =>
+    filter: conn =>
       conn.response
         ? conn.response.headers["content-type"]?.toLowerCase().includes("css")
         : false,
   },
   {
     label: "IMAGE",
-    filter: (conn) =>
+    filter: conn =>
       conn.response
         ? conn.response.headers["content-type"]?.toLowerCase().includes("image")
         : false,
   },
   {
     label: "BINARY",
-    filter: (conn) =>
+    filter: conn =>
       conn.response
         ? conn.response.headers["content-type"]
             ?.toLowerCase()
@@ -136,7 +136,7 @@ export const Filters = () => {
         {pin.label}
       </Chip>
       <Divider orientation="vertical" />
-      {versions.map((x) => (
+      {versions.map(x => (
         <Chip
           key={x.label}
           variant="flat"
@@ -151,7 +151,7 @@ export const Filters = () => {
         </Chip>
       ))}
       <Divider orientation="vertical" />
-      {status.map((x) => (
+      {status.map(x => (
         <Chip
           key={x.label}
           variant="flat"
@@ -166,7 +166,7 @@ export const Filters = () => {
         </Chip>
       ))}
       <Divider orientation="vertical" />
-      {responseTypes.map((x) => (
+      {responseTypes.map(x => (
         <Chip
           key={x.label}
           variant="flat"
