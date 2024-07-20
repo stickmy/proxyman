@@ -7,7 +7,7 @@ import type { FC, MouseEvent } from "react";
 export const Pin: FC<{
   uri: string;
 }> = ({ uri }) => {
-  const { currentPin, pinUri, unpinUri, pins } = usePinUriStore();
+  const { pinUri, unpinUri, pins } = usePinUriStore();
 
   const onPinClick = (evt: MouseEvent<HTMLButtonElement>) => {
     evt.nativeEvent.stopImmediatePropagation();

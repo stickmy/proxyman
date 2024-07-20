@@ -48,21 +48,21 @@ export const Request: FC<{
   return (
     <div className="flex flex-col h-full">
       <div className="px-1">
-        <span className="inline-block w-[60px] text-tiny label">uri</span>
-        <Snippet className="text-tiny" symbol="" size="sm">
+        <span className="inline-block w-16 text-tiny">uri</span>
+        <Snippet className="text-tiny" hideSymbol size="sm">
           {request.uri}
         </Snippet>
       </div>
       <div className="px-1">
-        <span className="inline-block w-[60px] text-tiny label">method</span>
+        <span className="inline-block w-16 text-tiny">method</span>
         <span className="break-all text-tiny">{request.method}</span>
       </div>
       <div className="px-1">
-        <span className="inline-block w-[60px] text-tiny label">version</span>
+        <span className="inline-block w-16 text-tiny">version</span>
         <span className="break-all text-tiny">{request.version}</span>
       </div>
       <div className="px-1">
-        <span className="inline-block w-[60px] text-tiny label">time</span>
+        <span className="inline-block w-16 text-tiny">time</span>
         <span className="break-all text-tiny">
           {dayjs(request.time).format("YYYY-MM-DD HH:mm:ss:SSS")}
         </span>

@@ -91,7 +91,7 @@ impl<CA, C, P> Tunnel<CA, C, P>
             let req = match req_or_res.res {
                 Some(mut res) => {
                     self.send_event(
-                        ResponseEvent::new(conn_id, &mut res, req_or_res.hit_rules)
+                        ResponseEvent::new(conn_id, req_or_res.req.uri().to_owned(), &mut res, req_or_res.hit_rules)
                             .await
                             .into(),
                     )
@@ -100,6 +100,8 @@ impl<CA, C, P> Tunnel<CA, C, P>
                 }
                 None => req_or_res.req,
             };
+
+            let req_uri = req.uri().clone();
 
             log::trace!("send network request: {}, {:?}", conn_id, req);
             let res = self
@@ -122,7 +124,7 @@ impl<CA, C, P> Tunnel<CA, C, P>
             res = decode_response(res).unwrap();
 
             self.send_event(
-                ResponseEvent::new(conn_id, &mut res, req_or_res.hit_rules)
+                ResponseEvent::new(conn_id, req_uri, &mut res, req_or_res.hit_rules)
                     .await
                     .into(),
             )

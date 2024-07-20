@@ -7,6 +7,7 @@ import { Filters } from "@/Routes/Connections/Filters";
 import { type Connection, useConnectionStore } from "@/Store/ConnectionStore";
 import { usePinUriStore } from "@/Store/PinUriStore";
 import {
+  Button,
   Chip,
   Input,
   type Selection,
@@ -24,11 +25,13 @@ import dayjs from "dayjs";
 import get from "lodash/get";
 import { type FC, useCallback, useEffect, useState } from "react";
 import { Pin } from "./Pin";
+import { useNavigate } from "react-router-dom";
 import "./index.css";
 
 export const Connections = () => {
   const [layout] = useLayout();
 
+  const navigate = useNavigate();
   const { connections } = useConnectionStore();
   const { filter } = useConnActionStore();
   const { currentPin } = usePinUriStore();
@@ -136,13 +139,24 @@ export const Connections = () => {
             <div>
               {Object.entries(value).map(([packName, rules]) => (
                 <div key={packName}>
-                  <span className="inline-block text-primary-400">
-                    {packName}
-                  </span>
-                  <ul className="pl-6">
+                  <span className="inline-block">{packName}</span>
+                  <ul>
                     {rules.map(rule => (
                       <li key={rule} className="list-disc">
-                        {rule}
+                        <Button
+                          isIconOnly
+                          disableRipple
+                          disableAnimation
+                          className="bg-transparent w-fit !text-tiny !outline-0 hover:text-primary-400"
+                          onClick={evt => {
+                            evt.nativeEvent.stopImmediatePropagation();
+                            evt.stopPropagation();
+
+                            navigate(`/pack/${packName}/${rule}`);
+                          }}
+                        >
+                          {rule}
+                        </Button>
                       </li>
                     ))}
                   </ul>

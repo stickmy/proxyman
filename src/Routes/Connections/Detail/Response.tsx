@@ -7,7 +7,7 @@ import { useConnActionStore } from "@/Routes/Connections/ConnActionStore";
 import { Headers } from "@/Routes/Connections/Detail/Headers";
 import { isJsonp } from "@/Routes/Connections/Detail/Helper";
 import { usePackStore } from "@/Routes/Rule/usePacks";
-import { Chip, Tab, Tabs } from "@nextui-org/react";
+import { Chip, Snippet, Tab, Tabs, Tooltip } from "@nextui-org/react";
 import cls from "classnames";
 import dayjs from "dayjs";
 import React, {
@@ -37,6 +37,9 @@ export const Response: FC<{
   const contentTypeKey = Object.keys(response.headers).find(
     x => x.toLowerCase() === "content-type",
   );
+  const contentType = contentTypeKey
+    ? response.headers[contentTypeKey]
+    : undefined;
 
   useLayoutEffect(() => {
     if (activeTab !== "body") return;
@@ -114,14 +117,23 @@ export const Response: FC<{
   };
 
   const notStringLike = !!(
-    contentTypeKey &&
-    ["image", "octet-stream", "media"].some(type =>
-      response.headers[contentTypeKey].includes(type),
-    )
+    contentType &&
+    ["image", "octet-stream", "media"].some(type => contentType.includes(type))
   );
 
   return (
     <div className="flex flex-col h-full">
+      <div className="px-1">
+        <Tooltip
+          placement="top-start"
+          content="跟 request uri 的区别是: 它是一系列的规则处理之后的值, 是实际发生请求的 uri"
+        >
+          <span className="inline-block w-16 text-tiny">uri</span>
+        </Tooltip>
+        <Snippet className="text-tiny" hideSymbol size="sm">
+          {response.uri}
+        </Snippet>
+      </div>
       <div className="px-1">
         <span className="inline-block w-16 text-tiny">version</span>
         <span className="break-all text-tiny">{response.version}</span>
@@ -188,7 +200,9 @@ export const Response: FC<{
               </Button> */}
             {/* )} */}
           </div>
-          {notStringLike && <div>"Media type not supported"</div>}
+          {notStringLike && (
+            <MediaResponse uri={response.uri} contentType={contentType} />
+          )}
           <div
             id="res-body"
             className="w-full h-full relative border border-transparent data-[editing=true]:border-dashed data-[editing=true]:border-blue9"
@@ -202,6 +216,16 @@ export const Response: FC<{
       </Tabs>
     </div>
   );
+};
+
+const MediaResponse: FC<{
+  uri: string;
+  contentType: string;
+}> = ({ uri, contentType }) => {
+  if (contentType.startsWith("image")) {
+    return <img src={uri} alt={uri} />;
+  }
+  return <span>unsupport media</span>;
 };
 
 function getBodyLanguage(response: ResponseConnection): string {

@@ -17,10 +17,14 @@ export interface RequestConnection extends BaseConnection {
   version: string;
 }
 export interface ResponseConnection extends BaseConnection {
-  body: string;
-  headers: Record<string, string>;
+  /**
+   * 实际请求的 uri, 比如 A redirect to B, request.uri 是 A, response.uri 是 B
+   */
+  uri: string;
   status: number;
   version: string;
+  headers: Record<string, string>;
+  body: string;
   hitRules?: Record<string, RuleMode[]>;
 }
 

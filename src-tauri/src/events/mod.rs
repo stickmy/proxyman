@@ -67,6 +67,8 @@ impl RequestEvent {
 #[serde(rename_all = "camelCase")]
 pub struct ResponseEvent {
     id: Uuid,
+    #[serde(with = "http_serde::uri")]
+    uri: Uri,
     #[serde(with = "http_serde::status_code")]
     status: StatusCode,
     #[serde(with = "http_serde::version")]
@@ -81,6 +83,7 @@ pub struct ResponseEvent {
 impl ResponseEvent {
     pub async fn new(
         id: Uuid,
+        uri: Uri,
         res: &mut Response<Body>,
         hit_rules: Option<RuleHit>,
     ) -> Self {
@@ -92,6 +95,7 @@ impl ResponseEvent {
 
         Self {
             id,
+            uri,
             status: res.status(),
             version: res.version(),
             headers: res.headers().clone(),
