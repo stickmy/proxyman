@@ -205,6 +205,7 @@ export const Connections = () => {
         selectionMode="single"
         color="success"
         radius="sm"
+        isHeaderSticky
         isCompact
         removeWrapper={false}
         selectedKeys={selectedKeys}

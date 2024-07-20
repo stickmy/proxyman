@@ -14,6 +14,7 @@ export const ConnectionDetail: FC<{
       classNames={{
         tabList: "w-full",
       }}
+      defaultSelectedKey="response"
     >
       <Tab key="request" title="Request" className="h-full">
         <Request request={connection.request} />
