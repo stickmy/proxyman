@@ -4,23 +4,23 @@ use serde::Serialize;
 use tauri::{async_runtime::Mutex, State};
 use tokio::sync::mpsc::{self, Sender};
 
-use crate::processors::parser::ProcessorRuleParser;
-use crate::processors::persist::{create_pack_dir, delete_pack_dir, write_processor_pack_status};
-use crate::processors::processor_pack::ProcessorPack;
 use crate::{
-    error::{processor_error::ProcessorErrorKind, Error},
+    error::{Error, processor_error::ProcessorErrorKind},
     processors::{
         http_processor::{
             delay::{RequestDelayProcessor, RequestDelayRule},
+            HttpProcessor,
             redirect::RequestRedirectProcessor,
             response::{ResponseMapping, ResponseProcessor},
-            HttpProcessor,
         },
-        persist::{read_processor, read_processors_from_appdir, write_processor},
+        persist::processor_persist::{read_processor, read_processors_from_appdir, write_processor},
         processor_id::ProcessorID,
     },
     proxy::ProxyState,
 };
+use crate::processors::parser::ProcessorRuleParser;
+use crate::processors::persist::processor_persist::{create_pack_dir, delete_pack_dir, write_processor_pack_status};
+use crate::processors::processor_pack::ProcessorPack;
 
 pub(crate) enum ProcessorChannelMessage {
     Redirect(String, Vec<[String; 2]>),
@@ -35,7 +35,7 @@ pub(crate) enum ProcessorChannelMessage {
 pub(crate) fn init() -> (
     Arc<Mutex<HttpProcessor>>,
     Sender<ProcessorChannelMessage>,
-    impl Future<Output = ()>,
+    impl Future<Output=()>,
 ) {
     let packs = read_processors_from_appdir();
 
@@ -202,7 +202,7 @@ pub fn get_processor_content(mode: String, pack_name: String) -> Result<String, 
                 id: processor_id,
                 source: ProcessorErrorKind::Unsupport {},
             }
-            .to_json())
+                .to_json())
         }
     };
 

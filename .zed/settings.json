@@ -4,12 +4,12 @@
 // see the documentation: https://zed.dev/docs/configuring-zed#folder-specific-settings
 {
   "format_on_save": "on",
-  "formatter": {
-    "external": {
-      "command": "./node_modules/@biomejs/biome/bin/biome",
-      "arguments": ["format", "--write", "--stdin-file-path", "{buffer_path}"]
-    }
-  },
+  // "formatter": {
+  //   "external": {
+  //     "command": "./node_modules/@biomejs/biome/bin/biome",
+  //     "arguments": ["format", "--write", "--stdin-file-path", "{buffer_path}"]
+  //   }
+  // },
   "language_servers": ["biome", "..."],
   "languages": {
     "TypeScript": {

@@ -1,20 +1,20 @@
+use std::{fs, io::Write};
 use std::collections::HashMap;
-use std::{fs, io::Write, path};
 
 use snafu::ResultExt;
 
 use crate::app_conf;
-use crate::error::processor_error::ReadStatusError;
-use crate::error::ProcessorStatusError;
 use crate::error::{
     self,
-    processor_error::{ProcessorErrorKind, ReadError},
-    Error, ProcessorError,
+    Error,
+    processor_error::{ProcessorErrorKind, ReadError}, ProcessorError,
 };
-
-use super::http_processor::delay::RequestDelayProcessor;
-use super::http_processor::redirect::RequestRedirectProcessor;
-use super::{processor_id::ProcessorID, processor_pack::ProcessorPack};
+use crate::error::processor_error::ReadStatusError;
+use crate::error::ProcessorStatusError;
+use crate::processors::http_processor::delay::RequestDelayProcessor;
+use crate::processors::http_processor::redirect::RequestRedirectProcessor;
+use crate::processors::processor_id::ProcessorID;
+use crate::processors::processor_pack::ProcessorPack;
 
 pub type ProcessorPackStatus = HashMap<String, bool>;
 
@@ -106,19 +106,25 @@ pub fn read_processors_from_appdir() -> Vec<ProcessorPack> {
 }
 
 pub fn create_pack_dir(pack_name: &str) -> std::io::Result<()> {
-    ensure_dir(&app_conf::app_rule_dir())?;
+    super::ensure_dir(app_conf::app_rule_dir())?;
     let dir = app_conf::app_rule_dir().join(pack_name);
-    ensure_dir(&dir)
+    super::ensure_dir(dir)
 }
 
 pub fn delete_pack_dir(pack_name: &str) -> std::io::Result<()> {
     let dir = app_conf::app_rule_dir().join(pack_name);
+
+    if !dir.exists() {
+        return Ok(())
+    }
+
     fs::remove_dir_all(dir)
 }
 
 pub fn write_processor(id: ProcessorID, content: &str, pack_name: &str) -> std::io::Result<()> {
     let mut file = ensure_processor_file(pack_name, id)?;
-    file.write(content.as_bytes()).map(|_| ())
+    file.write_all(content.as_bytes())?;
+    Ok(())
 }
 
 pub fn read_processor(id: ProcessorID, pack_name: String) -> Result<String, error::Error> {
@@ -142,28 +148,15 @@ pub fn read_processor(id: ProcessorID, pack_name: String) -> Result<String, erro
         .context(ProcessorError { id })
 }
 
-fn ensure_dir(dir: &path::PathBuf) -> Result<(), std::io::Error> {
-    match fs::metadata(dir) {
-        Ok(meta) => {
-            if !meta.is_dir() {
-                fs::create_dir(dir)
-            } else {
-                Ok(())
-            }
-        }
-        Err(_) => fs::create_dir(dir),
-    }
-}
-
 fn ensure_processor_file(
     pack_name: &str,
     processor_id: ProcessorID,
 ) -> Result<fs::File, std::io::Error> {
     let app_rule_path = app_conf::app_rule_dir();
-    ensure_dir(&app_rule_path)?;
+    super::ensure_dir(&app_rule_path)?;
 
     let processor_dir = app_rule_path.join(pack_name);
-    ensure_dir(&processor_dir)?;
+    super::ensure_dir(&processor_dir)?;
 
     let path = processor_dir.join(processor_id.to_string());
 
