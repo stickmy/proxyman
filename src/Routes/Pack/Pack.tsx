@@ -1,8 +1,12 @@
-import { updateProcessPackStatus } from "@/Commands/Commands";
-import { AddIcon } from "@/Icons";
+import {
+  removeProcessorPack,
+  updateProcessPackStatus,
+} from "@/Commands/Commands";
+import cls from "classnames";
+import { AddIcon, DeleteIcon } from "@/Icons";
 import { usePackStore } from "@/Routes/Rule/usePacks";
 import { Button, Switch, useDisclosure } from "@nextui-org/react";
-import { type ChangeEvent, type FC, useEffect } from "react";
+import { type ChangeEvent, type FC, type MouseEvent, useEffect } from "react";
 import toast from "react-hot-toast";
 import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import { CreatePack } from "./CreatePack";
@@ -37,11 +41,27 @@ export const Pack: FC = () => {
     }
   };
 
+  const removePack = async (evt: MouseEvent<HTMLButtonElement>) => {
+    evt.nativeEvent.stopImmediatePropagation();
+    evt.stopPropagation();
+    evt.preventDefault();
+
+    const packName = evt.currentTarget.dataset.packname;
+    if (!packName) return;
+
+    try {
+      await removeProcessorPack(packName);
+      packStore.removePack(packName);
+    } catch (error) {
+      toast.error(`删除失败: ${error}`);
+    }
+  };
+
   const { isOpen, onOpenChange, onOpen } = useDisclosure();
 
   return (
     <div className="flex flex-row w-full h-full">
-      <div className="flex flex-col h-full border-r-1 border-default-100 pr-2 w-[200px] flex-shrink-0">
+      <div className="flex flex-col h-full border-r-1 border-default-100 pr-2 w-[240px] flex-shrink-0">
         <Button
           fullWidth
           variant="faded"
@@ -55,22 +75,50 @@ export const Pack: FC = () => {
         </Button>
         <CreatePack isOpen={isOpen} onOpenChange={onOpenChange} />
         <ul>
-          {packs.map(pack => (
+          {packs.map((pack) => (
             <li key={pack.packName} className="[&:not(:last-child)]:mb-2">
               <NavLink
                 to={`/pack/${pack.packName}`}
-                className="py-2 pl-2 text-sm rounded flex flex-row items-center justify-between hover:bg-default-100"
+                className="py-2 px-2 text-sm rounded flex flex-row items-center justify-between hover:bg-default-100"
                 style={({ isActive }) => ({
                   background: isActive ? "hsl(var(--nextui-default-100))" : "",
                 })}
               >
                 <span>{pack.packName}</span>
-                <Switch
-                  color="success"
-                  size="sm"
-                  isSelected={pack.enable}
-                  onChange={evt => onSwitch(evt, pack.packName)}
-                />
+                <div className="flex-row flex items-center">
+                  <Switch
+                    className="mr-2"
+                    classNames={{
+                      base: cls(
+                        "inline-flex flex-row-reverse max-w-md hover:bg-content2 items-center",
+                        "justify-between cursor-pointer rounded-lg gap-2 border-transparent",
+                      ),
+                      wrapper: "p-0 h-3 overflow-visible mr-0 w-8",
+                      thumb: cls(
+                        "w-4 h-4 shadow-lg",
+                        "group-data-[hover=true]:border-primary",
+                        //selected
+                        "group-data-[selected=true]:ml-4",
+                        // pressed
+                        "group-data-[pressed=true]:w-4",
+                        "group-data-[selected]:group-data-[pressed]:ml-2",
+                      ),
+                    }}
+                    color="success"
+                    isSelected={pack.enable}
+                    onChange={(evt) => onSwitch(evt, pack.packName)}
+                  />
+                  <Button
+                    isIconOnly
+                    disableRipple
+                    disableAnimation
+                    className="bg-transparent !text-tiny !outline-0 hover:text-primary-400 h-4 !w-fit min-w-2"
+                    data-packname={pack.packName}
+                    onClick={removePack}
+                  >
+                    <DeleteIcon size={16} className="text-default-600" />
+                  </Button>
+                </div>
               </NavLink>
             </li>
           ))}

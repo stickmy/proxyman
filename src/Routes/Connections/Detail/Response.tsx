@@ -1,4 +1,4 @@
-import { removeResponseMapping, setProcessor } from "@/Commands/Commands";
+import { setProcessor } from "@/Commands/Commands";
 import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
 import { useTheme } from "@/Components/TopBar/useTheme";
 import { type ResponseConnection, RuleMode } from "@/Events/ConnectionEvents";
@@ -35,7 +35,7 @@ export const Response: FC<{
   const { isPretty, pretty } = usePretty(resMonacoRef, response.body);
 
   const contentTypeKey = Object.keys(response.headers).find(
-    x => x.toLowerCase() === "content-type",
+    (x) => x.toLowerCase() === "content-type",
   );
   const contentType = contentTypeKey
     ? response.headers[contentTypeKey]
@@ -73,7 +73,7 @@ export const Response: FC<{
   useEffect(() => {
     if (!beEditing) {
       // Response 规则的生命周期是 session 周期, 它的设置也不需要指定 pack, 因此选取任一开启的 pack 即可
-      const pack = packs.find(x => x.enable);
+      const pack = packs.find((x) => x.enable);
 
       if (!pack) {
         toast("请开启任一规则");
@@ -101,7 +101,7 @@ export const Response: FC<{
   const { setDetailVisible } = useConnActionStore();
 
   const dropEditedResponse = async () => {
-    const pack = packs.find(x => x.enable);
+    const pack = packs.find((x) => x.enable);
 
     if (!pack) {
       toast("请开启任一规则");
@@ -109,7 +109,7 @@ export const Response: FC<{
     }
 
     try {
-      await removeResponseMapping(pack.packName, uri);
+      // await removeResponseMapping(pack.packName, uri);
       setDetailVisible(false);
     } catch (error: any) {
       toast.error("重置失败");
@@ -118,7 +118,9 @@ export const Response: FC<{
 
   const notStringLike = !!(
     contentType &&
-    ["image", "octet-stream", "media"].some(type => contentType.includes(type))
+    ["image", "octet-stream", "media"].some((type) =>
+      contentType.includes(type),
+    )
   );
 
   return (
@@ -230,7 +232,7 @@ const MediaResponse: FC<{
 
 function getBodyLanguage(response: ResponseConnection): string {
   const contentTypeKey = Object.keys(response.headers).find(
-    x => x.toLowerCase() === "content-type",
+    (x) => x.toLowerCase() === "content-type",
   );
   if (!contentTypeKey) return "text";
 

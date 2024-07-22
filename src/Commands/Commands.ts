@@ -31,6 +31,22 @@ export const getProxyStatus = async (): Promise<boolean> => {
   return invokeWithLogging<boolean>("plugin:proxy|proxy_status");
 };
 
+export const getValueList = async () => {
+  return invokeWithLogging<string[]>("plugin:proxy|get_value_list");
+};
+
+export const getValueContent = async (name: string) => {
+  return invokeWithLogging<string>("plugin:proxy|get_value_content", { name });
+};
+
+export const saveValue = async (name: string, value: string) => {
+  return invokeWithLogging("plugin:proxy|save_value", { name, value });
+};
+
+export const removeValue = async (name: string) => {
+  return invokeWithLogging("plugin:proxy|remove_value", { name });
+};
+
 export const getProcessorContent = async (
   packName: string,
   mode: string,
@@ -53,13 +69,6 @@ export const setProcessor = async (
   });
 };
 
-export const removeResponseMapping = async (packName: string, req: string) => {
-  return invokeWithLogging("plugin:proxy|remove_response_mapping", {
-    packName,
-    req,
-  });
-};
-
 export interface ProcessorPackTransfer {
   packName: string;
   enable: boolean;
@@ -76,6 +85,10 @@ export const addProcessPack = async (packName: string, enable?: boolean) => {
     packName,
     enable: enable ?? false,
   });
+};
+
+export const removeProcessorPack = async (packName: string) => {
+  return invokeWithLogging("plugin:proxy|remove_processor_pack", { packName });
 };
 
 export const updateProcessPackStatus = async (
