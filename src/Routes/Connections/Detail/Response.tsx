@@ -51,6 +51,7 @@ export const Response: FC<{
         resMonacoRef.current = createMonacoEditor(target, {
           value: body,
           readonly: true,
+          lineNumbers: "on",
           language,
           theme,
         });
@@ -152,6 +153,7 @@ export const Response: FC<{
               size="sm"
               className={cls(
                 "mr-2 cursor-pointer px-2",
+                "hover:bg-default-200",
                 isPretty ? "bg-success-300" : "bg-default-100",
               )}
             >
@@ -162,6 +164,7 @@ export const Response: FC<{
               size="sm"
               className={cls(
                 "mr-2 cursor-pointer px-2",
+                "hover:bg-default-200",
                 beEditing ? "bg-success-300" : "bg-default-100",
               )}
             >

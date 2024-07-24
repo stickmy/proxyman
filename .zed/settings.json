@@ -10,7 +10,7 @@
   //     "arguments": ["format", "--write", "--stdin-file-path", "{buffer_path}"]
   //   }
   // },
-  "language_servers": ["biome", "..."],
+  "language_servers": ["biome", "!typescript-language-server", "vtsls", "..."],
   "languages": {
     "TypeScript": {
       "code_actions_on_format": {

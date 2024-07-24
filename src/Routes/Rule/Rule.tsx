@@ -62,11 +62,11 @@ const ruleModes = [
     mode: RuleMode.Redirect,
   },
   {
-    label: "延时",
-    mode: RuleMode.Delay,
-  },
-  {
     label: "响应值设置",
     mode: RuleMode.Response,
+  },
+  {
+    label: "延时",
+    mode: RuleMode.Delay,
   },
 ];

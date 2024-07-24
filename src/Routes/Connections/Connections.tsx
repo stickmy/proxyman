@@ -152,7 +152,7 @@ export const Connections = () => {
                             evt.nativeEvent.stopImmediatePropagation();
                             evt.stopPropagation();
 
-                            navigate(`/pack/${packName}/${effect}`);
+                            navigate(`/pack/${packName}/${effect.name}`);
                           }}
                         >
                           {effect.name}
