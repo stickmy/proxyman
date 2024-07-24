@@ -27,7 +27,7 @@ use crate::{
 };
 
 use super::decoder::{decode_request, decode_response};
-use super::processor;
+use crate::processors::processor;
 use super::rewind::Rewind;
 
 pub struct Tunnel<CA, C, P> {
@@ -91,7 +91,7 @@ impl<CA, C, P> Tunnel<CA, C, P>
             let req = match req_or_res.res {
                 Some(mut res) => {
                     self.send_event(
-                        ResponseEvent::new(conn_id, req_or_res.req.uri().to_owned(), &mut res, req_or_res.hit_rules)
+                        ResponseEvent::new(conn_id, req_or_res.req.uri().to_owned(), &mut res, req_or_res.processor_effects)
                             .await
                             .into(),
                     )
@@ -124,7 +124,7 @@ impl<CA, C, P> Tunnel<CA, C, P>
             res = decode_response(res).unwrap();
 
             self.send_event(
-                ResponseEvent::new(conn_id, req_uri, &mut res, req_or_res.hit_rules)
+                ResponseEvent::new(conn_id, req_uri, &mut res, req_or_res.processor_effects)
                     .await
                     .into(),
             )

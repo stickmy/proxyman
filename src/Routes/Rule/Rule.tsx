@@ -65,4 +65,8 @@ const ruleModes = [
     label: "延时",
     mode: RuleMode.Delay,
   },
+  {
+    label: "响应值设置",
+    mode: RuleMode.Response,
+  },
 ];

@@ -25,7 +25,13 @@ export interface ResponseConnection extends BaseConnection {
   version: string;
   headers: Record<string, string>;
   body: string;
-  hitRules?: Record<string, RuleMode[]>;
+  effects?: Record<
+    string,
+    Array<{
+      name: string;
+      info: Record<string, string>;
+    }>
+  >;
 }
 
 export interface RequestEvent {

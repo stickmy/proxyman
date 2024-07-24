@@ -1,6 +1,6 @@
 import { addProcessPack } from "@/Commands/Commands";
-import { usePackStore } from "@/Routes/Rule/usePacks";
 import { useState } from "react";
+import { usePackStore } from "./usePacks";
 
 export const useCreatePack = () => {
   const [loading, setLoading] = useState<boolean>(false);

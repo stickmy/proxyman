@@ -17,3 +17,4 @@ export * from "./SearchIcon";
 export * from "./AddIcon";
 export * from "./PinIcon";
 export * from "./DeleteIcon";
+export * from "./SharpIcon";

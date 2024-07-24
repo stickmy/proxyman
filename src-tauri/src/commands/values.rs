@@ -1,11 +1,9 @@
-use std::ffi::OsString;
-
 use crate::processors::persist::value_persist::{
     delete_value, read_value, read_value_list_from_appdir, write_value,
 };
 
 #[tauri::command]
-pub async fn get_value_list() -> Vec<OsString> {
+pub async fn get_value_list() -> Vec<String> {
     read_value_list_from_appdir().unwrap_or_default()
 }
 

@@ -4,29 +4,33 @@ use serde::Serialize;
 use tauri::{async_runtime::Mutex, State};
 use tokio::sync::mpsc::{self, Sender};
 
+use crate::processors::parser::ProcessorRuleParser;
+use crate::processors::persist::processor_persist::{
+    create_pack_dir, delete_pack_dir, write_processor_pack_status,
+};
+use crate::processors::processor_pack::ProcessorPack;
 use crate::{
-    error::{Error, processor_error::ProcessorErrorKind},
     processors::{
         http_processor::{
             delay::{RequestDelayProcessor, RequestDelayRule},
-            HttpProcessor,
             redirect::RequestRedirectProcessor,
-            response::{ResponseMapping, ResponseProcessor},
+            response::ResponseProcessor,
+            HttpProcessor,
         },
-        persist::processor_persist::{read_processor, read_processors_from_appdir, write_processor},
+        persist::processor_persist::{
+            read_processor, read_processors_from_appdir, write_processor,
+        },
         processor_id::ProcessorID,
     },
     proxy::ProxyState,
 };
-use crate::processors::parser::ProcessorRuleParser;
-use crate::processors::persist::processor_persist::{create_pack_dir, delete_pack_dir, write_processor_pack_status};
-use crate::processors::processor_pack::ProcessorPack;
 
 pub(crate) enum ProcessorChannelMessage {
+    // processor message
     Redirect(String, Vec<[String; 2]>),
     Delay(String, RequestDelayRule),
-    Response(String, ResponseMapping),
-    RemoveResponse(String, String),
+    Response(String, Vec<[String; 2]>),
+    // packs message
     AddPack(String, bool),
     RemovePack(String),
     UpdatePackStatus(String, bool),
@@ -35,7 +39,7 @@ pub(crate) enum ProcessorChannelMessage {
 pub(crate) fn init() -> (
     Arc<Mutex<HttpProcessor>>,
     Sender<ProcessorChannelMessage>,
-    impl Future<Output=()>,
+    impl Future<Output = ()>,
 ) {
     let packs = read_processors_from_appdir();
 
@@ -76,12 +80,7 @@ pub(crate) fn init() -> (
                 }
                 ProcessorChannelMessage::Response(pack_name, mapping) => {
                     if let Some(response) = processor_setter.get_response_mut(pack_name) {
-                        response.append_mapping(mapping);
-                    }
-                }
-                ProcessorChannelMessage::RemoveResponse(pack_name, req_pattern) => {
-                    if let Some(response) = processor_setter.get_response_mut(pack_name) {
-                        response.remove_mapping(req_pattern);
+                        response.set_mapping(mapping);
                     }
                 }
             }
@@ -107,13 +106,7 @@ pub(crate) async fn set_processor(
 
     let processor_id = ProcessorID::try_from(mode)?;
 
-    let save_ret = match processor_id {
-        ProcessorID::REDIRECT | ProcessorID::DELAY => {
-            write_processor(processor_id, content.as_str(), pack_name.as_str())
-        }
-        ProcessorID::RESPONSE => Ok(()),
-        _ => return Err("Unsupport processor".into()),
-    };
+    let save_ret = write_processor(processor_id, content.as_str(), pack_name.as_str());
 
     if let Err(e) = save_ret {
         log::error!(
@@ -138,8 +131,10 @@ pub(crate) async fn set_processor(
                     pack_name,
                     RequestDelayProcessor::parse_rule(content.as_str()),
                 )),
-                ProcessorID::RESPONSE => ResponseProcessor::parse_rule(content.as_str())
-                    .map(|x| ProcessorChannelMessage::Response(pack_name, x)),
+                ProcessorID::RESPONSE => Some(ProcessorChannelMessage::Response(
+                    pack_name,
+                    ResponseProcessor::parse_rule(content.as_str()),
+                )),
                 _ => return Err("Unsupport processor".into()),
             }
         };
@@ -168,45 +163,10 @@ pub(crate) async fn set_processor(
 }
 
 #[tauri::command]
-pub(crate) async fn remove_response_mapping(
-    state: State<'_, ProxyState>,
-    pack_name: String,
-    req: String,
-) -> Result<(), String> {
-    let mut state = state.lock().await;
-
-    match state.as_mut() {
-        Some((_, processor, _, _, _)) => {
-            if let Err(e) = processor
-                .send(ProcessorChannelMessage::RemoveResponse(pack_name, req))
-                .await
-            {
-                log::error!("Remove ResponseProcessor mapping, {e}");
-                return Err(format!("Remove mapping failed: {e}"));
-            }
-        }
-        None => return Err("get proxy state failed".to_string()),
-    }
-
-    Ok(())
-}
-
-#[tauri::command]
 pub fn get_processor_content(mode: String, pack_name: String) -> Result<String, String> {
     let processor_id = ProcessorID::try_from(mode)?;
 
-    let ret = match processor_id {
-        ProcessorID::REDIRECT | ProcessorID::DELAY => read_processor(processor_id, pack_name),
-        _ => {
-            return Err(Error::Processor {
-                id: processor_id,
-                source: ProcessorErrorKind::Unsupport {},
-            }
-                .to_json())
-        }
-    };
-
-    ret.map_err(|e| e.to_json())
+    read_processor(processor_id, pack_name).map_err(|e| e.to_json())
 }
 
 #[derive(Serialize)]
@@ -223,7 +183,10 @@ pub fn get_processor_packs() -> Vec<ProcessorPackTransfer> {
     let mut ret: Vec<ProcessorPackTransfer> = Vec::new();
 
     for ref pack in packs {
-        ret.push(ProcessorPackTransfer { pack_name: pack.pack_name.to_string(), enable: pack.is_enable() })
+        ret.push(ProcessorPackTransfer {
+            pack_name: pack.pack_name.to_string(),
+            enable: pack.is_enable(),
+        })
     }
 
     ret

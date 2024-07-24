@@ -46,7 +46,7 @@ export const Connections = () => {
     if (selection === "all") return;
 
     const id: string = selection.keys().next().value;
-    setDetailConnection(connections.find(x => x.id === id));
+    setDetailConnection(connections.find((x) => x.id === id));
   };
 
   const clearCurrentConn = () => {
@@ -66,7 +66,7 @@ export const Connections = () => {
       // Ignore other searches when a pined uri exists.
       if (currentPin) {
         setRenderConnections(
-          connections.filter(x => x.request.uri.startsWith(currentPin)),
+          connections.filter((x) => x.request.uri.startsWith(currentPin)),
         );
         return;
       }
@@ -74,12 +74,12 @@ export const Connections = () => {
       let filtered = connections;
 
       if (uriKeyword) {
-        filtered = connections.filter(x =>
+        filtered = connections.filter((x) =>
           x.request.uri.toLowerCase().includes(uriKeyword.toLowerCase()),
         );
       }
       if (filter) {
-        filtered = filtered.filter(x => filter(x));
+        filtered = filtered.filter((x) => filter(x));
       }
 
       setRenderConnections(filtered);
@@ -132,30 +132,30 @@ export const Connections = () => {
             ? `${conn.response.time - conn.request.time}ms`
             : "-";
         }
-        case "response.hitRules": {
+        case "response.effects": {
           const value = get(conn, columnKey);
           if (!value) return "/";
           return (
             <div>
-              {Object.entries(value).map(([packName, rules]) => (
+              {Object.entries(value).map(([packName, effects]) => (
                 <div key={packName}>
                   <span className="inline-block">{packName}</span>
                   <ul>
-                    {rules.map(rule => (
-                      <li key={rule} className="list-disc">
+                    {effects.map((effect) => (
+                      <li key={effect.name} className="list-disc">
                         <Button
                           isIconOnly
                           disableRipple
                           disableAnimation
                           className="bg-transparent w-fit !text-tiny !outline-0 hover:text-primary-400"
-                          onClick={evt => {
+                          onClick={(evt) => {
                             evt.nativeEvent.stopImmediatePropagation();
                             evt.stopPropagation();
 
-                            navigate(`/pack/${packName}/${rule}`);
+                            navigate(`/pack/${packName}/${effect}`);
                           }}
                         >
-                          {rule}
+                          {effect.name}
                         </Button>
                       </li>
                     ))}
@@ -212,16 +212,16 @@ export const Connections = () => {
         onSelectionChange={updateCurrentConn}
       >
         <TableHeader columns={columns}>
-          {column => (
+          {(column) => (
             <TableColumn key={column.key} maxWidth={column.maxWidth}>
               {column.label}
             </TableColumn>
           )}
         </TableHeader>
         <TableBody items={renderConnections} emptyContent="Empty connections">
-          {item => (
+          {(item) => (
             <TableRow key={item.id}>
-              {columnKey => (
+              {(columnKey) => (
                 <TableCell className="text-tiny">
                   {renderCell(item, columnKey)}
                 </TableCell>
@@ -323,7 +323,7 @@ const columns = [
     label: "DURATION",
   },
   {
-    key: "response.hitRules",
+    key: "response.effects",
     label: "HIT RULES",
   },
 ];

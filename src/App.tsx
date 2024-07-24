@@ -13,6 +13,8 @@ import "dayjs/locale/zh-cn";
 import { Pack } from "./Routes/Pack/Pack";
 import { Root } from "./Routes/Root";
 import { Rule } from "./Routes/Rule/Rule";
+import { Values } from "./Routes/Value/Values";
+import { Value } from "./Routes/Value/Value";
 import "./App.css";
 
 dayjs.locale("zh-cn");
@@ -33,6 +35,9 @@ function App() {
               <Route element={<Connections />} index />
               <Route element={<Pack />} path="pack/:packName?">
                 <Route element={<Rule />} path=":mode?" />
+              </Route>
+              <Route element={<Values />} path="value">
+                <Route element={<Value />} path=":name" />
               </Route>
             </Route>,
           ),

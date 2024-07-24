@@ -4,9 +4,9 @@ use std::{
     sync::Arc,
 };
 use tauri::{
+    AppHandle,
     async_runtime::{self, Mutex},
-    plugin::{Builder, TauriPlugin},
-    AppHandle, Manager, Runtime, State,
+    Manager, plugin::{Builder, TauriPlugin}, Runtime, State,
 };
 use tokio::{
     net::TcpListener,
@@ -18,7 +18,6 @@ use crate::commands;
 use self::service::ProxyService;
 
 mod decoder;
-pub mod processor;
 mod rewind;
 mod service;
 mod tunnel;
@@ -130,7 +129,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::values::remove_value,
             commands::processor::set_processor,
             commands::processor::get_processor_content,
-            commands::processor::remove_response_mapping,
             commands::processor::get_processor_packs,
             commands::processor::add_processor_pack,
             commands::processor::remove_processor_pack,

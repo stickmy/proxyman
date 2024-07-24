@@ -4,11 +4,11 @@ import {
 } from "@/Commands/Commands";
 import cls from "classnames";
 import { AddIcon, DeleteIcon } from "@/Icons";
-import { usePackStore } from "@/Routes/Rule/usePacks";
 import { Button, Switch, useDisclosure } from "@nextui-org/react";
 import { type ChangeEvent, type FC, type MouseEvent, useEffect } from "react";
 import toast from "react-hot-toast";
 import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
+import { usePackStore } from "./usePacks";
 import { CreatePack } from "./CreatePack";
 
 export const Pack: FC = () => {
@@ -21,6 +21,9 @@ export const Pack: FC = () => {
   useEffect(() => {
     // 如果路由中没有 packName, 则跳转第一个 pack 为默认路由
     if (!packName && packs.length !== 0) {
+      navigate(`/pack/${packs[0].packName}`);
+    } else if (packs.every((x) => x.packName !== packName)) {
+      // packs 中没有 packName, 可能是该 pack 被删除了
       navigate(`/pack/${packs[0].packName}`);
     }
   }, [packName, packs, navigate]);
@@ -57,6 +60,10 @@ export const Pack: FC = () => {
     }
   };
 
+  const onCreatedSuccess = (name: string) => {
+    navigate(`/pack/${name}`);
+  };
+
   const { isOpen, onOpenChange, onOpen } = useDisclosure();
 
   return (
@@ -73,7 +80,11 @@ export const Pack: FC = () => {
         >
           创建规则组
         </Button>
-        <CreatePack isOpen={isOpen} onOpenChange={onOpenChange} />
+        <CreatePack
+          isOpen={isOpen}
+          onOpenChange={onOpenChange}
+          onSuccess={onCreatedSuccess}
+        />
         <ul>
           {packs.map((pack) => (
             <li key={pack.packName} className="[&:not(:last-child)]:mb-2">

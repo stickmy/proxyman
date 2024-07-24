@@ -1,5 +1,5 @@
 import { useTheme } from "@/Components/TopBar/useTheme";
-import { HttpIcon, RuleIcon } from "@/Icons";
+import { HttpIcon, RuleIcon, SharpIcon } from "@/Icons";
 import { Tooltip } from "@nextui-org/react";
 import React, { type FC } from "react";
 import { NavLink } from "react-router-dom";
@@ -40,6 +40,19 @@ export const Sidebar: FC = () => {
               })}
             >
               <RuleIcon size={18} />
+            </NavLink>
+          </Tooltip>
+        </li>
+        <li>
+          <Tooltip content="values" placement="right">
+            <NavLink
+              to="/value"
+              className="w-full h-full flex items-center justify-center"
+              style={({ isActive }) => ({
+                background: isActive ? getActiveColor() : "",
+              })}
+            >
+              <SharpIcon size={18} />
             </NavLink>
           </Tooltip>
         </li>

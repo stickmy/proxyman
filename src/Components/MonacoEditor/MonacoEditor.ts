@@ -41,6 +41,6 @@ export const createMonacoEditor = (
   });
 };
 
-const transformSystemThemeToMonaco = (theme: ThemeType) => {
+export const transformSystemThemeToMonaco = (theme: ThemeType) => {
   return theme === "light" ? "vs" : "vs-dark";
 };

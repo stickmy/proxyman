@@ -1,6 +1,6 @@
 use core::fmt;
 
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct ProcessorID(pub(super) &'static str);
@@ -41,7 +41,7 @@ impl TryFrom<String> for ProcessorID {
 impl Serialize for ProcessorID {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer,
+        S: Serializer,
     {
         serializer.serialize_str(self.0)
     }

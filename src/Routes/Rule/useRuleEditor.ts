@@ -1,6 +1,6 @@
 import { getProcessorContent, setProcessor } from "@/Commands/Commands";
 import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
-import { type ThemeType, useTheme } from "@/Components/TopBar/useTheme";
+import { useEditorTheme } from "@/Components/MonacoEditor/useEditorTheme";
 import { RuleMode } from "@/Events/ConnectionEvents";
 import { monaco } from "@/Monaco/Monaco";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -19,27 +19,11 @@ export const useRuleEditor = (
     [mode],
   );
 
-  const { theme, onThemeChange, offThemeChange } = useTheme();
-
-  const setEditorTheme = (theme: ThemeType) => {
-    if (editorRef.current) {
-      editorRef.current.updateOptions({
-        theme: theme === "light" ? "vs" : "vs-dark",
-      });
-    }
-  };
-
-  useEffect(() => {
-    onThemeChange(setEditorTheme);
-
-    return () => {
-      offThemeChange(setEditorTheme);
-    };
-  }, []);
-
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
   const valueRef = useRef<string>();
   const saveRef = useRef<() => Promise<void>>();
+
+  const { theme } = useEditorTheme(editorRef);
 
   useEffect(() => {
     saveRef.current = async () => {
@@ -49,7 +33,6 @@ export const useRuleEditor = (
 
       if (editorRef.current) {
         const value = editorRef.current.getValue();
-        if (value === "") return;
         if (value === valueRef.current) return;
 
         try {
@@ -87,7 +70,7 @@ export const useRuleEditor = (
           });
           editor.addAction({
             id: "save-processor-file",
-            label: "save rule content",
+            label: "save processor content",
             keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
             run: () => {
               saveRef.current?.();
@@ -116,5 +99,6 @@ export const useRuleEditor = (
 const getRuleModeSerializationKey = (mode: RuleMode) => {
   if (mode === RuleMode.Delay) return "Delay";
   if (mode === RuleMode.Redirect) return "Redirect";
+  if (mode === RuleMode.Response) return "Response";
   throw new TypeError("Unsupported rule");
 };

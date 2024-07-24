@@ -4,9 +4,8 @@ use std::time::Duration;
 use regex::Regex;
 use tokio::time::sleep;
 
-use super::{HttpRequestProcessor, ProcessorID};
-use crate::processors::parser::ProcessorRuleParser;
-use crate::{processors::Processor, proxy::processor::RequestOrResponse};
+use super::{HttpRequestProcessor, ProcessorID, RequestProcessResult};
+use crate::processors::{parser::ProcessorRuleParser, Processor};
 
 impl ProcessorID {
     pub const DELAY: ProcessorID = ProcessorID("Delay");
@@ -39,7 +38,7 @@ impl Processor for RequestDelayProcessor {
 
 #[async_trait]
 impl HttpRequestProcessor for RequestDelayProcessor {
-    async fn process_request(&self, req: http::Request<hyper::Body>) -> (RequestOrResponse, bool) {
+    async fn process_request(&self, req: http::Request<hyper::Body>) -> RequestProcessResult {
         if let Some(ref mappings) = self.mappings {
             for RequestDelayMapping {
                 req_pattern,
@@ -61,18 +60,18 @@ impl HttpRequestProcessor for RequestDelayProcessor {
                 .await
                 .unwrap();
 
-                return (req.into(), true);
+                return (req.into(), true, None);
             }
         }
 
-        (req.into(), false)
+        (req.into(), false, None)
     }
 }
 
 impl ProcessorRuleParser for RequestDelayProcessor {
     type Rule = RequestDelayRule;
 
-    /// Parse configuation like this:
+    /// Parse configuration like this:
     /// ```shell
     /// # strip this line
     /// https://www.x.com 200

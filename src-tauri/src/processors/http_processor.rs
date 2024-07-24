@@ -3,26 +3,44 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 use hyper::{Body, Request, Response};
 
-use crate::proxy::processor::{self, RequestOrResponse, RuleHit};
+use crate::{
+    processors::processor::{self, RequestOrResponse},
+    processors::processor_effect::{ProcessorEffect, ProcessorEffects},
+};
+
+use super::{processor_id::ProcessorID, processor_pack::ProcessorPack, Processor};
 
 use self::{
     delay::RequestDelayProcessor, redirect::RequestRedirectProcessor, response::ResponseProcessor,
 };
 
-use super::{processor_id::ProcessorID, processor_pack::ProcessorPack, Processor};
-
 pub mod delay;
 pub mod redirect;
 pub mod response;
 
+pub type RequestProcessResult = (
+    RequestOrResponse,
+    // hit or not
+    bool,
+    // hit info
+    Option<HashMap<String, String>>,
+);
+pub type ResponseProcessResult = (
+    Response<Body>,
+    // hit or not
+    bool,
+    // hit info
+    Option<HashMap<String, String>>,
+);
+
 #[async_trait]
 pub trait HttpRequestProcessor: Send + Sync + std::fmt::Debug {
-    async fn process_request(&self, req: Request<Body>) -> (RequestOrResponse, bool);
+    async fn process_request(&self, req: Request<Body>) -> RequestProcessResult;
 }
 
 #[async_trait]
 pub trait HttpResponseProcessor: Send + Sync + std::fmt::Debug + Processor {
-    async fn process_response(&self, res: Response<Body>) -> (Response<Body>, bool);
+    async fn process_response(&self, res: Response<Body>) -> ResponseProcessResult;
 }
 
 #[derive(Debug, Clone)]
@@ -100,7 +118,7 @@ impl HttpProcessor {
 impl processor::HttpProcessor for HttpProcessor {
     async fn process_request(&self, req: Request<Body>) -> RequestOrResponse {
         let mut processed_ret: RequestOrResponse = req.into();
-        let mut hit_rules: RuleHit = HashMap::new();
+        let mut effects: ProcessorEffects = HashMap::new();
 
         for pack in self.packs.iter() {
             if pack.is_enable() {
@@ -108,14 +126,25 @@ impl processor::HttpProcessor for HttpProcessor {
                 let processors: Vec<&dyn Processor> =
                     vec![pack.get_redirect(), pack.get_response(), pack.get_delay()];
 
-                let mut pack_hit_rules = Vec::<String>::new();
+                let mut pack_effect = Vec::<ProcessorEffect>::new();
 
-                // Match all rules that could be matched in a signle pack.
+                // Match all rules that could be matched in a single pack.
                 for processor in processors.iter() {
-                    let (req_or_res, caught) = processor.process_request(processed_ret.req).await;
+                    let (req_or_res, hit, info) =
+                        processor.process_request(processed_ret.req).await;
 
-                    if caught {
-                        pack_hit_rules.push(processor.name().0.to_string());
+                    log::trace!(
+                        "process_request result: pack({}), processor({}), hit({hit}), info({:?})",
+                        pack.pack_name,
+                        processor.name(),
+                        info
+                    );
+
+                    if hit {
+                        pack_effect.push(ProcessorEffect {
+                            name: processor.name(),
+                            info,
+                        });
                     }
 
                     processed_ret.req = req_or_res.req;
@@ -124,16 +153,16 @@ impl processor::HttpProcessor for HttpProcessor {
                     }
                 }
 
-                if !pack_hit_rules.is_empty() {
-                    hit_rules.insert(pack.pack_name.clone(), pack_hit_rules);
+                if !pack_effect.is_empty() {
+                    effects.insert(pack.pack_name.clone(), pack_effect);
                     // Break the matching if any a pack could be matched successfully.
                     break;
                 }
             }
         }
 
-        if !hit_rules.is_empty() {
-            processed_ret.hit_rules = Some(hit_rules);
+        if !effects.is_empty() {
+            processed_ret.processor_effects = Some(effects);
         }
 
         processed_ret

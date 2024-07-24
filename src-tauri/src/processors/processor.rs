@@ -1,19 +1,16 @@
-use std::collections::HashMap;
-
 use async_trait::async_trait;
 use http::StatusCode;
 use hyper::{Body, Request, Response};
 use tokio_tungstenite::tungstenite::Message;
 
 use crate::error::Error;
-
-pub type RuleHit = HashMap<String /* pack name */, Vec<String> /* pack hit rules */>;
+use crate::processors::processor_effect::ProcessorEffects;
 
 #[derive(Debug)]
 pub struct RequestOrResponse {
     pub req: Request<Body>,
     pub res: Option<Response<Body>>,
-    pub hit_rules: Option<RuleHit>,
+    pub processor_effects: Option<ProcessorEffects>,
 }
 
 impl From<Request<Body>> for RequestOrResponse {
@@ -21,7 +18,7 @@ impl From<Request<Body>> for RequestOrResponse {
         Self {
             req: value,
             res: None,
-            hit_rules: None,
+            processor_effects: None,
         }
     }
 }
@@ -31,7 +28,7 @@ impl From<(Request<Body>, Response<Body>)> for RequestOrResponse {
         Self {
             req: value.0,
             res: Some(value.1),
-            hit_rules: None,
+            processor_effects: None,
         }
     }
 }

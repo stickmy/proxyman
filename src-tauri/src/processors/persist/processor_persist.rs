@@ -1,18 +1,19 @@
-use std::{fs, io::Write};
 use std::collections::HashMap;
+use std::{fs, io::Write};
 
 use snafu::ResultExt;
 
 use crate::app_conf;
-use crate::error::{
-    self,
-    Error,
-    processor_error::{ProcessorErrorKind, ReadError}, ProcessorError,
-};
 use crate::error::processor_error::ReadStatusError;
 use crate::error::ProcessorStatusError;
+use crate::error::{
+    self,
+    processor_error::{ProcessorErrorKind, ReadError},
+    Error, ProcessorError,
+};
 use crate::processors::http_processor::delay::RequestDelayProcessor;
 use crate::processors::http_processor::redirect::RequestRedirectProcessor;
+use crate::processors::http_processor::response::ResponseProcessor;
 use crate::processors::processor_id::ProcessorID;
 use crate::processors::processor_pack::ProcessorPack;
 
@@ -29,7 +30,7 @@ pub fn read_processor_packs_status() -> Result<ProcessorPackStatus, Error> {
 }
 
 pub fn write_processor_pack_status(pack_name: &str, enable: bool) -> Result<(), Error> {
-    let mut status = read_processor_packs_status().unwrap_or(HashMap::default());
+    let mut status = read_processor_packs_status().unwrap_or_default();
 
     status.insert(pack_name.to_string(), enable);
 
@@ -83,6 +84,8 @@ pub fn read_processors_from_appdir() -> Vec<ProcessorPack> {
                                                 ProcessorID::DELAY => pack.set_delay(
                                                     RequestDelayProcessor::from(content),
                                                 ),
+                                                ProcessorID::RESPONSE => pack
+                                                    .set_response(ResponseProcessor::from(content)),
                                                 _ => {
                                                     log::debug!(
                                                         "processor file: {processor_id} is ignored"
@@ -115,7 +118,7 @@ pub fn delete_pack_dir(pack_name: &str) -> std::io::Result<()> {
     let dir = app_conf::app_rule_dir().join(pack_name);
 
     if !dir.exists() {
-        return Ok(())
+        return Ok(());
     }
 
     fs::remove_dir_all(dir)

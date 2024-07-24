@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::str::FromStr;
 
 use async_trait::async_trait;
@@ -5,10 +6,9 @@ use http::Uri;
 use hyper::{Body, Request};
 use regex::Regex;
 
-use crate::{processors::Processor, proxy::processor::RequestOrResponse};
-use crate::processors::parser::ProcessorRuleParser;
+use crate::processors::{parser::ProcessorRuleParser, Processor};
 
-use super::{HttpRequestProcessor, ProcessorID};
+use super::{HttpRequestProcessor, ProcessorID, RequestProcessResult};
 
 impl ProcessorID {
     pub const REDIRECT: ProcessorID = ProcessorID("Redirect");
@@ -33,21 +33,24 @@ impl Processor for RequestRedirectProcessor {
 
 #[async_trait]
 impl HttpRequestProcessor for RequestRedirectProcessor {
-    async fn process_request(&self, mut req: Request<Body>) -> (RequestOrResponse, bool) {
+    async fn process_request(&self, mut req: Request<Body>) -> RequestProcessResult {
         if let Some(ref mappings) = self.mappings {
             for [reg_str, dest] in mappings.iter() {
                 match replace_with_reg_str(reg_str, dest, req.uri().to_string()) {
                     None => continue,
                     Some(ret) => {
                         *req.uri_mut() = Uri::from_str(&ret).unwrap();
+
+                        let mut hit_info = HashMap::<String, String>::new();
+                        hit_info.insert(String::from("uri"), ret);
+
+                        return (req.into(), true, Some(hit_info));
                     }
                 }
-
-                return (req.into(), true);
             }
         }
 
-        (req.into(), false)
+        (req.into(), false, None)
     }
 }
 
@@ -56,9 +59,9 @@ impl ProcessorRuleParser for RequestRedirectProcessor {
 
     /// Parse configuration like this:
     /// ```shell
-    /// # strip this line
+    /// ## This is a comment line
     /// https://www.x.com https://www.y.com
-    ///    https://wwww.m.com  https://www.n.com
+    /// https://wwww.m.com https://www.n.com
     /// ```
     fn parse_rule(content: &str) -> Self::Rule {
         let lines = content.split('\n');
@@ -111,7 +114,7 @@ fn replace_with_reg_str(reg_str: &str, dest: &String, source: String) -> Option<
 
     match re.is_match(&source) {
         false => None,
-        true => Some(re.replace(source.as_str(), dest).to_string())
+        true => Some(re.replace(source.as_str(), dest).to_string()),
     }
 }
 
@@ -130,4 +133,3 @@ mod tests {
         assert_eq!(result, Some("https://www.baidu.com/a=1&b=2".to_string()));
     }
 }
-

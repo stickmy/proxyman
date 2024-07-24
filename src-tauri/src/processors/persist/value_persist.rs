@@ -1,11 +1,11 @@
 use crate::app_conf::app_value_dir;
-use std::{ffi::OsString, fs, io::Write, path::PathBuf};
+use std::{fs, io::Write, path::PathBuf};
 
-pub fn read_value_list_from_appdir() -> Result<Vec<OsString>, std::io::Error> {
+pub fn read_value_list_from_appdir() -> Result<Vec<String>, std::io::Error> {
     let files = fs::read_dir(app_value_dir());
 
     files
-        .map(|d| d.flatten().map(|f| f.file_name()))
+        .map(|d| d.flatten().map(|f| f.file_name().into_string().unwrap()))
         .map(|c| c.collect())
 }
 

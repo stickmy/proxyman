@@ -21,10 +21,7 @@ export const ConnectionDetail: FC<{
       </Tab>
       <Tab key="response" title="Response" className="h-full">
         {connection.response ? (
-          <Response
-            uri={connection.request.uri}
-            response={connection.response}
-          />
+          <Response response={connection.response} />
         ) : (
           <Spinner />
         )}

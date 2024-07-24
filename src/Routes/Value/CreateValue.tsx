@@ -9,53 +9,54 @@ import {
 } from "@nextui-org/react";
 import { type FC, useState } from "react";
 import { toast } from "react-hot-toast";
-import { usePackStore } from "./usePacks";
-import { useCreatePack } from "./useCreatePack";
+import { useValueStore } from "./useValueStore";
+import { useCreateValue } from "./useCreateValue";
 
-export const CreatePack: FC<{
+export const CreateValue: FC<{
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  content?: string;
   onSuccess?: (name: string) => void;
-}> = ({ isOpen, onOpenChange, onSuccess }) => {
+}> = ({ content = "", isOpen, onOpenChange, onSuccess }) => {
   const [isInvalid, setIsInvalid] = useState<boolean>(false);
   const [invalidMessage, setInvalidMessage] = useState<string>();
 
-  const [packName, setPackName] = useState<string>("");
-  const { packs } = usePackStore();
-  const { createPack, loading } = useCreatePack();
+  const [valueName, setValueName] = useState<string>("");
+  const { values } = useValueStore();
+  const { createValue, loading } = useCreateValue();
 
-  const onPackNameChange = (name: string) => {
-    setPackName(name);
+  const onValueNameChange = (name: string) => {
+    setValueName(name);
 
     if (!name) {
       setIsInvalid(true);
-      setInvalidMessage("规则组名称不能为空");
+      setInvalidMessage("值文件名称不能为空");
       return;
     }
 
-    const exists = packs.some((pack) => pack.packName === name);
+    const exists = values.some((value) => value === name);
     if (exists) {
       setIsInvalid(true);
-      setInvalidMessage(`规则组(${name})已存在`);
+      setInvalidMessage(`值文件(${name})已存在`);
       return;
     }
 
     setIsInvalid(false);
   };
 
-  const createPackAndClose = async (onClose: () => void) => {
+  const createValueAndClose = async (onClose: () => void) => {
     if (loading) return;
 
-    if (!packName || isInvalid) {
-      toast.error("请检查规则组名称", { duration: 20000 });
+    if (!valueName || isInvalid) {
+      toast.error("请检查值文件名称", { duration: 20000 });
       return;
     }
 
     try {
-      await createPack(packName);
+      await createValue(valueName, content);
       toast.success("创建成功");
       onClose();
-      onSuccess?.(packName);
+      onSuccess?.(valueName);
     } catch (error) {
       toast.error(error as string);
     }
@@ -72,17 +73,17 @@ export const CreatePack: FC<{
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1 text-tiny">
-              创建规则组
+              创建值文件
             </ModalHeader>
             <ModalBody>
               <Input
                 size="sm"
                 autoFocus
-                label="规则组名称"
-                placeholder="输入规则组名称"
+                label="值文件名称"
+                placeholder="输入值文件名称"
                 variant="bordered"
-                value={packName}
-                onValueChange={onPackNameChange}
+                value={valueName}
+                onValueChange={onValueNameChange}
                 isInvalid={isInvalid}
                 errorMessage={invalidMessage}
               />
@@ -93,7 +94,7 @@ export const CreatePack: FC<{
               </Button>
               <Button
                 color="primary"
-                onPress={() => createPackAndClose(onClose)}
+                onPress={() => createValueAndClose(onClose)}
                 size="sm"
                 isLoading={loading}
               >

@@ -1,30 +1,28 @@
-import { setProcessor } from "@/Commands/Commands";
 import { createMonacoEditor } from "@/Components/MonacoEditor/MonacoEditor";
 import { useTheme } from "@/Components/TopBar/useTheme";
 import { type ResponseConnection, RuleMode } from "@/Events/ConnectionEvents";
 import type { monaco } from "@/Monaco/Monaco";
-import { useConnActionStore } from "@/Routes/Connections/ConnActionStore";
 import { Headers } from "@/Routes/Connections/Detail/Headers";
 import { isJsonp } from "@/Routes/Connections/Detail/Helper";
-import { usePackStore } from "@/Routes/Rule/usePacks";
-import { Chip, Snippet, Tab, Tabs, Tooltip } from "@nextui-org/react";
+import {
+  Chip,
+  Snippet,
+  Tab,
+  Tabs,
+  Tooltip,
+  useDisclosure,
+} from "@nextui-org/react";
 import cls from "classnames";
 import dayjs from "dayjs";
-import React, {
-  type FC,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import toast from "react-hot-toast";
+import React, { type FC, useLayoutEffect, useRef, useState } from "react";
 import { usePretty } from "./Hooks/usePretty";
+import { CreateValue } from "@/Routes/Value/CreateValue";
+import { useNavigate } from "react-router-dom";
 
 export const Response: FC<{
-  uri: string;
   response: ResponseConnection;
-}> = ({ uri, response }) => {
-  const { packs } = usePackStore();
+}> = ({ response }) => {
+  const navigate = useNavigate();
 
   const { theme } = useTheme();
 
@@ -60,60 +58,44 @@ export const Response: FC<{
     }, 100);
   }, [activeTab]);
 
+  const [savedResponseValue, setSavedResponseValue] = useState<string>();
+  const { isOpen, onOpenChange, onOpen } = useDisclosure();
   const [beEditing, setBeEditing] = useState<boolean>(false);
+
   const onEditClick = () => {
-    if (!resMonacoRef.current) return;
-
-    resMonacoRef.current.updateOptions({
-      readOnly: beEditing,
-    });
-
-    setBeEditing(!beEditing);
-  };
-  useEffect(() => {
+    // 没处于编辑状态, 开启编辑状态
     if (!beEditing) {
-      // Response 规则的生命周期是 session 周期, 它的设置也不需要指定 pack, 因此选取任一开启的 pack 即可
-      const pack = packs.find((x) => x.enable);
+      // 编辑行为分两种
+      // 1. 第一次进入编辑态
+      // 2. 之前已经保存为值文件, 并通过 Response 处理器返回为这次的响应, 此时的编辑是跳转到值文件
+      if (response.effects) {
+        const effects = Object.values(response.effects).flat();
+        const effect = effects.find((x) => x.name === RuleMode.Response);
 
-      if (!pack) {
-        toast("请开启任一规则");
-        return;
+        if (effect) {
+          navigate(`/value/${effect.info.name}`);
+          return;
+        }
       }
 
       if (!resMonacoRef.current) return;
 
-      const body = resMonacoRef.current.getValue();
+      resMonacoRef.current.updateOptions({
+        readOnly: beEditing,
+      });
+    } else {
+      // 出于编辑状态, 保存值
+      if (!resMonacoRef.current) return;
 
+      const body = resMonacoRef.current.getValue();
       if (body === response.body) return;
 
-      const rule = asProcessorRule(uri, response, body);
-      (async () => {
-        try {
-          await setProcessor(pack.packName, RuleMode.Response, rule);
-          setDetailVisible(false);
-        } catch (error: any) {
-          toast.error(error);
-        }
-      })();
-    }
-  }, [beEditing]);
+      setSavedResponseValue(asResponseValue(response, body));
 
-  const { setDetailVisible } = useConnActionStore();
-
-  const dropEditedResponse = async () => {
-    const pack = packs.find((x) => x.enable);
-
-    if (!pack) {
-      toast("请开启任一规则");
-      return;
+      onOpen();
     }
 
-    try {
-      // await removeResponseMapping(pack.packName, uri);
-      setDetailVisible(false);
-    } catch (error: any) {
-      toast.error("重置失败");
-    }
+    setBeEditing(!beEditing);
   };
 
   const notStringLike = !!(
@@ -169,38 +151,22 @@ export const Response: FC<{
               onClick={pretty}
               size="sm"
               className={cls(
-                "mr-1",
-                "cursor-pointer",
+                "mr-2 cursor-pointer px-2",
                 isPretty ? "bg-success-300" : "bg-default-100",
               )}
             >
               格式化
             </Chip>
-            {/* <Button
-              onClick={pretty}
-              size="mini"
-              type={isPretty ? "primary" : "default"}
-              className="mr-1"
-            >
-              Pretty
-            </Button>
-            <Button
-              size="mini"
-              type={beEditing ? "primary" : "default"}
+            <Chip
               onClick={onEditClick}
+              size="sm"
+              className={cls(
+                "mr-2 cursor-pointer px-2",
+                beEditing ? "bg-success-300" : "bg-default-100",
+              )}
             >
-              {beEditing ? "Save as next return" : "Edit"}
-            </Button>
-            {response.hitRules?.includes(RuleMode.Response) && (
-              <Button
-                size="mini"
-                type="dashed"
-                className="ml-1"
-                onClick={dropEditedResponse}
-              >
-                Drop edited response
-              </Button> */}
-            {/* )} */}
+              {beEditing ? "保存为值文件" : "编辑"}
+            </Chip>
           </div>
           {notStringLike && (
             <MediaResponse uri={response.uri} contentType={contentType} />
@@ -216,6 +182,11 @@ export const Response: FC<{
           />
         </Tab>
       </Tabs>
+      <CreateValue
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        content={savedResponseValue}
+      />
     </div>
   );
 };
@@ -269,12 +240,7 @@ function getBodyModel(response: ResponseConnection) {
   };
 }
 
-function asProcessorRule(
-  uri: string,
-  response: ResponseConnection,
-  body: string,
-): string {
-  // req pattern
+function asResponseValue(response: ResponseConnection, body: string): string {
   // version status
   // header1
   // header2
@@ -286,5 +252,5 @@ function asProcessorRule(
     .join("\n");
 
   // biome-ignore lint: the format is more clearly.
-  return uri + "\n" + versionStatus + "\n" + headers + "\n\n" + body;
+  return versionStatus + "\n" + headers + "\n\n" + body;
 }
