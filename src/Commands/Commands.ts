@@ -128,6 +128,6 @@ const invokeWithLogging = async <T>(
     return t;
   } catch (error: any) {
     console.debug("Command error - ", error);
-    throw JSON.parse(error);
+    throw typeof error === "string" ? error : JSON.parse(error);
   }
 };

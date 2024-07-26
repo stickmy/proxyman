@@ -20,9 +20,9 @@ export const Pack: FC = () => {
 
   useEffect(() => {
     // 如果路由中没有 packName, 则跳转第一个 pack 为默认路由
-    if (!packName && packs.length !== 0) {
+    if (!packName && packs.length) {
       navigate(`/pack/${packs[0].packName}`);
-    } else if (packs.every((x) => x.packName !== packName)) {
+    } else if (packs.length && packs.every((x) => x.packName !== packName)) {
       // packs 中没有 packName, 可能是该 pack 被删除了
       navigate(`/pack/${packs[0].packName}`);
     }

@@ -127,7 +127,7 @@ export const TopBar = () => {
       .then(() => {
         toast.success("终端代理命令已复制");
       })
-      .catch(err => {
+      .catch((err) => {
         toast.error("复制失败");
       });
   }

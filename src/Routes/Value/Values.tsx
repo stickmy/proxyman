@@ -16,9 +16,9 @@ export const Values: FC = () => {
 
   useEffect(() => {
     // 重定向到第一个 item
-    if (!name && values.length !== 0) {
+    if (!name && values.length) {
       navigate(`/value/${values[0]}`);
-    } else if (values.every((x) => x !== name)) {
+    } else if (values.length && values.every((x) => x !== name)) {
       // name 不在 values 中, 可能是 name 被删除了
       navigate(`/value/${values[0]}`);
     }
