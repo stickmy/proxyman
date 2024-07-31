@@ -17,12 +17,11 @@
     ],
     "resources": ["ca/*"],
     "targets": "all",
-    "createUpdaterArtifacts": "v1Compatible"
+    "createUpdaterArtifacts": false
   },
   "productName": "Proxyman",
   "version": "0.1.0",
   "identifier": "com.proxyman",
-  "plugins": {},
   "app": {
     "windows": [
       {
