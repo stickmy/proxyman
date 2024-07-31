@@ -1,10 +1,13 @@
 use std::{convert::Infallible, sync::Arc};
 
 use bytes::Bytes;
-use http::{Method, StatusCode, uri::{Authority, Scheme}, Uri};
+use http::{
+    uri::{Authority, Scheme},
+    Method, StatusCode, Uri,
+};
 use hyper::{
-    Body, Client, client::connect::Connect, header::Entry,
-    Request, Response, server::conn::Http, service::service_fn, upgrade::Upgraded,
+    client::connect::Connect, header::Entry, server::conn::Http, service::service_fn,
+    upgrade::Upgraded, Body, Client, Request, Response,
 };
 use snafu::ResultExt;
 use tauri::async_runtime::Mutex;
@@ -14,21 +17,21 @@ use tokio::{
     sync::mpsc::Sender,
 };
 use tokio_rustls::TlsAcceptor;
-use tokio_tungstenite::{Connector, tungstenite, WebSocketStream};
+use tokio_tungstenite::{tungstenite, Connector, WebSocketStream};
 use uuid::Uuid;
 
 use crate::{
     ca::CertificateAuthority,
     error::{
-        ClientError,
-        endpoint_error::{EndpointError, HttpError, WebsocketProtocolError}, ServerError,
+        endpoint_error::{EndpointError, HttpError, WebsocketProtocolError},
+        ClientError, ServerError,
     },
     events::{Events, RequestEvent, ResponseEvent},
 };
 
 use super::decoder::{decode_request, decode_response};
-use crate::processors::processor;
 use super::rewind::Rewind;
+use crate::processors::processor;
 
 pub struct Tunnel<CA, C, P> {
     pub ca: Arc<CA>,
@@ -39,9 +42,9 @@ pub struct Tunnel<CA, C, P> {
 }
 
 impl<CA, C, P> Clone for Tunnel<CA, C, P>
-    where
-        C: Clone,
-        P: Clone,
+where
+    C: Clone,
+    P: Clone,
 {
     fn clone(&self) -> Self {
         Tunnel {
@@ -55,10 +58,10 @@ impl<CA, C, P> Clone for Tunnel<CA, C, P>
 }
 
 impl<CA, C, P> Tunnel<CA, C, P>
-    where
-        CA: CertificateAuthority,
-        C: Connect + Clone + Send + Sync + 'static,
-        P: processor::HttpProcessor + std::fmt::Debug,
+where
+    CA: CertificateAuthority,
+    C: Connect + Clone + Send + Sync + 'static,
+    P: processor::HttpProcessor + std::fmt::Debug,
 {
     async fn send_event(&self, event: Events) {
         if let Err(e) = self.transporter.send(event).await {
@@ -82,7 +85,8 @@ impl<CA, C, P> Tunnel<CA, C, P>
                 })
                 .unwrap();
 
-            self.send_event(RequestEvent::new(conn_id, &mut req).await.into()).await;
+            self.send_event(RequestEvent::new(conn_id, &mut req).await.into())
+                .await;
 
             let processor = self.processor.lock().await;
             let req_or_res = processor.process_request(req).await;
@@ -91,11 +95,16 @@ impl<CA, C, P> Tunnel<CA, C, P>
             let req = match req_or_res.res {
                 Some(mut res) => {
                     self.send_event(
-                        ResponseEvent::new(conn_id, req_or_res.req.uri().to_owned(), &mut res, req_or_res.processor_effects)
-                            .await
-                            .into(),
+                        ResponseEvent::new(
+                            conn_id,
+                            req_or_res.req.uri().to_owned(),
+                            &mut res,
+                            req_or_res.processor_effects,
+                        )
+                        .await
+                        .into(),
                     )
-                        .await;
+                    .await;
                     return Ok(res);
                 }
                 None => req_or_res.req,
@@ -128,7 +137,7 @@ impl<CA, C, P> Tunnel<CA, C, P>
                     .await
                     .into(),
             )
-                .await;
+            .await;
 
             Ok(res)
         }
@@ -291,8 +300,8 @@ impl<CA, C, P> Tunnel<CA, C, P>
         scheme: Scheme,
         authority: Authority,
     ) -> Result<(), EndpointError>
-        where
-            S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
+    where
+        S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
     {
         let service = service_fn(|mut req| {
             if req.version() == hyper::Version::HTTP_10 || req.version() == hyper::Version::HTTP_11

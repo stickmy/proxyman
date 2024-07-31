@@ -1,8 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use sys_events::handle_sys_events;
-
 mod app_conf;
 mod ca;
 mod commands;
@@ -19,30 +17,56 @@ fn main() {
     let context = tauri::generate_context!();
 
     let app = tauri::Builder::default()
-        .plugin(proxy::init())
-        .menu(window::initial_menu(tauri::Menu::os_default(&context.package_info().name)))
-        .on_menu_event(window::register_menu_events)
-        .setup(|_app| {
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .setup(|app| {
             if let Err(e) = app_conf::init() {
                 return Err(Box::new(e));
             }
 
+            proxy::set_proxy_state(app);
+
+            let menu = window::build_menu(app)?;
+            app.set_menu(menu)?;
+
             simplelog::CombinedLogger::init(vec![simplelog::WriteLogger::new(
                 #[cfg(debug_assertions)]
-                    simplelog::LevelFilter::Trace,
+                simplelog::LevelFilter::Trace,
                 #[cfg(not(debug_assertions))]
-                    simplelog::LevelFilter::Debug,
+                simplelog::LevelFilter::Debug,
                 simplelog::ConfigBuilder::new()
                     .add_filter_allow_str("proxyman")
                     .build(),
                 std::fs::File::create(app_conf::app_logger_file()).unwrap(),
             )])
-                .unwrap();
+            .unwrap();
 
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![
+            proxy::start_proxy,
+            proxy::stop_proxy,
+            proxy::proxy_status,
+            commands::ca::check_cert_installed,
+            commands::ca::install_cert,
+            commands::values::get_value_list,
+            commands::values::get_value_content,
+            commands::values::save_value,
+            commands::values::remove_value,
+            commands::processor::set_processor,
+            commands::processor::get_processor_content,
+            commands::processor::get_processor_packs,
+            commands::processor::add_processor_pack,
+            commands::processor::remove_processor_pack,
+            commands::processor::update_processor_pack_status,
+            commands::global_proxy::turn_on_global_proxy,
+            commands::global_proxy::turn_off_global_proxy,
+            commands::app_setting::set_app_setting,
+            commands::app_setting::get_app_setting,
+        ])
         .build(context)
         .expect("error while running tauri application");
 
-    app.run(handle_sys_events);
+    app.run(sys_events::handle_sys_events);
 }

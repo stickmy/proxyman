@@ -48,10 +48,7 @@ pub(super) fn read_app_setting<P: AsRef<Path>>(path: P) -> Result<AppSetting, Er
     Ok(conf)
 }
 
-pub(super) fn write_app_setting<P: AsRef<Path>>(
-    path: P,
-    conf: AppSetting,
-) -> Result<(), Error> {
+pub(super) fn write_app_setting<P: AsRef<Path>>(path: P, conf: AppSetting) -> Result<(), Error> {
     let str = serde_json::to_string(&conf).map_err(|err| Error::Configuration {
         scenario: "serialized as string",
         source: ConfigurationErrorKind::AppSettingFmt {

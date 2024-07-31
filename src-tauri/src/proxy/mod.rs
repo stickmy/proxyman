@@ -4,9 +4,8 @@ use std::{
     sync::Arc,
 };
 use tauri::{
-    AppHandle,
     async_runtime::{self, Mutex},
-    Manager, plugin::{Builder, TauriPlugin}, Runtime, State,
+    AppHandle, Emitter, Manager, Runtime, State,
 };
 use tokio::{
     net::TcpListener,
@@ -36,6 +35,16 @@ pub(crate) type ProxyState = Mutex<
 struct ProxyStartResult {
     pub success: bool,
     pub reason: Option<String>,
+}
+
+async fn check_port_available(port: u16) -> bool {
+    let v4_addr = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), port);
+    let v6_addr = SocketAddrV6::new(Ipv6Addr::UNSPECIFIED, port, 0, 0);
+    TcpListener::bind(v4_addr).await.is_ok() && TcpListener::bind(v6_addr).await.is_ok()
+}
+
+pub fn set_proxy_state(app: &tauri::App) {
+    app.manage(Mutex::new(None) as ProxyState);
 }
 
 #[tauri::command]
@@ -75,7 +84,7 @@ pub(crate) async fn start_proxy<R: Runtime>(
 
     let transporter_thread = async_runtime::spawn(async move {
         while let Some(exchange) = transporter_recv.recv().await {
-            app.emit_all("proxy_event", exchange).unwrap();
+            app.emit("proxy_event", exchange).unwrap();
         }
     });
 
@@ -92,7 +101,7 @@ pub(crate) async fn start_proxy<R: Runtime>(
 }
 
 #[tauri::command]
-async fn stop_proxy(proxy: State<'_, ProxyState>) -> Result<(), String> {
+pub(crate) async fn stop_proxy(proxy: State<'_, ProxyState>) -> Result<(), String> {
     let mut proxy = proxy.lock().await;
     assert!(proxy.is_some());
     proxy.take();
@@ -100,43 +109,6 @@ async fn stop_proxy(proxy: State<'_, ProxyState>) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn proxy_status(proxy: State<'_, ProxyState>) -> Result<bool, String> {
+pub(crate) async fn proxy_status(proxy: State<'_, ProxyState>) -> Result<bool, String> {
     Ok(proxy.lock().await.is_some())
-}
-
-async fn check_port_available(port: u16) -> bool {
-    let v4_addr = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), port);
-    let v6_addr = SocketAddrV6::new(Ipv6Addr::UNSPECIFIED, port, 0, 0);
-    TcpListener::bind(v4_addr).await.is_ok() && TcpListener::bind(v6_addr).await.is_ok()
-}
-
-pub fn init<R: Runtime>() -> TauriPlugin<R> {
-    Builder::new("proxy")
-        .setup(|app_handle| {
-            app_handle.manage(Mutex::new(None) as ProxyState);
-
-            Ok(())
-        })
-        .invoke_handler(tauri::generate_handler![
-            start_proxy,
-            stop_proxy,
-            proxy_status,
-            commands::ca::check_cert_installed,
-            commands::ca::install_cert,
-            commands::values::get_value_list,
-            commands::values::get_value_content,
-            commands::values::save_value,
-            commands::values::remove_value,
-            commands::processor::set_processor,
-            commands::processor::get_processor_content,
-            commands::processor::get_processor_packs,
-            commands::processor::add_processor_pack,
-            commands::processor::remove_processor_pack,
-            commands::processor::update_processor_pack_status,
-            commands::global_proxy::turn_on_global_proxy,
-            commands::global_proxy::turn_off_global_proxy,
-            commands::app_setting::set_app_setting,
-            commands::app_setting::get_app_setting,
-        ])
-        .build()
 }

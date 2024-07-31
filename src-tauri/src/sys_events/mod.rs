@@ -8,7 +8,10 @@ pub fn handle_sys_events<R: Runtime>(_app_handler: &AppHandle<R>, event: RunEven
         RunEvent::ExitRequested { .. } => {
             tauri::async_runtime::block_on(async {
                 if let Err(e) = turn_off_global_proxy().await {
-                    log::error!("App exits with cleaup failed - turn off proxy, {}", e);
+                    log::error!(
+                        "App exits with cleaup failed - turn off global proxy, {}",
+                        e
+                    );
                 }
             });
         }

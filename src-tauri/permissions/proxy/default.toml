@@ -1,0 +1,25 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = "Default permissions for proxy plugin"
+permissions = [
+    "allow-start-proxy",
+    "allow-stop-proxy",
+    "allow-proxy-status",
+    "allow-check-cert-installed",
+    "allow-install-cert",
+    "allow-get-value-list",
+    "allow-get-value-content",
+    "allow-save-value",
+    "allow-remove-value",
+    "allow-set-processor",
+    "allow-get-processor-content",
+    "allow-get-processor-packs",
+    "allow-add-processor-pack",
+    "allow-remove-processor-pack",
+    "allow-update-processor-pack-status",
+    "allow-turn-on-global-proxy",
+    "allow-turn-off-global-proxy",
+    "allow-set-app-setting",
+    "allow-get-app-setting",
+]

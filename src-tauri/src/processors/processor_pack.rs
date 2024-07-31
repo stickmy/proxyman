@@ -1,4 +1,4 @@
-use super::http_processor::{delay::*,redirect::*,response::*};
+use super::http_processor::{delay::*, redirect::*, response::*};
 
 #[derive(Debug, Clone)]
 pub struct ProcessorPack {

@@ -78,7 +78,7 @@ export const TopBar = () => {
     toast.promise(installTlsDefer, {
       loading: "TLS 证书安装中",
       success: "安装成功",
-      error: "安装失败",
+      error: "安装失败, 请查看日志",
     });
 
     try {

@@ -1,6 +1,6 @@
 use async_process::Command;
 use std::path::PathBuf;
-use tauri::{AppHandle, Runtime};
+use tauri::{AppHandle, Manager, Runtime};
 
 use crate::error::{configuration_error::ConfigurationErrorKind, Error};
 
@@ -51,7 +51,7 @@ pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, Error> 
                 .map_err(|_| Error::Configuration {
                     scenario: "Install https certificate",
                     source: ConfigurationErrorKind::Cert {
-                        scenario: "Execute 'security add-trusted-cert'"
+                        scenario: "Execute 'security add-trusted-cert'",
                     },
                 })
                 .and_then(|out| {
@@ -84,8 +84,8 @@ pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, Error> 
 }
 
 fn get_ca_path<R: Runtime>(app: AppHandle<R>) -> PathBuf {
-    app.path_resolver()
-        .resolve_resource("ca/proxyman.cer")
+    app.path()
+        .resolve("ca/proxyman.cer", tauri::path::BaseDirectory::Resource)
         .expect("failed to resolve certificate")
 }
 

@@ -2,55 +2,28 @@
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
     "beforeDevCommand": "pnpm dev",
-    "devPath": "http://localhost:1420",
-    "distDir": "../dist"
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420"
   },
-  "package": {
-    "productName": "Proxyman",
-    "version": "0.1.0"
+  "bundle": {
+    "active": true,
+    "category": "DeveloperTool",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": ["ca/*"],
+    "targets": "all",
+    "createUpdaterArtifacts": "v1Compatible"
   },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      },
-      "fs": {
-        "all": false,
-        "scope": ["$RESOURCE/ca/*", "$CONFIG/*/**"],
-        "writeFile": true,
-        "readFile": true,
-        "readDir": true,
-        "createDir": true,
-        "exists": true
-      },
-      "clipboard": {
-        "writeText": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "category": "DeveloperTool",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "com.proxyman",
-      "targets": "all",
-      "resources": [
-        "ca/*"
-      ]
-    },
-    "security": {
-      "csp": null
-    },
-    "updater": {
-      "active": false
-    },
+  "productName": "Proxyman",
+  "version": "0.1.0",
+  "identifier": "com.proxyman",
+  "plugins": {},
+  "app": {
     "windows": [
       {
         "fullscreen": false,
@@ -61,6 +34,15 @@
         "visible": true,
         "center": true
       }
-    ]
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self' customprotocol: asset:",
+        "connect-src": "ipc: http://ipc.localhost",
+        "font-src": ["https://fonts.gstatic.com"],
+        "img-src": "'self' asset: http://asset.localhost blob: data:",
+        "style-src": "'unsafe-inline' 'self'"
+      }
+    }
   }
 }

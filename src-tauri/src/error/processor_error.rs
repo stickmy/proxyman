@@ -40,11 +40,11 @@ impl Serialize for ProcessorErrorKind {
                 state.serialize_field("message", source.to_string().as_str())?;
                 state.end()
             }
-            Self::Fmt {  } => {
+            Self::Fmt {} => {
                 let mut state = serializer.serialize_struct("Format", 1)?;
                 state.serialize_field("message", "Format error")?;
                 state.end()
-            },
+            }
             Self::NotFound {} => {
                 let mut state = serializer.serialize_struct("NotFound", 1)?;
                 state.serialize_field("message", "Not found")?;

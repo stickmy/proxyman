@@ -13,7 +13,10 @@
   },
   "dependencies": {
     "@nextui-org/react": "^2.4.2",
-    "@tauri-apps/api": "^1.2.0",
+    "@tauri-apps/api": "2.0.0-beta.16",
+    "@tauri-apps/plugin-clipboard-manager": "2.1.0-beta.5",
+    "@tauri-apps/plugin-fs": "2.0.0-beta.7",
+    "@tauri-apps/plugin-shell": "2.0.0-beta.8",
     "ahooks": "^3.7.6",
     "classnames": "^2.5.1",
     "dayjs": "^1.11.7",
@@ -28,7 +31,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
-    "@tauri-apps/cli": "^1.5.11",
+    "@tauri-apps/cli": "2.0.0-beta.23",
     "@types/lodash": "^4.17.6",
     "@types/lodash.throttle": "^4.1.7",
     "@types/node": "^18.7.10",

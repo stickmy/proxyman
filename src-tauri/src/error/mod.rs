@@ -28,13 +28,9 @@ pub enum Error {
         source: ProcessorErrorKind,
     },
     #[snafu(display("ProcessorPack error"))]
-    ProcessorPack {
-        source: ProcessorErrorKind,
-    },
+    ProcessorPack { source: ProcessorErrorKind },
     #[snafu(display("Processor status error"))]
-    ProcessorStatus {
-        source: ProcessorErrorKind,
-    },
+    ProcessorStatus { source: ProcessorErrorKind },
     #[snafu(display("Error occurred with the server in {}: {}", scenario, source))]
     Server {
         scenario: &'static str,
