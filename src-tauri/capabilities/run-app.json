@@ -4,7 +4,10 @@
   "local": true,
   "windows": ["main", "main-*"],
   "permissions": [
-    "proxy:default",
+    {
+      "identifier": "fs:scope",
+      "allow": ["$RESOURCE/ca/*", "$CONFIG/*/**"]
+    },
     "path:default",
     "event:default",
     "window:default",
@@ -17,13 +20,7 @@
     "fs:allow-read-dir",
     "fs:allow-mkdir",
     "fs:allow-exists",
-    {
-      "identifier": "fs:scope",
-      "allow": ["$RESOURCE/ca/*", "$CONFIG/*/**"]
-    },
     "shell:allow-open",
-    "clipboard-manager:allow-write-text",
-    "clipboard-manager:default",
     "shell:default",
     "fs:default"
   ]

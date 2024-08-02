@@ -19,7 +19,6 @@ fn main() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             if let Err(e) = app_conf::init() {
                 return Err(Box::new(e));

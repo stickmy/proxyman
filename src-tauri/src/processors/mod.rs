@@ -6,8 +6,6 @@ pub mod parser;
 pub mod processor_id;
 pub mod processor_pack;
 
-pub mod values;
-
 pub mod persist;
 pub mod processor;
 pub mod processor_effect;
