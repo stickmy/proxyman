@@ -1,5 +1,6 @@
 use std::{fs, path::Path};
 
+pub mod error;
 pub mod processor_persist;
 pub mod value_persist;
 

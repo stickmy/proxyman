@@ -1,15 +1,13 @@
-use snafu::ResultExt;
 use std::{fs, path::PathBuf};
-
-use crate::error::{self, configuration_error::AppConfIoError, ConfigurationError};
 
 use self::app_setting::{read_app_setting, write_app_setting};
 
 pub(crate) use self::app_setting::AppSetting;
 
 mod app_setting;
+pub mod error;
 
-pub fn init() -> Result<(), error::Error> {
+pub fn init() -> Result<(), self::error::Error> {
     ensure_app_dir()
 }
 
@@ -37,10 +35,8 @@ pub fn get_app_setting() -> AppSetting {
     read_app_setting(app_setting_file()).unwrap_or_default()
 }
 
-pub fn save_app_setting(conf: AppSetting) {
-    if let Err(err) = write_app_setting(app_setting_file(), conf) {
-        log::error!("save app setting error: {}", err);
-    }
+pub fn save_app_setting(conf: AppSetting) -> Result<(), self::error::Error> {
+    write_app_setting(app_setting_file(), conf)
 }
 
 fn get_app_path(name: &str) -> PathBuf {
@@ -61,25 +57,17 @@ pub fn app_dir() -> PathBuf {
     app_dir.clone()
 }
 
-fn ensure_app_dir() -> Result<(), error::Error> {
+fn ensure_app_dir() -> Result<(), self::error::Error> {
     let app_dir = app_dir();
 
     match fs::metadata(&app_dir) {
         Ok(meta) => {
             if !meta.is_dir() {
-                fs::create_dir(app_dir)
-                    .context(AppConfIoError {})
-                    .context(ConfigurationError {
-                        scenario: "Ensure app dir",
-                    })
+                fs::create_dir(app_dir).map_err(self::error::Error::from)
             } else {
                 Ok(())
             }
         }
-        Err(_) => fs::create_dir(app_dir)
-            .context(AppConfIoError {})
-            .context(ConfigurationError {
-                scenario: "Ensure app dir",
-            }),
+        Err(_) => fs::create_dir(app_dir).map_err(self::error::Error::from),
     }
 }

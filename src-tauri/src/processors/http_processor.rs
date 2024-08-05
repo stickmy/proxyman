@@ -25,6 +25,7 @@ pub type RequestProcessResult = (
     // hit info
     Option<HashMap<String, String>>,
 );
+
 pub type ResponseProcessResult = (
     Response<Body>,
     // hit or not

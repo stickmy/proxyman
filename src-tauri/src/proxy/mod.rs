@@ -17,6 +17,7 @@ use crate::commands;
 use self::service::ProxyService;
 
 mod decoder;
+pub mod error;
 mod rewind;
 mod service;
 mod tunnel;

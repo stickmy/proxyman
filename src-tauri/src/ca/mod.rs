@@ -1,8 +1,6 @@
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
-use crate::error::configuration_error::SslError;
-use crate::error::{self, *};
 use async_trait::async_trait;
 use http::uri::Authority;
 use moka::future::Cache;
@@ -14,8 +12,9 @@ use openssl::{
     rand,
     x509::{extension::SubjectAlternativeName, X509Builder, X509NameBuilder, X509},
 };
-use snafu::ResultExt;
 use tokio_rustls::rustls::{self, ServerConfig};
+
+pub mod error;
 
 const TTL_SECS: i64 = 365 * 24 * 60 * 60;
 const CACHE_TTL: u64 = TTL_SECS as u64 / 2;
@@ -64,39 +63,20 @@ impl Default for Ssl {
 }
 
 impl Ssl {
-    fn gen_cert(&self, authority: &Authority) -> Result<rustls::Certificate, error::Error> {
-        let mut name_builder =
-            X509NameBuilder::new()
-                .context(SslError {})
-                .context(ConfigurationError {
-                    scenario: "Create CA name builder failed",
-                })?;
+    fn gen_cert(&self, authority: &Authority) -> Result<rustls::Certificate, self::error::Error> {
+        let mut name_builder = X509NameBuilder::new().map_err(self::error::Error::from)?;
         name_builder
             .append_entry_by_text("CN", authority.host())
-            .context(SslError)
-            .context(ConfigurationError {
-                scenario: "Append CA entry name failed",
-            })?;
+            .map_err(self::error::Error::from)?;
         let name = name_builder.build();
 
-        let mut x509_builder =
-            X509Builder::new()
-                .context(SslError {})
-                .context(ConfigurationError {
-                    scenario: "Create X509 builder failed",
-                })?;
+        let mut x509_builder = X509Builder::new().map_err(self::error::Error::from)?;
         x509_builder
             .set_subject_name(&name)
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "Set CA subject name failed",
-            })?;
+            .map_err(self::error::Error::from)?;
         x509_builder
             .set_version(2)
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "Set version failed",
-            })?;
+            .map_err(self::error::Error::from)?;
 
         let not_before = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
@@ -106,96 +86,51 @@ impl Ssl {
         x509_builder
             .set_not_before(
                 Asn1Time::from_unix(not_before)
-                    .context(SslError {})
-                    .context(ConfigurationError {
-                        scenario: "Asn1 failed",
-                    })?
+                    .map_err(self::error::Error::from)?
                     .as_ref(),
             )
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "x509 not before error",
-            })?;
+            .map_err(self::error::Error::from)?;
         x509_builder
             .set_not_after(
                 Asn1Time::from_unix(not_before + TTL_SECS)
-                    .context(SslError {})
-                    .context(ConfigurationError {
-                        scenario: "Asn1 failed",
-                    })?
+                    .map_err(self::error::Error::from)?
                     .as_ref(),
             )
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "x509 not after error",
-            })?;
+            .map_err(self::error::Error::from)?;
 
         x509_builder
             .set_pubkey(&self.pkey)
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "Set pub key failed",
-            })?;
+            .map_err(self::error::Error::from)?;
         x509_builder
             .set_issuer_name(self.ca_cert.subject_name())
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "Set issuer name failed",
-            })?;
+            .map_err(self::error::Error::from)?;
 
         let alternative_name = SubjectAlternativeName::new()
             .dns(authority.host())
             .build(&x509_builder.x509v3_context(Some(&self.ca_cert), None))
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "Create x509 v3 context failed",
-            })?;
+            .map_err(self::error::Error::from)?;
         x509_builder
             .append_extension(alternative_name)
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "Append x509 extension failed",
-            })?;
+            .map_err(self::error::Error::from)?;
 
         let mut serial_number = [0; 16];
-        rand::rand_bytes(&mut serial_number)
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "Create cryptographically strong random byte failed",
-            })?;
+        rand::rand_bytes(&mut serial_number).map_err(self::error::Error::from)?;
 
-        let serial_number = BigNum::from_slice(&serial_number)
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "Create serial number failed",
-            })?;
-        let serial_number = Asn1Integer::from_bn(&serial_number)
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "Create Asn1 integer failed",
-            })?;
+        let serial_number = BigNum::from_slice(&serial_number).map_err(self::error::Error::from)?;
+        let serial_number =
+            Asn1Integer::from_bn(&serial_number).map_err(self::error::Error::from)?;
         x509_builder
             .set_serial_number(&serial_number)
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "Set x509 serial number failed",
-            })?;
+            .map_err(self::error::Error::from)?;
 
         x509_builder
             .sign(&self.pkey, self.hash)
-            .context(SslError {})
-            .context(ConfigurationError {
-                scenario: "Sign x509 failed",
-            })?;
+            .map_err(self::error::Error::from)?;
 
         let x509 = x509_builder.build();
 
         Ok(rustls::Certificate(
-            x509.to_der()
-                .context(SslError {})
-                .context(ConfigurationError {
-                    scenario: "Transform x509 to der failed",
-                })?,
+            x509.to_der().map_err(self::error::Error::from)?,
         ))
     }
 }

@@ -38,6 +38,32 @@ impl TryFrom<String> for ProcessorID {
     }
 }
 
+impl TryFrom<&String> for ProcessorID {
+    type Error = &'static str;
+
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        match value.as_str() {
+            "Delay" => Ok(Self::DELAY),
+            "Redirect" => Ok(Self::REDIRECT),
+            "Response" => Ok(Self::RESPONSE),
+            _ => Err("Unsupport processor"),
+        }
+    }
+}
+
+impl TryFrom<&str> for ProcessorID {
+    type Error = &'static str;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "Delay" => Ok(Self::DELAY),
+            "Redirect" => Ok(Self::REDIRECT),
+            "Response" => Ok(Self::RESPONSE),
+            _ => Err("Unsupport processor"),
+        }
+    }
+}
+
 impl Serialize for ProcessorID {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

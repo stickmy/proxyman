@@ -1,12 +1,6 @@
 use std::{fs, path::Path};
 
 use serde::{Deserialize, Serialize};
-use snafu::ResultExt;
-
-use crate::error::{
-    configuration_error::{AppConfIoError, ConfigurationErrorKind},
-    ConfigurationError, Error,
-};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct AppSetting {
@@ -23,42 +17,32 @@ impl Default for AppSetting {
     }
 }
 
-pub(super) fn read_app_setting<P: AsRef<Path>>(path: P) -> Result<AppSetting, Error> {
-    let content_raw = fs::read(path)
-        .context(AppConfIoError {})
-        .context(ConfigurationError {
-            scenario: "read file",
-        })?;
+pub(super) fn read_app_setting<P: AsRef<Path>>(
+    path: P,
+) -> anyhow::Result<AppSetting, super::error::Error> {
+    let content_raw = fs::read(path).map_err(super::error::Error::from)?;
 
-    let content_str = String::from_utf8(content_raw).map_err(|err| Error::Configuration {
-        scenario: "read as utf8",
-        source: ConfigurationErrorKind::AppSettingFmt {
-            msg: format!("{err}"),
-        },
+    let content_str = String::from_utf8(content_raw).map_err(|err| {
+        log::error!("Failed to convert app settings content to utf8: {err}");
+        super::error::Error::Utf8(err)
     })?;
 
-    let conf: AppSetting =
-        serde_json::from_str(content_str.as_str()).map_err(|err| Error::Configuration {
-            scenario: "deserialize with serde_json",
-            source: ConfigurationErrorKind::AppSettingFmt {
-                msg: format!("{err}"),
-            },
-        })?;
+    let conf: AppSetting = serde_json::from_str(content_str.as_str()).map_err(|err| {
+        log::error!("Failed to deserialized app settings content to json: {err}");
+        super::error::Error::Json(err)
+    })?;
 
     Ok(conf)
 }
 
-pub(super) fn write_app_setting<P: AsRef<Path>>(path: P, conf: AppSetting) -> Result<(), Error> {
-    let str = serde_json::to_string(&conf).map_err(|err| Error::Configuration {
-        scenario: "serialized as string",
-        source: ConfigurationErrorKind::AppSettingFmt {
-            msg: format!("{err}"),
-        },
+pub(super) fn write_app_setting<P: AsRef<Path>>(
+    path: P,
+    conf: AppSetting,
+) -> Result<(), super::error::Error> {
+    let str = serde_json::to_string(&conf).map_err(|err| {
+        log::error!("Failed to serialize app settings content to json: {err}");
+        super::error::Error::Json(err)
     })?;
 
-    fs::write(path, str)
-        .context(AppConfIoError {})
-        .context(ConfigurationError {
-            scenario: "write to disk",
-        })
+    fs::write(path, str).map_err(super::error::Error::from)
 }

@@ -1,4 +1,3 @@
-use crate::error::endpoint_error::EndpointError;
 use async_compression::tokio::bufread::{BrotliDecoder, GzipDecoder, ZlibDecoder, ZstdDecoder};
 use bstr::ByteSlice;
 use bytes::Bytes;
@@ -37,7 +36,7 @@ enum Decoder {
 }
 
 impl Decoder {
-    pub fn decode(self, encoding: &[u8]) -> Result<Self, EndpointError> {
+    pub fn decode(self, encoding: &[u8]) -> Result<Self, super::error::EndpointError> {
         if encoding == b"identity" {
             return Ok(self);
         }
@@ -53,9 +52,11 @@ impl Decoder {
             b"br" => Box::new(BrotliDecoder::new(reader)),
             b"zstd" => Box::new(ZstdDecoder::new(reader)),
             _ => {
-                return Err(EndpointError::Decoder {
-                    scenario: "unknown decoding",
-                })
+                return Err(super::error::EndpointError::UnsupportDecoding(
+                    std::str::from_utf8(encoding)
+                        .unwrap_or_default()
+                        .to_string(),
+                ))
             }
         };
 
@@ -84,7 +85,7 @@ fn parse_encodings(headers: &HeaderMap<HeaderValue>) -> impl Iterator<Item = &[u
 fn decode_body<'a>(
     encodings: impl IntoIterator<Item = &'a [u8]>,
     body: Body,
-) -> Result<Body, EndpointError> {
+) -> Result<Body, super::error::EndpointError> {
     let mut decoder = Decoder::Body(body);
 
     for encoding in encodings {
@@ -94,7 +95,9 @@ fn decode_body<'a>(
     Ok(decoder.into())
 }
 
-pub fn decode_request(mut req: Request<Body>) -> Result<Request<Body>, EndpointError> {
+pub fn decode_request(
+    mut req: Request<Body>,
+) -> Result<Request<Body>, super::error::EndpointError> {
     if !req.headers().contains_key(CONTENT_ENCODING) {
         return Ok(req);
     }
@@ -117,7 +120,9 @@ pub fn decode_request(mut req: Request<Body>) -> Result<Request<Body>, EndpointE
     Ok(Request::from_parts(parts, body))
 }
 
-pub fn decode_response(mut res: Response<Body>) -> Result<Response<Body>, EndpointError> {
+pub fn decode_response(
+    mut res: Response<Body>,
+) -> Result<Response<Body>, super::error::EndpointError> {
     if !res.headers().contains_key(CONTENT_ENCODING) {
         return Ok(res);
     }

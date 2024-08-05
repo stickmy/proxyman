@@ -1,10 +1,12 @@
 use crate::app_conf;
 
 #[tauri::command]
-pub async fn set_app_setting(setting: app_conf::AppSetting) {
+pub async fn set_app_setting(
+    setting: app_conf::AppSetting,
+) -> Result<(), crate::app_conf::error::Error> {
     log::trace!("set_app_setting, {:?}", setting);
 
-    app_conf::save_app_setting(setting);
+    app_conf::save_app_setting(setting)
 }
 
 #[tauri::command]

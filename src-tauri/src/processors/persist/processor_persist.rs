@@ -1,48 +1,38 @@
 use std::collections::HashMap;
 use std::{fs, io::Write};
 
-use snafu::ResultExt;
-
+use super::error::{ProcessorError, ProcessorPackError};
 use crate::app_conf;
-use crate::error::processor_error::ReadStatusError;
-use crate::error::ProcessorStatusError;
-use crate::error::{
-    self,
-    processor_error::{ProcessorErrorKind, ReadError},
-    Error, ProcessorError,
+use crate::processors::{
+    http_processor::{
+        delay::RequestDelayProcessor, redirect::RequestRedirectProcessor,
+        response::ResponseProcessor,
+    },
+    processor_id::ProcessorID,
+    processor_pack::ProcessorPack,
 };
-use crate::processors::http_processor::delay::RequestDelayProcessor;
-use crate::processors::http_processor::redirect::RequestRedirectProcessor;
-use crate::processors::http_processor::response::ResponseProcessor;
-use crate::processors::processor_id::ProcessorID;
-use crate::processors::processor_pack::ProcessorPack;
 
 pub type ProcessorPackStatus = HashMap<String, bool>;
 
-pub fn read_processor_packs_status() -> Result<ProcessorPackStatus, Error> {
+pub fn read_processor_packs_status() -> anyhow::Result<ProcessorPackStatus, ProcessorPackError> {
     let str = fs::read_to_string(app_conf::app_processor_pack_status_file())
-        .context(ReadStatusError {})
-        .context(ProcessorStatusError {})?;
+        .map_err(ProcessorPackError::from)?;
 
-    serde_json::from_str(str.as_str()).map_err(|err| Error::ProcessorStatus {
-        source: ProcessorErrorKind::Fmt {},
-    })
+    serde_json::from_str(str.as_str()).map_err(ProcessorPackError::from)
 }
 
-pub fn write_processor_pack_status(pack_name: &str, enable: bool) -> Result<(), Error> {
+pub fn write_processor_pack_status(
+    pack_name: &str,
+    enable: bool,
+) -> anyhow::Result<(), ProcessorPackError> {
     let mut status = read_processor_packs_status().unwrap_or_default();
 
     status.insert(pack_name.to_string(), enable);
 
-    let str = serde_json::to_string::<ProcessorPackStatus>(&status).map_err(|err| {
-        Error::ProcessorPack {
-            source: ProcessorErrorKind::Fmt {},
-        }
-    })?;
+    let str =
+        serde_json::to_string::<ProcessorPackStatus>(&status).map_err(ProcessorPackError::from)?;
 
-    fs::write(app_conf::app_processor_pack_status_file(), str).map_err(|err| Error::ProcessorPack {
-        source: ProcessorErrorKind::Write { source: err },
-    })
+    fs::write(app_conf::app_processor_pack_status_file(), str).map_err(ProcessorPackError::from)
 }
 
 pub fn read_processors_from_appdir() -> Vec<ProcessorPack> {
@@ -74,7 +64,7 @@ pub fn read_processors_from_appdir() -> Vec<ProcessorPack> {
                                 if let Ok(file_name) = file.file_name().into_string() {
                                     let processor_id = ProcessorID::try_from(file_name);
                                     if let Ok(processor_id) = processor_id {
-                                        let content = fs::read_to_string(&file.path());
+                                        let content = fs::read_to_string(file.path());
 
                                         if let Ok(content) = content {
                                             match processor_id {
@@ -108,60 +98,61 @@ pub fn read_processors_from_appdir() -> Vec<ProcessorPack> {
     packs
 }
 
-pub fn create_pack_dir(pack_name: &str) -> std::io::Result<()> {
-    super::ensure_dir(app_conf::app_rule_dir())?;
+pub fn create_pack_dir(pack_name: &str) -> anyhow::Result<(), ProcessorPackError> {
+    super::ensure_dir(app_conf::app_rule_dir()).map_err(ProcessorPackError::from)?;
     let dir = app_conf::app_rule_dir().join(pack_name);
-    super::ensure_dir(dir)
+    super::ensure_dir(dir).map_err(ProcessorPackError::from)
 }
 
-pub fn delete_pack_dir(pack_name: &str) -> std::io::Result<()> {
+pub fn delete_pack_dir(pack_name: &str) -> anyhow::Result<(), ProcessorPackError> {
     let dir = app_conf::app_rule_dir().join(pack_name);
 
     if !dir.exists() {
         return Ok(());
     }
 
-    fs::remove_dir_all(dir)
+    fs::remove_dir_all(dir).map_err(ProcessorPackError::from)
 }
 
-pub fn write_processor(id: ProcessorID, content: &str, pack_name: &str) -> std::io::Result<()> {
-    let mut file = ensure_processor_file(pack_name, id)?;
-    file.write_all(content.as_bytes())?;
+pub fn write_processor(
+    id: ProcessorID,
+    content: &str,
+    pack_name: &str,
+) -> anyhow::Result<(), ProcessorError> {
+    let mut file = ensure_processor_file(pack_name, id).map_err(ProcessorError::from)?;
+    file.write_all(content.as_bytes())
+        .map_err(ProcessorError::from)?;
     Ok(())
 }
 
-pub fn read_processor(id: ProcessorID, pack_name: String) -> Result<String, error::Error> {
+pub fn read_processor(
+    id: ProcessorID,
+    pack_name: String,
+) -> anyhow::Result<String, ProcessorError> {
     let file = app_conf::app_rule_dir()
         .join(pack_name)
         .join(id.to_string());
 
-    let metadata = fs::metadata(&file)
-        .context(ReadError {})
-        .context(ProcessorError { id })?;
+    let metadata = fs::metadata(&file).map_err(ProcessorError::from)?;
 
     if !metadata.is_file() {
-        return Err(Error::Processor {
-            id,
-            source: ProcessorErrorKind::NotFound {},
-        });
+        return Err(ProcessorError::NotFound(id.to_string()));
     }
 
-    fs::read_to_string(file)
-        .context(ReadError {})
-        .context(ProcessorError { id })
+    fs::read_to_string(file).map_err(ProcessorError::from)
 }
 
 fn ensure_processor_file(
     pack_name: &str,
     processor_id: ProcessorID,
-) -> Result<fs::File, std::io::Error> {
+) -> anyhow::Result<fs::File, ProcessorError> {
     let app_rule_path = app_conf::app_rule_dir();
-    super::ensure_dir(&app_rule_path)?;
+    super::ensure_dir(&app_rule_path).map_err(ProcessorError::from)?;
 
     let processor_dir = app_rule_path.join(pack_name);
     super::ensure_dir(&processor_dir)?;
 
     let path = processor_dir.join(processor_id.to_string());
 
-    fs::File::create(path)
+    fs::File::create(path).map_err(ProcessorError::from)
 }

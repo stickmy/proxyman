@@ -4,7 +4,6 @@
 mod app_conf;
 mod ca;
 mod commands;
-mod error;
 mod events;
 mod processors;
 mod proxy;

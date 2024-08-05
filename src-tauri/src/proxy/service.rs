@@ -8,20 +8,10 @@ use hyper::{
     Client, Server,
 };
 use hyper_rustls::HttpsConnectorBuilder;
-use snafu::ResultExt;
 
 use super::tunnel::Tunnel;
 
-use crate::{
-    ca::Ssl,
-    error::{
-        self,
-        endpoint_error::{ConnectError, HttpError},
-        ServerError,
-    },
-    events,
-    processors::http_processor::HttpProcessor,
-};
+use crate::{ca::Ssl, events, processors::http_processor::HttpProcessor};
 
 pub struct ProxyService {
     addr: SocketAddr,
@@ -45,7 +35,7 @@ impl ProxyService {
     pub async fn start<F: Future<Output = ()>>(
         self,
         should_shutdown_signal: F,
-    ) -> Result<(), error::Error> {
+    ) -> Result<(), super::error::Error> {
         let addr = self.addr;
 
         let connector = HttpsConnectorBuilder::new()
@@ -64,10 +54,7 @@ impl ProxyService {
             .build(connector);
 
         let server_builder = Server::try_bind(&addr)
-            .context(ConnectError {})
-            .context(ServerError {
-                scenario: "Port was occupied",
-            })?
+            .map_err(super::error::Error::from)?
             .http1_preserve_header_case(true)
             .http1_title_case_headers(true);
 
@@ -99,9 +86,6 @@ impl ProxyService {
             .serve(make_service)
             .with_graceful_shutdown(should_shutdown_signal)
             .await
-            .context(HttpError {})
-            .context(ServerError {
-                scenario: "tunnel start",
-            })
+            .map_err(super::error::Error::from)
     }
 }

@@ -3,7 +3,6 @@ use http::StatusCode;
 use hyper::{Body, Request, Response};
 use tokio_tungstenite::tungstenite::Message;
 
-use crate::error::Error;
 use crate::processors::processor_effect::ProcessorEffects;
 
 #[derive(Debug)]
@@ -43,7 +42,7 @@ pub trait HttpProcessor: Clone + Send + Sync + 'static {
         res
     }
 
-    async fn process_error(&self, err: Error) -> Response<Body> {
+    async fn process_error(&self, err: crate::proxy::error::Error) -> Response<Body> {
         log::error!("Failed to tunnel request: {}", err);
 
         Response::builder()

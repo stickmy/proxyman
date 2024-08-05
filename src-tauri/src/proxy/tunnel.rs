@@ -9,7 +9,6 @@ use hyper::{
     client::connect::Connect, header::Entry, server::conn::Http, service::service_fn,
     upgrade::Upgraded, Body, Client, Request, Response,
 };
-use snafu::ResultExt;
 use tauri::async_runtime::Mutex;
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite},
@@ -22,10 +21,6 @@ use uuid::Uuid;
 
 use crate::{
     ca::CertificateAuthority,
-    error::{
-        endpoint_error::{EndpointError, HttpError, WebsocketProtocolError},
-        ClientError, ServerError,
-    },
     events::{Events, RequestEvent, ResponseEvent},
 };
 
@@ -80,9 +75,7 @@ where
             log::trace!("accept request from client: {}, {:?}", conn_id, req);
 
             let mut req = decode_request(req)
-                .context(ClientError {
-                    scenario: "decoding request body failed",
-                })
+                .map_err(super::error::Error::from)
                 .unwrap();
 
             self.send_event(RequestEvent::new(conn_id, &mut req).await.into())
@@ -117,16 +110,13 @@ where
                 .client
                 .request(normalize_request(req))
                 .await
-                .context(HttpError {})
-                .context(ServerError {
-                    scenario: "sending request",
-                });
+                .map_err(super::error::Error::from);
             log::trace!("send network request done: {}, {:?}", conn_id, res);
 
             let processor = self.processor.lock().await;
             let mut res = match res {
                 Ok(res) => res,
-                Err(e) => processor.process_error(e).await,
+                Err(err) => processor.process_error(err).await,
             };
             drop(processor);
 
@@ -260,11 +250,7 @@ where
             Request::from_parts(parts, ())
         };
 
-        match hyper_tungstenite::upgrade(&mut req, None)
-            .context(WebsocketProtocolError {})
-            .context(ClientError {
-                scenario: "upgrade tungstenite",
-            }) {
+        match hyper_tungstenite::upgrade(&mut req, None) {
             Ok((res, websocket)) => {
                 let fut = async move {
                     match websocket.await {
@@ -299,7 +285,7 @@ where
         stream: S,
         scheme: Scheme,
         authority: Authority,
-    ) -> Result<(), EndpointError>
+    ) -> Result<(), super::error::Error>
     where
         S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
     {
@@ -329,7 +315,7 @@ where
             .serve_connection(stream, service)
             .with_upgrades()
             .await
-            .context(HttpError {})
+            .map_err(super::error::Error::from)
     }
 }
 

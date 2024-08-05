@@ -5,6 +5,7 @@ use tauri::{async_runtime::Mutex, State};
 use tokio::sync::mpsc::{self, Sender};
 
 use crate::processors::parser::ProcessorRuleParser;
+use crate::processors::persist::error::ProcessorError;
 use crate::processors::persist::processor_persist::{
     create_pack_dir, delete_pack_dir, write_processor_pack_status,
 };
@@ -96,7 +97,7 @@ pub(crate) async fn set_processor(
     mode: String,
     pack_name: String,
     content: String,
-) -> Result<bool, String> {
+) -> Result<bool, ProcessorError> {
     log::debug!(
         "Set Processor - pack_name: {}, mode: {}, content: {}",
         pack_name,
@@ -104,7 +105,8 @@ pub(crate) async fn set_processor(
         content
     );
 
-    let processor_id = ProcessorID::try_from(mode)?;
+    let processor_id =
+        ProcessorID::try_from(&mode).map_err(|_| ProcessorError::ModeNotDefined(mode.clone()))?;
 
     let save_ret = write_processor(processor_id, content.as_str(), pack_name.as_str());
 
@@ -115,7 +117,7 @@ pub(crate) async fn set_processor(
             content,
             e
         );
-        return Err("save processor failed".to_string());
+        return Err(e);
     }
 
     let mut state = state.lock().await;
@@ -135,7 +137,7 @@ pub(crate) async fn set_processor(
                     pack_name,
                     ResponseProcessor::parse_rule(content.as_str()),
                 )),
-                _ => return Err("Unsupport processor".into()),
+                _ => return Err(ProcessorError::ModeNotDefined(mode)),
             }
         };
 
@@ -144,17 +146,23 @@ pub(crate) async fn set_processor(
                 Some((_, processor, _, _, _)) => {
                     if let Err(e) = processor.send(msg).await {
                         log::error!("Set Processor failed: {e}");
-                        return Err(format!("Set Processor failed: {e}"));
+                        return Err(ProcessorError::OtherError(format!(
+                            "Processor mpsc send failed: {e}"
+                        )));
                     }
                 }
                 None => {
                     log::error!("Set Processor failed: No ProcessorChannelMessage Sender found");
-                    return Err("No ProcessorChannelMessage Sender found".to_string());
+                    return Err(ProcessorError::OtherError(String::from(
+                        "Processor mpsc message was None",
+                    )));
                 }
             },
             None => {
-                log::error!("Parsing Processor rule failed");
-                return Err("Parsing Processor rule failed".to_string());
+                log::error!("Proxy tauri state was None");
+                return Err(ProcessorError::OtherError(String::from(
+                    "Proxy state was None",
+                )));
             }
         }
     }
@@ -163,10 +171,14 @@ pub(crate) async fn set_processor(
 }
 
 #[tauri::command]
-pub fn get_processor_content(mode: String, pack_name: String) -> Result<String, String> {
-    let processor_id = ProcessorID::try_from(mode)?;
+pub fn get_processor_content(
+    mode: String,
+    pack_name: String,
+) -> anyhow::Result<String, ProcessorError> {
+    let processor_id =
+        ProcessorID::try_from(&mode).map_err(|_| ProcessorError::ModeNotDefined(mode))?;
 
-    read_processor(processor_id, pack_name).map_err(|e| e.to_json())
+    read_processor(processor_id, pack_name)
 }
 
 #[derive(Serialize)]
