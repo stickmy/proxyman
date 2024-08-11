@@ -9,12 +9,13 @@ use crate::app_conf::{self};
 
 pub fn build_menu(app: &tauri::App) -> tauri::Result<Menu<Wry>> {
     let open_log = MenuItemBuilder::with_id("openlog", "Open Logs").build(app)?;
+    let submit_issues = MenuItemBuilder::with_id("submit_issues", "Submit issues").build(app)?;
 
     let menu = Menu::default(app.handle())?;
     for item in menu.items()? {
         if let Some(ref mut submenu) = item.as_submenu() {
             if submenu.id() == HELP_SUBMENU_ID {
-                submenu.append_items(&[&open_log])?;
+                submenu.append_items(&[&open_log, &submit_issues])?;
             }
         }
     }
@@ -23,6 +24,14 @@ pub fn build_menu(app: &tauri::App) -> tauri::Result<Menu<Wry>> {
         if event.id == open_log.id() {
             Command::new("open")
                 .arg(app_conf::app_dir().as_os_str())
+                .output()
+                .unwrap();
+        }
+        if event.id == submit_issues.id() {
+            Command::new("open")
+                .arg(String::from(
+                    "https://github.com/stickmy/proxyman/issues/new",
+                ))
                 .output()
                 .unwrap();
         }

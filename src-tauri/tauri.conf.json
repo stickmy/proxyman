@@ -1,5 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "productName": "Proxyman",
+  "version": "0.1.0",
+  "identifier": "stickmy.apps.proxyman",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "frontendDist": "../dist",
@@ -17,11 +20,16 @@
     ],
     "resources": ["ca/*"],
     "targets": "all",
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      }
+    },
     "createUpdaterArtifacts": false
   },
-  "productName": "Proxyman",
-  "version": "0.1.0",
-  "identifier": "com.proxyman",
   "app": {
     "windows": [
       {

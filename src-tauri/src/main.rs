@@ -10,8 +10,6 @@ mod proxy;
 mod sys_events;
 mod window;
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-
 fn main() {
     let context = tauri::generate_context!();
 
@@ -25,8 +23,7 @@ fn main() {
 
             proxy::set_proxy_state(app);
 
-            let menu = window::build_menu(app)?;
-            app.set_menu(menu)?;
+            app.set_menu(window::build_menu(app)?)?;
 
             simplelog::CombinedLogger::init(vec![simplelog::WriteLogger::new(
                 #[cfg(debug_assertions)]

@@ -1,16 +1,17 @@
 [package]
 name = "proxyman"
 version = "0.1.0"
-description = "Debugging proxy tool"
+description = "Network proxy tool"
 authors = ["stickmy"]
 license = ""
+homepage = "https://github.com/stickmy/proxyman"
 repository = "git@github.com:stickmy/proxyman.git"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.0.0-beta", features = ["codegen"] }
+tauri-build = { version = "2.0.0-beta", features = [] }
 
 [dependencies]
 tauri = { version = "2.0.0-beta", features = [] }
