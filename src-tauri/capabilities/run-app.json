@@ -19,7 +19,7 @@
     "fs:allow-exists",
     {
       "identifier": "fs:scope",
-      "allow": ["$RESOURCE/ca/*", "$CONFIG/*/**"]
+      "allow": ["$CONFIG/*/**"]
     },
     "shell:allow-open",
     "clipboard-manager:allow-write-text",

@@ -66,6 +66,14 @@ const ruleModes = [
     mode: RuleMode.Response,
   },
   {
+    label: "请求头设置",
+    mode: RuleMode.RequestHeader,
+  },
+  {
+    label: "响应头设置",
+    mode: RuleMode.ResponseHeader,
+  },
+  {
     label: "延时",
     mode: RuleMode.Delay,
   },

@@ -99,6 +99,8 @@ export const useRuleEditor = (
 const getRuleModeSerializationKey = (mode: RuleMode) => {
   if (mode === RuleMode.Delay) return "Delay";
   if (mode === RuleMode.Redirect) return "Redirect";
+  if (mode === RuleMode.RequestHeader) return "RequestHeader";
   if (mode === RuleMode.Response) return "Response";
+  if (mode === RuleMode.ResponseHeader) return "ResponseHeader";
   throw new TypeError("Unsupported rule");
 };

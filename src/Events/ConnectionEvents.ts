@@ -1,7 +1,9 @@
 export enum RuleMode {
   Redirect = "Redirect",
   Delay = "Delay",
+  RequestHeader = "RequestHeader",
   Response = "Response",
+  ResponseHeader = "ResponseHeader",
 }
 
 interface BaseConnection {

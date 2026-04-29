@@ -1,12 +1,15 @@
 use async_process::Command;
 use std::path::PathBuf;
-use tauri::{AppHandle, Manager, Runtime};
+use tauri::{AppHandle, Runtime};
 
+use crate::app_conf;
+use crate::ca::RootCaMaterial;
+use crate::core_api::ca as ca_api;
 use crate::error::{configuration_error::ConfigurationErrorKind, Error};
 
 #[tauri::command]
-pub async fn check_cert_installed<R: Runtime>(app: AppHandle<R>) -> Result<bool, String> {
-    let ca_path = get_ca_path(app);
+pub async fn check_cert_installed<R: Runtime>(_app: AppHandle<R>) -> Result<bool, String> {
+    let ca_path = ensure_ca_material().map_err(|err| err.to_string())?;
 
     let child = Command::new("security")
         .arg("verify-cert")
@@ -25,7 +28,17 @@ pub async fn check_cert_installed<R: Runtime>(app: AppHandle<R>) -> Result<bool,
 }
 
 #[tauri::command]
-pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, Error> {
+pub async fn check_cert_installed_v1<R: Runtime>(
+    app: AppHandle<R>,
+    request: ca_api::CaStatusRequest,
+) -> Result<ca_api::CaStatusResponse, String> {
+    ca_api::validate_ca_status_request(&request)?;
+    let installed = check_cert_installed(app).await?;
+    Ok(ca_api::ca_status_response(installed))
+}
+
+#[tauri::command]
+pub async fn install_cert<R: Runtime>(_app: AppHandle<R>) -> Result<bool, Error> {
     let key_chain_ret = get_key_chain().await;
 
     match key_chain_ret {
@@ -34,7 +47,7 @@ pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, Error> 
             Err(err)
         }
         Ok(key_chain) => {
-            let ca_path = get_ca_path(app);
+            let ca_path = ensure_ca_material()?;
 
             let child = Command::new("security")
                 .arg("add-trusted-cert")
@@ -83,10 +96,22 @@ pub async fn install_cert<R: Runtime>(app: AppHandle<R>) -> Result<bool, Error> 
     }
 }
 
-fn get_ca_path<R: Runtime>(app: AppHandle<R>) -> PathBuf {
-    app.path()
-        .resolve("ca/proxyman.cer", tauri::path::BaseDirectory::Resource)
-        .expect("failed to resolve certificate")
+#[tauri::command]
+pub async fn install_cert_v1<R: Runtime>(
+    app: AppHandle<R>,
+    request: ca_api::CaInstallRequest,
+) -> Result<ca_api::CaInstallResponse, String> {
+    ca_api::validate_ca_install_request(&request)?;
+    let installed = install_cert(app).await.map_err(|err| err.to_string())?;
+    Ok(ca_api::ca_install_response(installed))
+}
+
+fn ensure_ca_material() -> Result<PathBuf, Error> {
+    let ca_path = app_conf::app_ca_cert_file();
+    let key_path = app_conf::app_ca_key_file();
+    RootCaMaterial::load_or_generate(&ca_path, &key_path)?;
+
+    Ok(ca_path)
 }
 
 async fn get_key_chain() -> Result<String, Error> {

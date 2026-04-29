@@ -16,12 +16,18 @@ impl ProcessorID {
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct RequestRedirectProcessor {
-    mappings: Option<Vec<[String; 2]>>,
+    mappings: Option<Vec<RequestRedirectMapping>>,
+}
+
+#[derive(Clone, Debug)]
+struct RequestRedirectMapping {
+    matcher: Regex,
+    dest: String,
 }
 
 impl RequestRedirectProcessor {
     pub fn set_redirects_mapping(&mut self, mapping: Vec<[String; 2]>) {
-        self.mappings = Some(mapping);
+        self.mappings = compiled_redirect_mappings(mapping);
     }
 }
 
@@ -35,11 +41,18 @@ impl Processor for RequestRedirectProcessor {
 impl HttpRequestProcessor for RequestRedirectProcessor {
     async fn process_request(&self, mut req: Request<Body>) -> RequestProcessResult {
         if let Some(ref mappings) = self.mappings {
-            for [reg_str, dest] in mappings.iter() {
-                match replace_with_reg_str(reg_str, dest, req.uri().to_string()) {
+            for mapping in mappings.iter() {
+                match replace_with_regex(&mapping.matcher, &mapping.dest, req.uri().to_string()) {
                     None => continue,
                     Some(ret) => {
-                        *req.uri_mut() = Uri::from_str(&ret).unwrap();
+                        let uri = match Uri::from_str(&ret) {
+                            Ok(uri) => uri,
+                            Err(err) => {
+                                log::debug!("invalid redirect destination URI({ret}): {err}");
+                                continue;
+                            }
+                        };
+                        *req.uri_mut() = uri;
 
                         let mut hit_info = HashMap::<String, String>::new();
                         hit_info.insert(String::from("uri"), ret);
@@ -97,20 +110,46 @@ impl From<String> for RequestRedirectProcessor {
             return RequestRedirectProcessor::default();
         }
 
-        let mappings = Self::parse_rule(content.as_str());
+        let mappings = compiled_redirect_mappings(Self::parse_rule(content.as_str()));
 
-        RequestRedirectProcessor {
-            mappings: if mappings.is_empty() {
+        RequestRedirectProcessor { mappings }
+    }
+}
+
+fn compiled_redirect_mappings(mapping: Vec<[String; 2]>) -> Option<Vec<RequestRedirectMapping>> {
+    let mappings = mapping
+        .into_iter()
+        .filter_map(|[reg_str, dest]| match Regex::new(&reg_str) {
+            Ok(matcher) => Some(RequestRedirectMapping { matcher, dest }),
+            Err(err) => {
+                log::debug!("invalid redirect regex({reg_str}): {err}");
                 None
-            } else {
-                Some(mappings)
-            },
-        }
+            }
+        })
+        .collect::<Vec<_>>();
+
+    if mappings.is_empty() {
+        None
+    } else {
+        Some(mappings)
+    }
+}
+
+fn replace_with_regex(re: &Regex, dest: &str, source: String) -> Option<String> {
+    match re.is_match(&source) {
+        false => None,
+        true => Some(re.replace(source.as_str(), dest).to_string()),
     }
 }
 
 fn replace_with_reg_str(reg_str: &str, dest: &String, source: String) -> Option<String> {
-    let re = Regex::new(reg_str).unwrap();
+    let re = match Regex::new(reg_str) {
+        Ok(re) => re,
+        Err(err) => {
+            log::debug!("invalid redirect regex({reg_str}): {err}");
+            return None;
+        }
+    };
 
     match re.is_match(&source) {
         false => None,
@@ -120,6 +159,9 @@ fn replace_with_reg_str(reg_str: &str, dest: &String, source: String) -> Option<
 
 #[cfg(test)]
 mod tests {
+    use futures::FutureExt;
+    use hyper::{Body, Request};
+
     use super::*;
 
     #[test]
@@ -131,5 +173,48 @@ mod tests {
         let result = replace_with_reg_str(reg_str, &dest.to_string(), source.to_string());
 
         assert_eq!(result, Some("https://www.baidu.com/a=1&b=2".to_string()));
+    }
+
+    #[test]
+    fn correctness_invalid_redirect_regex_does_not_panic() {
+        let result = std::panic::catch_unwind(|| {
+            replace_with_reg_str(
+                "[",
+                &"https://example.com".to_string(),
+                "https://source.test".to_string(),
+            )
+        });
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), None);
+    }
+
+    #[test]
+    fn rules_invalid_redirect_regex_is_rejected_at_build_time() {
+        let processor =
+            RequestRedirectProcessor::from("[ https://example.test/replacement".to_string());
+
+        assert!(processor.mappings.is_none());
+    }
+
+    #[tokio::test]
+    async fn correctness_invalid_redirect_destination_does_not_panic() {
+        let mut processor = RequestRedirectProcessor::default();
+        processor.set_redirects_mapping(vec![[
+            "https://source.test/(.*)".to_string(),
+            ":// invalid uri".to_string(),
+        ]]);
+        let req = Request::builder()
+            .uri("https://source.test/path")
+            .body(Body::empty())
+            .expect("failed to build request");
+
+        let result = std::panic::AssertUnwindSafe(processor.process_request(req))
+            .catch_unwind()
+            .await;
+
+        assert!(result.is_ok());
+        let (_, hit, _) = result.unwrap();
+        assert!(!hit);
     }
 }

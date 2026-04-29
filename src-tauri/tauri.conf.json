@@ -15,7 +15,6 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["ca/*"],
     "targets": "all",
     "createUpdaterArtifacts": false
   },

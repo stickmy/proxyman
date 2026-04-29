@@ -64,3 +64,7 @@ default = ["http2"]
 custom-protocol = ["tauri/custom-protocol"]
 
 http2 = ["hyper/http2", "hyper-rustls/http2"]
+
+[[bin]]
+name = "proxyman-sidecar"
+path = "src/bin/proxyman_sidecar.rs"

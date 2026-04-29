@@ -21,12 +21,18 @@ pub(crate) type RequestDelayRule = Vec<RequestDelayMapping>;
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct RequestDelayProcessor {
-    mappings: Option<RequestDelayRule>,
+    mappings: Option<Vec<CompiledRequestDelayMapping>>,
+}
+
+#[derive(Debug, Clone)]
+struct CompiledRequestDelayMapping {
+    matcher: Regex,
+    delay_millsec: u64,
 }
 
 impl RequestDelayProcessor {
     pub fn set_delay_mapping(&mut self, mappings: RequestDelayRule) {
-        self.mappings = Some(mappings);
+        self.mappings = compiled_delay_mappings(mappings);
     }
 }
 
@@ -40,19 +46,14 @@ impl Processor for RequestDelayProcessor {
 impl HttpRequestProcessor for RequestDelayProcessor {
     async fn process_request(&self, req: http::Request<hyper::Body>) -> RequestProcessResult {
         if let Some(ref mappings) = self.mappings {
-            for RequestDelayMapping {
-                req_pattern,
-                delay_millsec,
-            } in mappings.iter()
-            {
-                let re = Regex::new(req_pattern).unwrap();
+            for mapping in mappings.iter() {
                 let uri = req.uri().to_string();
 
-                if !re.is_match(&uri) {
+                if !mapping.matcher.is_match(&uri) {
                     continue;
                 }
 
-                let delay_millsec = *delay_millsec;
+                let delay_millsec = mapping.delay_millsec;
 
                 tokio::spawn(async move {
                     sleep(Duration::from_millis(delay_millsec)).await;
@@ -121,14 +122,66 @@ impl From<String> for RequestDelayProcessor {
             return RequestDelayProcessor::default();
         }
 
-        let mappings = RequestDelayProcessor::parse_rule(value.as_str());
+        let mappings = compiled_delay_mappings(RequestDelayProcessor::parse_rule(value.as_str()));
 
-        RequestDelayProcessor {
-            mappings: if mappings.is_empty() {
+        RequestDelayProcessor { mappings }
+    }
+}
+
+fn compiled_delay_mappings(mappings: RequestDelayRule) -> Option<Vec<CompiledRequestDelayMapping>> {
+    let mappings = mappings
+        .into_iter()
+        .filter_map(|mapping| match Regex::new(&mapping.req_pattern) {
+            Ok(matcher) => Some(CompiledRequestDelayMapping {
+                matcher,
+                delay_millsec: mapping.delay_millsec,
+            }),
+            Err(err) => {
+                log::debug!("invalid delay regex({}): {err}", mapping.req_pattern);
                 None
-            } else {
-                Some(mappings)
-            },
-        }
+            }
+        })
+        .collect::<Vec<_>>();
+
+    if mappings.is_empty() {
+        None
+    } else {
+        Some(mappings)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use futures::FutureExt;
+    use hyper::{Body, Request};
+
+    use super::*;
+
+    #[tokio::test]
+    async fn correctness_invalid_delay_regex_does_not_panic() {
+        let mut processor = RequestDelayProcessor::default();
+        processor.set_delay_mapping(vec![RequestDelayMapping {
+            req_pattern: "[".to_string(),
+            delay_millsec: 1,
+        }]);
+        let req = Request::builder()
+            .uri("https://example.test/path")
+            .body(Body::empty())
+            .expect("failed to build request");
+
+        let result = std::panic::AssertUnwindSafe(processor.process_request(req))
+            .catch_unwind()
+            .await;
+
+        assert!(result.is_ok());
+        let (_, hit, _) = result.unwrap();
+        assert!(!hit);
+    }
+
+    #[test]
+    fn rules_invalid_delay_regex_is_rejected_at_build_time() {
+        let processor = RequestDelayProcessor::from("[ 1".to_string());
+
+        assert!(processor.mappings.is_none());
     }
 }

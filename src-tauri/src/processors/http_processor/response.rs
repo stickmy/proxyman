@@ -16,12 +16,18 @@ impl ProcessorID {
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct ResponseProcessor {
-    mappings: Option<Vec<[String; 2]>>,
+    mappings: Option<Vec<ResponseMapping>>,
+}
+
+#[derive(Debug, Clone)]
+struct ResponseMapping {
+    matcher: Regex,
+    value_name: String,
 }
 
 impl ResponseProcessor {
     pub fn set_mapping(&mut self, mapping: Vec<[String; 2]>) {
-        self.mappings = Some(mapping);
+        self.mappings = compiled_response_mappings(mapping);
     }
 }
 
@@ -35,14 +41,12 @@ impl Processor for ResponseProcessor {
 impl HttpRequestProcessor for ResponseProcessor {
     async fn process_request(&self, req: Request<Body>) -> RequestProcessResult {
         if let Some(ref mappings) = self.mappings {
-            for [req_pattern, value_name] in mappings.iter() {
-                let re = Regex::new(req_pattern).unwrap();
-
-                if !re.is_match(&req.uri().to_string()) {
+            for mapping in mappings.iter() {
+                if !mapping.matcher.is_match(&req.uri().to_string()) {
                     continue;
                 }
 
-                let value_content = read_value(value_name);
+                let value_content = read_value(&mapping.value_name);
 
                 match value_content {
                     Ok(value) => {
@@ -66,18 +70,21 @@ impl HttpRequestProcessor for ResponseProcessor {
                                 res.headers_mut().remove(CONTENT_LENGTH);
 
                                 let mut hit_info = HashMap::<String, String>::new();
-                                hit_info.insert(String::from("name"), value_name.clone());
+                                hit_info.insert(String::from("name"), mapping.value_name.clone());
 
                                 return ((req, res).into(), true, Some(hit_info));
                             }
                             None => {
-                                log::debug!("parse value({value_name}) as response error");
+                                log::debug!(
+                                    "parse value({}) as response error",
+                                    mapping.value_name
+                                );
                                 continue;
                             }
                         }
                     }
                     Err(err) => {
-                        log::debug!("read value({value_name}) error: {err}");
+                        log::debug!("read value({}) error: {err}", mapping.value_name);
                         continue;
                     }
                 }
@@ -131,15 +138,31 @@ impl From<String> for ResponseProcessor {
             return ResponseProcessor::default();
         }
 
-        let mappings = Self::parse_rule(value.as_str());
+        let mappings = compiled_response_mappings(Self::parse_rule(value.as_str()));
 
-        ResponseProcessor {
-            mappings: if mappings.is_empty() {
+        ResponseProcessor { mappings }
+    }
+}
+
+fn compiled_response_mappings(mapping: Vec<[String; 2]>) -> Option<Vec<ResponseMapping>> {
+    let mappings = mapping
+        .into_iter()
+        .filter_map(|[req_pattern, value_name]| match Regex::new(&req_pattern) {
+            Ok(matcher) => Some(ResponseMapping {
+                matcher,
+                value_name,
+            }),
+            Err(err) => {
+                log::debug!("invalid response regex({req_pattern}): {err}");
                 None
-            } else {
-                Some(mappings)
-            },
-        }
+            }
+        })
+        .collect::<Vec<_>>();
+
+    if mappings.is_empty() {
+        None
+    } else {
+        Some(mappings)
     }
 }
 
@@ -151,7 +174,7 @@ struct ParsedResponse<'a> {
     body: String,
 }
 
-fn parse_str_as_response(content: &str) -> Option<ParsedResponse> {
+fn parse_str_as_response(content: &str) -> Option<ParsedResponse<'_>> {
     #[derive(Debug, PartialEq)]
     enum ParseState {
         VersionStatus,
@@ -208,4 +231,37 @@ fn parse_str_as_response(content: &str) -> Option<ParsedResponse> {
     }
 
     Some(parsed_response)
+}
+
+#[cfg(test)]
+mod tests {
+    use futures::FutureExt;
+    use hyper::{Body, Request};
+
+    use super::*;
+
+    #[tokio::test]
+    async fn correctness_invalid_response_regex_does_not_panic() {
+        let mut processor = ResponseProcessor::default();
+        processor.set_mapping(vec![["[".to_string(), "missing-value".to_string()]]);
+        let req = Request::builder()
+            .uri("https://example.test/path")
+            .body(Body::empty())
+            .expect("failed to build request");
+
+        let result = std::panic::AssertUnwindSafe(processor.process_request(req))
+            .catch_unwind()
+            .await;
+
+        assert!(result.is_ok());
+        let (_, hit, _) = result.unwrap();
+        assert!(!hit);
+    }
+
+    #[test]
+    fn rules_invalid_response_regex_is_rejected_at_build_time() {
+        let processor = ResponseProcessor::from("[ missing-value".to_string());
+
+        assert!(processor.mappings.is_none());
+    }
 }

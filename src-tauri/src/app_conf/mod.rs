@@ -25,8 +25,24 @@ pub fn app_value_dir() -> PathBuf {
     get_app_path("value")
 }
 
+pub fn app_ca_cert_file() -> PathBuf {
+    get_app_path("ca/proxyman.cer")
+}
+
+pub fn app_ca_key_file() -> PathBuf {
+    get_app_path("ca/proxyman.key")
+}
+
 pub fn app_processor_pack_status_file() -> PathBuf {
     get_app_path("processor_pack_status.json")
+}
+
+pub fn app_system_proxy_snapshot_file() -> PathBuf {
+    get_app_path("system_proxy_snapshot.json")
+}
+
+pub fn app_session_events_file() -> PathBuf {
+    get_app_path("sessions/events.jsonl")
 }
 
 fn app_setting_file() -> PathBuf {
@@ -67,7 +83,7 @@ fn ensure_app_dir() -> Result<(), error::Error> {
     match fs::metadata(&app_dir) {
         Ok(meta) => {
             if !meta.is_dir() {
-                fs::create_dir(app_dir)
+                fs::create_dir_all(app_dir)
                     .context(AppConfIoError {})
                     .context(ConfigurationError {
                         scenario: "Ensure app dir",
@@ -76,7 +92,7 @@ fn ensure_app_dir() -> Result<(), error::Error> {
                 Ok(())
             }
         }
-        Err(_) => fs::create_dir(app_dir)
+        Err(_) => fs::create_dir_all(app_dir)
             .context(AppConfIoError {})
             .context(ConfigurationError {
                 scenario: "Ensure app dir",

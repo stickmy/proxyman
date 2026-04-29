@@ -10,6 +10,8 @@ use crate::processors::processor_effect::ProcessorEffects;
 pub enum Events {
     NewRequest(RequestEvent),
     NewResponse(ResponseEvent),
+    SseEvent(ServerSentEvent),
+    WebSocketMessage(WebSocketMessageEvent),
 }
 
 impl From<RequestEvent> for Events {
@@ -21,6 +23,18 @@ impl From<RequestEvent> for Events {
 impl From<ResponseEvent> for Events {
     fn from(value: ResponseEvent) -> Self {
         Self::NewResponse(value)
+    }
+}
+
+impl From<ServerSentEvent> for Events {
+    fn from(value: ServerSentEvent) -> Self {
+        Self::SseEvent(value)
+    }
+}
+
+impl From<WebSocketMessageEvent> for Events {
+    fn from(value: WebSocketMessageEvent) -> Self {
+        Self::WebSocketMessage(value)
     }
 }
 
@@ -77,6 +91,89 @@ pub struct ResponseEvent {
     time: i64,
 }
 
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ServerSentEvent {
+    id: Uuid,
+    #[serde(with = "http_serde::uri")]
+    uri: Uri,
+    event: Option<String>,
+    data: String,
+    last_event_id: Option<String>,
+    retry: Option<u64>,
+    time: i64,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WebSocketMessageEvent {
+    id: Uuid,
+    #[serde(with = "http_serde::uri")]
+    uri: Uri,
+    direction: String,
+    opcode: String,
+    payload: String,
+    payload_len: usize,
+    preview_encoding: String,
+    lossy_preview: bool,
+    preview_truncated: bool,
+    close_code: Option<u16>,
+    close_reason: Option<String>,
+    time: i64,
+}
+
+impl WebSocketMessageEvent {
+    pub(crate) fn new(
+        id: Uuid,
+        uri: Uri,
+        direction: &'static str,
+        opcode: &'static str,
+        payload: String,
+        payload_len: usize,
+        preview_encoding: &'static str,
+        lossy_preview: bool,
+        preview_truncated: bool,
+        close_code: Option<u16>,
+        close_reason: Option<String>,
+    ) -> Self {
+        Self {
+            id,
+            uri,
+            direction: direction.to_string(),
+            opcode: opcode.to_string(),
+            payload,
+            payload_len,
+            preview_encoding: preview_encoding.to_string(),
+            lossy_preview,
+            preview_truncated,
+            close_code,
+            close_reason,
+            time: chrono::Local::now().timestamp_millis(),
+        }
+    }
+}
+
+impl ServerSentEvent {
+    pub(crate) fn new(
+        id: Uuid,
+        uri: Uri,
+        event: Option<String>,
+        data: String,
+        last_event_id: Option<String>,
+        retry: Option<u64>,
+    ) -> Self {
+        Self {
+            id,
+            uri,
+            event,
+            data,
+            last_event_id,
+            retry,
+            time: chrono::Local::now().timestamp_millis(),
+        }
+    }
+}
+
 impl ResponseEvent {
     pub async fn new(
         id: Uuid,
@@ -97,6 +194,27 @@ impl ResponseEvent {
             version: res.version(),
             headers: res.headers().clone(),
             body: body_str,
+            effects,
+            time: chrono::Local::now().timestamp_millis(),
+        }
+    }
+
+    pub(crate) fn from_body_bytes(
+        id: Uuid,
+        uri: Uri,
+        status: StatusCode,
+        version: Version,
+        headers: HeaderMap,
+        body_bytes: Bytes,
+        effects: Option<ProcessorEffects>,
+    ) -> Self {
+        Self {
+            id,
+            uri,
+            status,
+            version,
+            headers,
+            body: transform_bytes_to_string(body_bytes),
             effects,
             time: chrono::Local::now().timestamp_millis(),
         }

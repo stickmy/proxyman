@@ -32,7 +32,9 @@ impl TryFrom<String> for ProcessorID {
         match value.as_str() {
             "Delay" => Ok(Self::DELAY),
             "Redirect" => Ok(Self::REDIRECT),
+            "RequestHeader" => Ok(Self::REQUEST_HEADER),
             "Response" => Ok(Self::RESPONSE),
+            "ResponseHeader" => Ok(Self::RESPONSE_HEADER),
             _ => Err("Unsupport processor"),
         }
     }

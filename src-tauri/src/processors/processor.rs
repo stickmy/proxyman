@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use http::StatusCode;
+use http::{StatusCode, Uri};
 use hyper::{Body, Request, Response};
 use tokio_tungstenite::tungstenite::Message;
 
@@ -39,7 +39,7 @@ pub trait HttpProcessor: Clone + Send + Sync + 'static {
         req.into()
     }
 
-    async fn process_response(&self, res: Response<Body>) -> Response<Body> {
+    async fn process_response(&self, _req_uri: &Uri, res: Response<Body>) -> Response<Body> {
         res
     }
 
