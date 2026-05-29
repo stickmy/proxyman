@@ -1,0 +1,56 @@
+[package]
+name = "proxyman"
+version = "0.1.0"
+description = "Proxyman proxy core and macOS sidecar"
+authors = ["stickmy"]
+license = ""
+repository = "git@github.com:stickmy/proxyman.git"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.3.1", features = ["serde"] }
+futures = "0.3.11"
+async-process = "1.7.0"
+async-trait = "0.1.68"
+async-compression = { version = "0.3.7", features = [
+    "tokio",
+    "brotli",
+    "gzip",
+    "zlib",
+    "zstd",
+] }
+moka = { version = "0.9.6", features = ["future"] }
+chrono = "0.4.28"
+bstr = "1.4.0"
+bytes = { version = "1.4.0", features = ["serde"] }
+http = "0.2.8"
+http-serde = "1.1"
+hyper = { version = "0.14.23", features = ["full"] }
+hyper-tls = "0.5.0"
+tokio = { version = "1.25.0", features = ["full"] }
+hyper-tungstenite = "0.9.0"
+tokio-rustls = "0.23.4"
+tokio-tungstenite = { version = "0.18.0", features = [
+    "native-tls",
+    "rustls-tls-webpki-roots",
+] }
+tokio-util = { version = "0.7.0", features = ["io"] }
+openssl = { version = "0.10.45", features = ["vendored"] }
+snafu = "0.7"
+regex = "1.8.1"
+log = "0.4"
+simplelog = { version = "0.12.1", features = ["paris"] }
+home = "0.5.5"
+
+[features]
+default = ["http2"]
+http2 = ["hyper/http2"]
+
+[dev-dependencies]
+tempfile = "3.5.0"
+
+[[bin]]
+name = "proxyman-sidecar"
+path = "src/bin/proxyman_sidecar.rs"

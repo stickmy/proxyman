@@ -2,10 +2,81 @@
 
 [![Release](https://github.com/stickmy/proxyman/actions/workflows/release.yml/badge.svg)](https://github.com/stickmy/proxyman/actions/workflows/release.yml)
 
-A http network debugging tool written by rust.
+A native macOS HTTP debugging proxy. The app surface is SwiftUI and the proxy core is Rust.
 
-![connections](./screenshots/main.png)
-![rules](./screenshots/rules.png)
+## Current App Shape
+
+- macOS client: `swiftui`
+- Rust sidecar and proxy core: `crates/proxyman-core`
+- Run entrypoint: `./script/build_and_run.sh`
+- Codex Run action: `.codex/environments/environment.toml`
+
+The old React/Tauri frontend has been removed. The Rust proxy core and sidecar now live in `crates/proxyman-core`; this crate does not depend on Tauri or compile a Tauri app shell.
+
+## Run
+
+```sh
+./script/build_and_run.sh
+```
+
+Verify build and launch:
+
+```sh
+./script/build_and_run.sh --verify
+```
+
+Build checks:
+
+```sh
+cargo check --manifest-path crates/proxyman-core/Cargo.toml --bin proxyman-sidecar
+swift build --package-path swiftui
+```
+
+Package a local macOS app archive:
+
+```sh
+./script/build_and_run.sh --package
+```
+
+By default this creates an unsigned local archive at `dist/ProxymanClient-macos.zip`.
+
+Sign the archive with a Developer ID Application identity:
+
+```sh
+PROXYMAN_CODESIGN_IDENTITY="Developer ID Application: Example (TEAMID)" \
+  ./script/build_and_run.sh --package
+```
+
+Sign and notarize with App Store Connect notary credentials:
+
+```sh
+PROXYMAN_CODESIGN_IDENTITY="Developer ID Application: Example (TEAMID)" \
+PROXYMAN_NOTARIZE=1 \
+PROXYMAN_NOTARY_APPLE_ID="apple@example.com" \
+PROXYMAN_NOTARY_TEAM_ID="TEAMID" \
+PROXYMAN_NOTARY_PASSWORD="app-specific-password" \
+  ./script/build_and_run.sh --package
+```
+
+The release workflow can import a `.p12` signing certificate and notarize the
+archive when these GitHub secrets are configured:
+
+- `PROXYMAN_CODESIGN_CERTIFICATE_BASE64`
+- `PROXYMAN_CODESIGN_CERTIFICATE_PASSWORD`
+- `PROXYMAN_CODESIGN_IDENTITY`
+- `PROXYMAN_NOTARIZE`
+- `PROXYMAN_NOTARY_APPLE_ID`
+- `PROXYMAN_NOTARY_TEAM_ID`
+- `PROXYMAN_NOTARY_PASSWORD`
+- `PROXYMAN_NOTARY_KEYCHAIN_PROFILE`
+
+Manual macOS system-proxy verification:
+
+```sh
+script/verify-system-proxy-urlsession.swift --service Wi-Fi
+```
+
+This helper is Swift intentionally. Build/run automation stays in shell, but this check needs to exercise Foundation `URLSession` through the macOS system proxy stack. `curl`, Node, and shell networking can use different proxy resolution paths or override proxy behavior, so they are not equivalent to native app traffic.
 
 ## Features
 
@@ -17,8 +88,6 @@ A http network debugging tool written by rust.
 Support MacOS(x64, aarch64) only, the Windows is not supported currently.
 
 ## chrome with https proxy
-
-![](./screenshots/chrome_https_issue.png)
 
 If you turned on the global system proxy, when you visit websites based on https, you'll get `NET::ERR_CERT_AUTHORITY_INVALID` error, due to the proxyman using self-signed tls certificates, which chrome does not validate for security reason.
 
@@ -60,8 +129,6 @@ https://uri.com uri-response-example
 ```
 
 #### Value files
-
-![rules](./screenshots/values.png)
 
 The first line is http version and status code. Then the next parts is the response headers until the empty line appear. After the empty line, the parts is response body.
 

@@ -1,6 +1,6 @@
 # SwiftUI Client Start Decision
 
-This document freezes the first native-client direction. The goal is to start Batch 08 quickly without binding the SwiftUI app to old Tauri command names, legacy React event shapes, or a storage implementation.
+This document freezes the first native-client direction. The goal is to keep the SwiftUI app bound to a stable sidecar contract, not old frontend command names, legacy React event shapes, or a storage implementation.
 
 ## 1. IPC
 
@@ -12,7 +12,7 @@ First shape:
 - Command socket: newline-delimited JSON-RPC 2.0 over Unix domain socket.
 - Event socket: newline-delimited typed event envelopes over a separate Unix domain socket.
 - Socket paths live under the app data/runtime directory and include a per-run token or pid segment to avoid stale collisions.
-- SwiftUI never calls temporary Tauri commands directly.
+- SwiftUI talks only to the sidecar command and event sockets.
 
 Initial command frames:
 
@@ -88,7 +88,7 @@ Expected behavior:
 - Starting the app creates a new empty in-memory session.
 - Killing or quitting the app drops captured exchanges.
 - Explicit HAR export/import is the persistence mechanism for the first shell.
-- JSONL remains a transition/legacy implementation detail while the old Tauri surface exists, but SwiftUI should not depend on it.
+- JSONL remains a transition/debug implementation detail, but SwiftUI should not depend on it.
 - SQLite is not needed before the first SwiftUI client unless persistent history, tags, notes, retention policy, or large indexed search become first-shell requirements.
 
 This now uses a `SessionStore` boundary, with an in-memory SwiftUI-facing backend behind the sidecar for summary search, body loading, and session clear.
@@ -103,17 +103,29 @@ Build a minimal SwiftUI app that can run before the Rust sidecar socket server e
 - Uses a `CoreClient` protocol with a mock implementation and a Unix-socket implementation.
 - Keeps UI layout native and compact, not a port of the React frontend.
 
-Current minimal test:
+Current build/run entrypoint:
 
 ```sh
-scripts/run-swiftui-minimal-test.sh start
+./script/build_and_run.sh
 ```
 
-This builds `proxyman-sidecar`, builds a temporary SwiftUI `.app` bundle, embeds the sidecar into the app bundle, opens the client, and lets the client call `proxy.status`, `proxy.availablePort`, `proxy.start`, `proxy.stop`, `sessions.search`, `sessions.loadBody`, `sessions.clear`, `replay.send`, `har.export`, `har.import`, CA, system-proxy, and rule-pack methods over the Unix command socket. Stop it with:
+This builds `proxyman-sidecar`, builds a local SwiftUI `.app` bundle, embeds the sidecar into the app bundle, opens the client, and lets the client call `proxy.status`, `proxy.availablePort`, `proxy.start`, `proxy.stop`, `sessions.search`, `sessions.loadBody`, `sessions.clear`, `replay.send`, `har.export`, `har.import`, CA, system-proxy, and rule-pack methods over the Unix command socket. Stop it with:
 
 ```sh
-scripts/run-swiftui-minimal-test.sh stop
+./script/build_and_run.sh stop
 ```
+
+Current package entrypoint:
+
+```sh
+./script/build_and_run.sh --package
+```
+
+This builds release Rust and SwiftPM binaries, creates `dist/ProxymanClient.app`,
+embeds `proxyman-sidecar`, writes version/build metadata into `Info.plist`, and
+archives `dist/ProxymanClient-macos.zip`. Local packaging is unsigned by default.
+Setting `PROXYMAN_CODESIGN_IDENTITY` enables Developer ID signing; setting notary
+credentials enables notarization, stapling, and re-archiving.
 
 Current lifecycle behavior:
 
@@ -130,11 +142,14 @@ Current lifecycle behavior:
 
 Current stage:
 
-- Minimal lifecycle, live-event capture, session summary refresh, body loading, session clear, replay, HAR import/export, bounded CA/system-proxy/rules socket methods, first SwiftUI rule editing, first CA/system-proxy controls, and read-only system-proxy status are verified by build and socket smoke checks.
-- `scripts/verify-system-proxy-urlsession.swift --service Wi-Fi` passed native `URLSession` system-proxy verification with a fake local proxy and restored the original Wi-Fi proxy settings.
-- The Rules section has a pack list, add/remove, enable/disable, validate, save, and `.rules` text editor backed by `rules.*` socket methods.
-- The Certificates section has CA status/install controls backed by `ca.status` and `ca.install`; the action label switches from `Install` to `Reinstall` once the CA is trusted.
+- Minimal lifecycle, live-event capture, session summary refresh, body loading, session clear, replay, HAR import/export, bounded CA/system-proxy/rules socket methods, first SwiftUI rule editing, first CA/system-proxy controls, upstream TLS verification, and read-only system-proxy status are verified by build and socket smoke checks.
+- `script/verify-system-proxy-urlsession.swift --service Wi-Fi` passed native `URLSession` system-proxy verification with a fake local proxy and restored the original Wi-Fi proxy settings. This is intentionally a Swift script so the check exercises Foundation `URLSession`, not a separate shell, JS, or `curl` proxy stack.
+- The Rules section has a pack list, add/remove, automatic validation/save, matched-size enabled/saved/delete controls beside the selected pack name, and a `.rules` text editor backed by `rules.*` socket methods.
+- The Certificates section has CA status/install controls backed by `ca.status` and `ca.install`; the action label switches from `Install` to `Reinstall` once the CA is trusted. It also exposes upstream TLS verification through `upstreamTls.status` and `upstreamTls.update`.
 - The System Proxy section has status refresh plus enable/disable controls backed by `systemProxy.status`, `systemProxy.enable`, and `systemProxy.disable`.
 - The native layout has a compact source-list sidebar, flat titlebar proxy controls, fixed titlebar control slots to avoid start/stop jitter, and shared `ProxymanButtonStyle` action buttons backed by project-local UI tokens.
 - Sidecar CA verification passed on macOS: status was missing before install, install returned true, and status returned installed afterward.
-- Next work is structural cleanup: move app entry/services/stores into the planned folders, replace the temporary smoke script with `script/build_and_run.sh`, and add narrow SwiftPM tests for store/event behavior.
+- SwiftPM tests now cover AppModel available-port preflight, Start using the displayed port, event application, selected body loading, capture clear/replay, rule-pack state, CA status/install, upstream TLS verification, system-proxy state, and sidecar JSON-RPC response decoding.
+- `Models.swift` now contains value models only. `AppModel`, `CoreClient`, Unix socket sidecar/client code, `ProxyLifecycleStore`, `CaptureSessionsStore`, `RulePacksStore`, `CertificateStore`, and `SystemProxyStore` are split into dedicated flat source files under `swiftui/Sources/ProxymanClient/`.
+- Release packaging now has unsigned local fallback plus optional Developer ID signing/notarization wiring. A credentialed notarization pass still requires real CI or local notary credentials.
+- Next work keeps the current AppModel store boundaries fixed unless a concrete behavior change creates a new dependency boundary. After release hardening, choose the next post-shell track: persistent session storage or deferred rule-engine expansion.

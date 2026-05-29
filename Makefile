@@ -1,8 +1,23 @@
 VERSION ?= 0.1.0
 
-change-version:
-	sed -i -e "s/\"version\": \".*\"/\"version\": \"$(VERSION)\"/" src-tauri/tauri.conf.json
-	sed -i -e "s/\"version\": \".*\"/\"version\": \"$(VERSION)\"/" package.json
+.PHONY: run stop verify package check swift-build rust-check
 
-change-package-version:
-	sed -i -e "s/\"version\": \".*\"/\"version\": \"$(VERSION)\"/" package.json
+run:
+	./script/build_and_run.sh
+
+stop:
+	./script/build_and_run.sh stop
+
+verify:
+	./script/build_and_run.sh --verify
+
+package:
+	./script/build_and_run.sh --package
+
+check: rust-check swift-build
+
+rust-check:
+	cargo check --manifest-path crates/proxyman-core/Cargo.toml --bin proxyman-sidecar
+
+swift-build:
+	swift build --package-path swiftui

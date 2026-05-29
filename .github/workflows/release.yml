@@ -2,190 +2,57 @@ name: Release
 
 on:
   push:
-    tags: [ v\d+\.\d+\.\d+ ]
+    tags: [v*.*.*]
+
+permissions:
+  contents: write
 
 jobs:
-  create-release:
-    permissions:
-      contents: write
-    runs-on: ubuntu-20.04
-    outputs:
-      release_id: ${{ steps.create-release.outputs.id }}
-      release_upload_url: ${{ steps.create-release.outputs.upload_url }}
-      release_body: "${{ steps.tag.outputs.message }}"
-
+  build:
+    runs-on: macos-latest
+    env:
+      HAS_CODESIGN_CERTIFICATE: ${{ secrets.PROXYMAN_CODESIGN_CERTIFICATE_BASE64 != '' && secrets.PROXYMAN_CODESIGN_CERTIFICATE_PASSWORD != '' }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get version
-        id: get_version
-        uses: dhkatz/get-version-action@v3.0.0
-
-      - name: Get tag message
-        id: tag
-        run: |
-          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-          echo "message<<EOF" >> $GITHUB_OUTPUT
-          echo "$(git tag -l --format='%(contents)' ${{ steps.get_version.outputs.version }})" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create Release
-        id: create-release
-        uses: ncipollo/release-action@v1
-        with:
-          draft: true
-          name: ${{ steps.get_version.outputs.version }}
-          tag: ${{ steps.get_version.outputs.version }}
-          body: "${{ steps.tag.outputs.message }}"
-
-  build-frontend:
-    needs: create-release
-    permissions:
-      contents: write
-      packages: write
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Get version
-        id: get_version
-        uses: dhkatz/get-version-action@v3.0.0
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8.6.0
-
-      - name: setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'pnpm'
-
-      - name: install frontend dependencies
-        run: pnpm install
-
-      - name: Change version
-        env:
-          VERSION: "${{ steps.get_version.outputs.version-without-v }}"
-        run: make change-version change-package-version
-
-      - uses: oNaiPs/secrets-to-env-action@v1
-        with:
-          secrets: ${{ toJSON(secrets) }}
-
-      - name: build frontend
-        run: pnpm build-frontend
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: tauri-frontend
-          path: dist/
-
-  build-tauri:
-    needs: [create-release, build-frontend]
-    permissions:
-      contents: write
-      packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - os: macos-latest
-            arch: x86_64
-            rust_target: x86_64-apple-darwin
-          - os: macos-latest
-            arch: aarch64
-            rust_target: aarch64-apple-darwin
-
-    runs-on: ${{ matrix.config.os }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Get version
-        id: get_version
-        uses: dhkatz/get-version-action@v3.0.0
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8.6.0
-
-      - name: setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'pnpm'
-
-      - name: install frontend dependencies
-        run: pnpm install
-
-      - name: install Rust stable
+      - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.config.rust_target }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.config.rust_target }}
-          workspaces: './src-tauri -> target'
+          workspaces: './crates/proxyman-core -> target'
 
-      - name: install dependencies (mac aarch64 only)
-        if: matrix.config.os == 'macos-latest'
-        run: |
-          rustup target add aarch64-apple-darwin
+      - name: Test Rust sidecar and proxy core
+        run: cargo test --manifest-path crates/proxyman-core/Cargo.toml
 
-      - name: Change Version
+      - name: Test SwiftUI client
+        run: swift test --package-path swiftui
+
+      - name: Import code signing certificate
+        if: env.HAS_CODESIGN_CERTIFICATE == 'true'
         env:
-          VERSION: "${{ steps.get_version.outputs.version-without-v }}"
-        run: make change-version change-package-version
+          PROXYMAN_CODESIGN_CERTIFICATE_BASE64: ${{ secrets.PROXYMAN_CODESIGN_CERTIFICATE_BASE64 }}
+          PROXYMAN_CODESIGN_CERTIFICATE_PASSWORD: ${{ secrets.PROXYMAN_CODESIGN_CERTIFICATE_PASSWORD }}
+        run: bash script/import_codesign_certificate.sh
 
-      - uses: actions/download-artifact@v3
-        with:
-          name: tauri-frontend
-          path: dist
-
-      - uses: oNaiPs/secrets-to-env-action@v1
-        with:
-          secrets: ${{ toJSON(secrets) }}
-
-      - name: Build Tauri App (macOS x86_64)
-        uses: tauri-apps/tauri-action@v0
-        if: matrix.config.os == 'macos-latest' && matrix.config.arch == 'x86_64'
+      - name: Package macOS app
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          releaseId: ${{ needs.create-release.outputs.release_id }}
-          releaseBody: ${{ needs.create-release.outputs.release_body }}
-          args: --target x86_64-apple-darwin
+          PROXYMAN_APP_VERSION: ${{ github.ref_name }}
+          PROXYMAN_BUILD_NUMBER: ${{ github.run_number }}
+          PROXYMAN_CODESIGN_IDENTITY: ${{ secrets.PROXYMAN_CODESIGN_IDENTITY }}
+          PROXYMAN_CODESIGN_ENTITLEMENTS: ${{ vars.PROXYMAN_CODESIGN_ENTITLEMENTS }}
+          PROXYMAN_NOTARIZE: ${{ secrets.PROXYMAN_NOTARIZE }}
+          PROXYMAN_NOTARY_APPLE_ID: ${{ secrets.PROXYMAN_NOTARY_APPLE_ID }}
+          PROXYMAN_NOTARY_TEAM_ID: ${{ secrets.PROXYMAN_NOTARY_TEAM_ID }}
+          PROXYMAN_NOTARY_PASSWORD: ${{ secrets.PROXYMAN_NOTARY_PASSWORD }}
+          PROXYMAN_NOTARY_KEYCHAIN_PROFILE: ${{ secrets.PROXYMAN_NOTARY_KEYCHAIN_PROFILE }}
+        run: ./script/build_and_run.sh --package
 
-      - name: Build Tauri App (macOS aarch64)
-        uses: tauri-apps/tauri-action@v0
-        if: matrix.config.os == 'macos-latest' && matrix.config.arch == 'aarch64'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create draft release
+        uses: ncipollo/release-action@v1
         with:
-          releaseId: ${{ needs.create-release.outputs.release_id }}
-          releaseBody: ${{ needs.create-release.outputs.release_body }}
-          args: --target aarch64-apple-darwin
-
-  publish-release:
-    permissions:
-      contents: write
-    runs-on: ubuntu-20.04
-    needs: [create-release, build-tauri]
-
-    steps:
-      - name: publish release
-        id: publish-release
-        uses: actions/github-script@v6
-        env:
-          release_id: ${{ needs.create-release.outputs.release_id }}
-        with:
-          script: |
-            github.rest.repos.updateRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: process.env.release_id,
-              draft: false,
-              prerelease: false
-            })
+          artifacts: dist/ProxymanClient-macos.zip
+          draft: true
+          tag: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}

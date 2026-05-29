@@ -1,6 +1,6 @@
 # Proxy Core API Direction
 
-The SwiftUI app should not depend on Tauri command names or old React event shapes. The Rust proxy core needs a stable API that can be used by Tauri during transition and by SwiftUI later.
+The SwiftUI app should not depend on old frontend command names or legacy React event shapes. The Rust proxy core is exposed through a sidecar JSON-RPC command socket and a separate event socket.
 
 ## Core Responsibilities
 
@@ -12,31 +12,29 @@ The SwiftUI app should not depend on Tauri command names or old React event shap
 - Query the current in-memory session and explicitly import/export HAR.
 - Replay requests.
 
-## Current Adapter Surface
+## Current Sidecar Surface
 
-These APIs exist today as Tauri commands or command-adjacent functions. SwiftUI should treat them as a temporary adapter surface until the core boundary is stabilized:
+These APIs exist today on the Unix domain socket sidecar:
 
-- Proxy: `start_proxy`, `stop_proxy`, `proxy_status`; typed transition adapters `start_proxy_v1`, `stop_proxy_v1`, `proxy_status_v1`.
-- CA: `check_cert_installed`, `install_cert`; typed transition adapters `check_cert_installed_v1`, `install_cert_v1`.
-- System proxy: `turn_on_global_proxy`, `turn_off_global_proxy`; typed transition adapters `turn_on_global_proxy_v1`, `turn_off_global_proxy_v1`.
-- Rules: `set_processor`, `get_processor_content`, pack add/remove/status commands; typed transition adapters `set_processor_v1`, `get_processor_content_v1`, `get_processor_packs_v1`, `add_processor_pack_v1`, `remove_processor_pack_v1`, `update_processor_pack_status_v1`; typed-rule contract validation adapter `validate_typed_rules_v1`; `.rules` pack persistence adapters `save_rule_pack_rules_v1` and `get_rule_pack_rules_v1`.
-- Sessions: `search_session_events`, `load_session_body`, `replay_session_request`, `export_session_har`, `import_session_har`.
-- Typed proxy facade: `core_api::proxy` defines versioned start/stop/status request and response structs, rejects ephemeral port `0` for stable UI-facing starts, and lets typed status report listen host/port.
-- Typed event facade: `core_api::events` maps legacy proxy events into `proxy_event_v1` envelopes for exchange started, request heads, request body chunks from captured request bodies, request finished, response heads, response finished, exchange finished, SSE events, and WebSocket messages. Network response streaming also emits typed-only `ResponseBodyChunk` events through a separate runtime event channel. Request/response body chunks and WebSocket payload previews include UTF-8 vs lossy UTF-8 metadata, WebSocket close frames include code/reason metadata, request/response decode failures emit typed-only `ExchangeError` events, and the typed runtime event channel uses an explicit non-blocking `DropNewest` backpressure policy. The old `proxy_event` stream is still emitted for the React transition surface and does not receive chunk/error events.
+- Proxy lifecycle: `proxy.status`, `proxy.availablePort`, `proxy.start`, `proxy.stop`.
+- CA: `ca.status`, `ca.install`.
+- System proxy: `systemProxy.status`, `systemProxy.enable`, `systemProxy.disable`.
+- Rules: `rules.listPacks`, `rules.getPackRules`, `rules.validate`, `rules.savePackRules`, `rules.addPack`, `rules.removePack`, `rules.updatePackStatus`.
+- Sessions: `sessions.search`, `sessions.loadBody`, `sessions.clear`, `replay.send`, `har.export`, `har.import`.
+- Typed proxy controller: `StandaloneProxyController` owns sidecar proxy lifecycle and rejects ephemeral port `0` for stable UI-facing starts.
+- Typed event facade: `core_api::events` maps internal proxy events into `proxy_event_v1` envelopes for exchange started, request heads, request body chunks from captured request bodies, request finished, response heads, response finished, exchange finished, SSE events, and WebSocket messages. Network response streaming also emits typed-only `ResponseBodyChunk` events through a separate runtime event channel. Request/response body chunks and WebSocket payload previews include UTF-8 vs lossy UTF-8 metadata, WebSocket close frames include code/reason metadata, request/response decode failures emit typed-only `ExchangeError` events, and the typed runtime event channel uses an explicit non-blocking `DropNewest` backpressure policy.
 - Typed CA facade: `core_api::ca` defines versioned status/install request and response structs over the current certificate commands.
 - Typed system proxy facade: `core_api::system_proxy` defines versioned enable/disable request and response structs and rejects port `0` for stable UI-facing enables.
 - Typed rule facade: `core_api::rules` defines versioned rule content and rule pack request/response structs, plus a stable `RuleKind` enum over the current processor modes. It also has typed rule contract DTOs, `validate_typed_rules_v1`, and a lightweight user-authored `.rules` parser/formatter for redirect, delay, request-header, response-header, block, map-remote, map-local, request-body, and response-body rules. `save_rule_pack_rules_v1` persists the original user-authored text after validation and clears old per-processor files in that pack. `TypedRuleProcessor` applies compatible actions in order, including request-side redirect, delay, request-header, request-body, map-remote, map-local, and block, plus response-side response-header, response-body, delay, and typed response block with request URL and status matching.
-- Typed session facade: `core_api::session::CoreSessionApi` delegates search/body/HAR/replay to a typed `SessionStore` contract and exposes `search_session_exchanges` as a versioned typed Tauri adapter. First SwiftUI shell should use an in-memory `SessionStore`; JSONL is transition support, not the native-client storage contract. The old `search_session_events` raw event command remains only for the existing React transition surface.
+- Typed session facade: `core_api::session::CoreSessionApi` delegates search/body/HAR/replay to a typed `SessionStore` contract. First SwiftUI shell uses an in-memory `SessionStore`; JSONL is transition support, not the native-client storage contract.
 
-The active API direction is to create strict module-level facades inside `src-tauri` first, then extract a `proxy-core` crate once the contracts stop moving. SwiftUI should depend on those facades or a later IPC service contract, not on old React-era event shapes or Tauri command names.
+The active API direction is to keep strict module-level facades inside `crates/proxyman-core` first, then split smaller Rust crates only once the contracts stop moving. SwiftUI should depend on the sidecar/IPC contract, not on old React-era event shapes.
 
 ## Current Facade Decisions
 
 - Start with a module-level facade instead of extracting a crate immediately.
 - Use Unix domain sockets for the first native sidecar boundary: one newline-delimited JSON-RPC command socket and one newline-delimited event socket.
-- Keep Tauri commands thin and compatibility-oriented during the transition.
 - Do not expose raw JSONL event values through new SwiftUI-facing APIs. The session facade now uses typed `SessionStore` operations for search/body/HAR/replay; only HAR import/export intentionally uses `serde_json::Value`.
-- Keep old raw Tauri proxy/session/system/CA commands and legacy `proxy_event` available until the React transition surface is disposable, but add new typed adapters and `proxy_event_v1` with `apiVersion`.
 - Keep `serde_json::Value` only at deliberate import/export boundaries such as HAR.
 - Version new facade request/response structs with `apiVersion`.
 - Use in-memory session storage for the first SwiftUI shell. App quit drops captured exchanges unless the user explicitly exports HAR.
@@ -45,12 +43,12 @@ The active API direction is to create strict module-level facades inside `src-ta
 
 | Area | Stable enough for SwiftUI prototype | Current shape | Remaining work |
 | --- | --- | --- | --- |
-| Proxy lifecycle | Yes | `start_proxy_v1`, `stop_proxy_v1`, `proxy_status_v1` over `core_api::proxy` DTOs; sidecar JSON-RPC exposes `proxy.status`, `proxy.availablePort`, `proxy.start`, and `proxy.stop` | Add diagnostics/health details and keep lifecycle semantics stable while adding more sidecar methods |
+| Proxy lifecycle | Yes | `StandaloneProxyController`; sidecar JSON-RPC exposes `proxy.status`, `proxy.availablePort`, `proxy.start`, and `proxy.stop` | Add diagnostics/health details and keep lifecycle semantics stable while adding more sidecar methods |
 | Events | Yes for prototype | `proxy_event_v1` typed envelopes for lifecycle, request/response heads, body chunks, SSE, WebSocket text/binary/control messages, decode errors, and `DropNewest` backpressure; sidecar event socket broadcasts `proxyEvent` frames to SwiftUI and external subscribers; sidecar also stores typed `proxyEvent` frames in the in-memory session store | Add reconnect/backfill refinements using current in-memory exchange summaries |
 | Sessions | Yes for prototype | `search_session_exchanges`, lazy body, replay, HAR import/export over a typed `CoreSessionApi<SessionStore>` contract; `InMemorySessionStore` backs the SwiftUI sidecar and exposes `sessions.search`, `sessions.loadBody`, `sessions.clear`, `replay.send`, `har.export`, and `har.import` | Keep JSONL only as transition/legacy support; add HTTPS replay parity and richer HAR phases when needed |
 | Rules | Partially | `core_api::rules` transition DTOs over current processor commands and packs, typed rule DTO/validation through `validate_typed_rules_v1`, `.rules` parser/formatter/persistence, request-side runtime for redirect/delay/request-header/request-body/map-remote/map-local/block, response-side runtime for response-header/response-body/delay/typed block, sidecar JSON-RPC for `rules.getPackRules`, `rules.validate`, `rules.savePackRules`, `rules.addPack`, `rules.removePack`, and `rules.updatePackStatus`, and first SwiftUI pack list/editor controls | Fault actions, body-preview matcher execution, richer breakpoint-style response actions, rule-hit event details |
-| CA | Partially | `check_cert_installed_v1`, `install_cert_v1`; sidecar JSON-RPC exposes `ca.status` and `ca.install`; SwiftUI Certificates controls are wired and sidecar status/install passed on macOS | Rich trust state: installed/missing/stale |
-| System proxy | Partially | `system_proxy_status_v1`, `turn_on_global_proxy_v1`, `turn_off_global_proxy_v1`; sidecar JSON-RPC exposes `systemProxy.status`, `systemProxy.enable`, and `systemProxy.disable`; native `URLSession` verification passed on Wi-Fi | Explicit service selection and PAC/SOCKS/auth proxy preservation |
+| CA | Partially | Sidecar JSON-RPC exposes `ca.status` and `ca.install`; SwiftUI Certificates controls are wired and sidecar status/install passed on macOS | Rich trust state: installed/missing/stale |
+| System proxy | Partially | Sidecar JSON-RPC exposes `systemProxy.status`, `systemProxy.enable`, and `systemProxy.disable`; native `URLSession` verification passed on Wi-Fi | Explicit service selection and PAC/SOCKS/auth proxy preservation |
 
 ## Typed Event Progress
 
@@ -70,9 +68,8 @@ Implemented in `proxy_event_v1`:
 
 Event stream rules:
 
-- `proxy_event` stays as the legacy React transition stream and persistence source.
-- `proxy_event_v1` is the SwiftUI-facing typed stream.
-- Runtime response chunks and exchange errors are typed-only and are not persisted to JSONL.
+- `proxyEvent` is the SwiftUI-facing typed stream over the event socket.
+- Runtime response chunks and exchange errors are captured in the sidecar in-memory session model, not a legacy frontend stream.
 - Body chunk and WebSocket payload previews include `previewEncoding`, `lossyPreview`, and truncation metadata; they are not full body storage.
 - The typed runtime channel uses non-blocking `DropNewest` backpressure.
 
@@ -157,6 +154,5 @@ See [swiftui-client.md](swiftui-client.md) for the decision details.
 
 During migration:
 
-- Keep old Tauri commands as adapters only when needed.
-- Do not add new business logic to the old frontend.
+- Do not add new business logic to the removed frontend.
 - New behavior belongs in the proxy core or system integration layer.

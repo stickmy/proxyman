@@ -1,10 +1,10 @@
 # macOS App Best Practices Plan
 
-This plan treats `swiftui/ProxymanClient` as the macOS app surface. The old Tauri frontend is deprecated and should not guide new UI, app structure, or runtime decisions.
+This plan treats `swiftui` as the macOS app surface. The old React/Tauri frontend has been removed and should not guide new UI, app structure, or runtime decisions.
 
 ## Principles
 
-- Keep the SwiftUI client native, compact, and desktop-first instead of porting the React/Tauri interface.
+- Keep the SwiftUI client native, compact, and desktop-first instead of recreating the old React/Tauri interface.
 - Keep SwiftUI as the source of truth for value state, selection, commands, and layout.
 - Use AppKit only for narrow platform gaps such as cursor behavior, local scroll tuning, text-system control, panels, responder-chain access, or window behavior SwiftUI cannot express cleanly.
 - Prefer stable split layouts and explicit selection over top-level root swapping.
@@ -13,12 +13,15 @@ This plan treats `swiftui/ProxymanClient` as the macOS app surface. The old Taur
 
 ## Current Shape
 
-- SwiftPM executable package: `swiftui/ProxymanClient`.
+- SwiftPM executable package: `swiftui`.
 - Main app entry: `ProxymanClientApp`.
-- Root UI lives in `ContentView.swift`; capture, rules, system proxy, certificates, and shared workspace chrome now live in dedicated view files under `Views/`.
-- App state, mock client, socket client boundary, and event application logic are concentrated in `Models.swift` and `UnixSocketCoreClient.swift`.
-- Shared support modifiers and styles live under `Support/`, including cursor affordances and `ProxymanButtonStyle`.
-- Existing smoke path is `scripts/run-swiftui-minimal-test.sh`, but it still references the legacy `src-tauri` sidecar path.
+- Root UI lives in `ContentView.swift`; capture, rules, system proxy, certificates, and shared workspace chrome live in dedicated flat source files under `swiftui/Sources/ProxymanClient/`.
+- Value models live in `Models.swift`; app state lives in `AppModel.swift`; the `CoreClient` protocol/mock lives in `CoreClient.swift`; Unix socket transport, sidecar launch, and response DTOs live in `UnixSocketCoreClient.swift`.
+- Shared support modifiers and styles currently live as flat files beside the views, including cursor affordances and `ProxymanButtonStyle`.
+- Build/run smoke path is `script/build_and_run.sh`; it builds the Rust sidecar, builds the SwiftPM app, stages a local `.app` bundle, embeds the sidecar, and launches the app.
+- SwiftPM logic tests live under `swiftui/Tests/ProxymanClientTests/`.
+- Manual system-proxy verification lives at `script/verify-system-proxy-urlsession.swift`; it uses Swift only to exercise Foundation `URLSession`, not as a general scripting preference.
+- Codex Run action is configured in `.codex/environments/environment.toml`.
 
 ## UI Decisions
 
@@ -53,15 +56,19 @@ This plan treats `swiftui/ProxymanClient` as the macOS app surface. The old Taur
 - Starting the proxy should use the already displayed port and should not run a second available-port search that changes the value after the user clicks Start.
 - Stop should preserve the last effective host and port in the UI unless a later refresh discovers a different stopped-state available port.
 
+## Script Decisions
+
+- Keep project-local automation under `script/`.
+- Use shell for build, run, stop, logs, and app-bundle staging.
+- Use Swift scripts only when the verification target is a native Apple framework behavior that shell/JS cannot faithfully exercise.
+- `verify-system-proxy-urlsession.swift` exists because it checks whether Foundation `URLSession` observes macOS HTTP/HTTPS system proxy settings. `curl` is still useful for proxy-core smoke tests, but it does not prove native app traffic uses the same path.
+
 ## Target File Shape
 
-- `App/`: app entry, scene setup, command ownership, app delegate if needed.
-- `Views/`: root layout and feature surfaces.
-- `Views/Shared/`: reusable chrome, rows, badges, preview sections, status components.
-- `Models/`: pure value models, identifiers, payload-independent UI state.
-- `Stores/`: observable app state and feature-specific state coordinators.
-- `Services/`: sidecar launch, Unix socket client, command/event clients.
-- `Support/`: AppKit bridges, formatters, cursor helpers, lightweight view modifiers.
+- Keep the SwiftPM package root at `swiftui`.
+- Keep the first-shell source files flat under `swiftui/Sources/ProxymanClient/`.
+- Add subdirectories only when there is enough weight to justify them: `Models/`, `Stores/`, `Services/`, or `Views/` should represent real ownership, not one-file folders.
+- Keep files named after their primary type.
 
 ## Work Plan
 
@@ -76,25 +83,29 @@ This plan treats `swiftui/ProxymanClient` as the macOS app surface. The old Taur
 - [x] Add fixed titlebar control slots to prevent start/stop layout jitter.
 - [x] Add shared action button styling and project-local UI tokens.
 - [x] Resolve available proxy port during startup/status refresh instead of only during Start.
-- [ ] Move pure models and enums out of the observable app store file.
+- [x] Move pure models and enums out of the observable app store file.
 - [ ] Split the observable app state into focused stores or coordinators where the dependency boundary is clear.
-- [ ] Move sidecar launch and Unix socket transport into `Services/`.
-- [ ] Replace the ad hoc SwiftUI smoke script with `script/build_and_run.sh`.
-- [ ] Add `.codex/environments/environment.toml` once the run script is stable.
-- [ ] Add narrow SwiftPM tests for parsing, event application, and store behavior before changing those code paths.
+- [x] Move sidecar launch and Unix socket transport out of `Models.swift` into a dedicated client/service file.
+- [x] Replace the ad hoc SwiftUI smoke script with `script/build_and_run.sh`.
+- [x] Add `.codex/environments/environment.toml` once the run script is stable.
+- [x] Remove the old React/Tauri frontend and Tauri app-shell code while preserving the Rust proxy core and sidecar.
+- [x] Move the Rust proxy core and sidecar crate out of the old app-shell directory into `crates/proxyman-core`.
+- [x] Flatten the SwiftPM package root to `swiftui` and remove one-file SwiftUI source subfolders.
+- [x] Merge project scripts into `script/`.
+- [x] Add narrow SwiftPM tests for sidecar response parsing, event application, and AppModel state behavior before changing those code paths.
 - [ ] Run a visual smoke pass after structural changes compile.
 
 ## AppKit Use Rules
 
 - Wrap AppKit behavior in small `NSViewRepresentable`, modifier, or service types.
 - Do not pass `NSView`, `NSWindow`, or `NSCursor` through feature view hierarchies.
-- Keep cursor and text-system bridges in `Support/`.
+- Keep cursor and text-system bridges narrow and local; move them into `Support/` only when the flat source list becomes too noisy.
 - Keep scroll-view tuning local to the specific SwiftUI surface that needs it.
 - Re-check AppKit bridges after moving views, because SwiftUI may recreate representables and modifiers.
 
 ## Build And Verification
 
-- Use `swift build --package-path swiftui/ProxymanClient` after each structural slice.
-- Use the sidecar smoke path only as a temporary bridge until the sidecar crate is separated from legacy Tauri paths.
+- Use `swift build --package-path swiftui` after each structural slice.
 - Once `script/build_and_run.sh` exists, prefer it for build, launch, logs, and visual smoke checks.
+- The Rust proxy-core sidecar crate now lives under `crates/proxyman-core`; it no longer depends on Tauri or compiles the Tauri app shell.
 - Do not run broad formatters as part of these refactors.

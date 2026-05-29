@@ -2,101 +2,32 @@ name: Test Build
 
 on:
   workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
 
 jobs:
-  build-frontend:
-    permissions:
-      contents: write
-      packages: write
-    runs-on: ubuntu-20.04
+  build:
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get version
-        id: get_version
-        uses: dhkatz/get-version-action@v3.0.0
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8.6.0
-
-      - name: setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'pnpm'
-
-      - name: install frontend dependencies
-        run: pnpm install
-
-      - name: Change version
-        env:
-          VERSION: "${{ steps.get_version.outputs.version-without-v }}"
-        run: make change-version change-package-version
-
-      - uses: oNaiPs/secrets-to-env-action@v1
-        with:
-          secrets: ${{ toJSON(secrets) }}
-
-      - name: build frontend
-        run: pnpm build-frontend
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: tauri-frontend-test
-          path: dist/
-
-  build-tauri:
-    needs: [build-frontend]
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [macos-latest]
-
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8.6.0
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'pnpm'
-
-      - name: install frontend dependencies
-        run: pnpm install
-
-      - name: install Rust Stable
+      - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: install dependencies (mac only)
-        if: matrix.platform == 'macos-latest'
-        run: |
-          rustup target add aarch64-apple-darwin x86_64-apple-darwin
-
-      - uses: actions/download-artifact@v3
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
         with:
-          name: tauri-frontend-test
-          path: dist
+          workspaces: './crates/proxyman-core -> target'
 
-      - name: Build Tauri App (MacOS Universal)
-        uses: tauri-apps/tauri-action@dev
-        if: matrix.platform == 'macos-latest'
-        id: tauri-action-mac
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          releaseId: test-release
-          args: --target universal-apple-darwin
+      - name: Test Rust sidecar and proxy core
+        run: cargo test --manifest-path crates/proxyman-core/Cargo.toml
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: tauri-client-app-artifact
-          path: |
-            ${{ fromJSON(steps.tauri-action-mac.outputs.artifactPaths)[0] }}
+      - name: Test SwiftUI client
+        run: swift test --package-path swiftui
+
+      - name: Build SwiftUI client
+        run: swift build --package-path swiftui
+
+      - name: Build sidecar
+        run: cargo build --manifest-path crates/proxyman-core/Cargo.toml --bin proxyman-sidecar

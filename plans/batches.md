@@ -11,31 +11,31 @@ Test cases first:
 - Start a local HTTP origin and send a request through the proxy.
 - Start a local HTTPS origin through generated certificates or a test MITM fixture.
 - Assert request and response lifecycle events are emitted in order.
-- Assert proxy start/stop does not depend on a Tauri window.
+- Assert proxy start/stop does not depend on an app window.
 
 Implementation scope:
 
 - Introduce a `proxy-core` boundary, either as a new crate or a module that can later be moved.
-- Keep Tauri commands as a thin adapter.
+- Keep the UI boundary outside the proxy core.
 - Define a test event sink independent of `app.emit`.
 
 Verification:
 
 ```sh
-cargo test --manifest-path src-tauri/Cargo.toml proxy_core
+cargo test --manifest-path crates/proxyman-core/Cargo.toml proxy_core
 ```
 
 Done when:
 
-- Tests can exercise proxy behavior without React/Tauri UI.
-- Current Tauri app still compiles.
+- Tests can exercise proxy behavior without any frontend UI.
+- Sidecar build still compiles.
 
 Status:
 
 - State: Verified
-- Test command: `cargo test --manifest-path src-tauri/Cargo.toml proxy_core_forwards_http_request_without_tauri -- --nocapture`
+- Test command: `cargo test --manifest-path crates/proxyman-core/Cargo.toml proxy_core_forwards_http_request_without_app_shell -- --nocapture`
 - Last verified: 2026-04-28
-- Known gaps: The proxy core is still physically inside `src-tauri`; extraction to a standalone crate remains a follow-up once the first behavior tests are in place.
+- Known gaps: The proxy core is still physically inside `crates/proxyman-core`; extraction to a standalone crate remains a follow-up once the first behavior tests are in place.
 
 ## Batch 01: Correctness Hardening
 
@@ -59,7 +59,7 @@ Implementation scope:
 Verification:
 
 ```sh
-cargo test --manifest-path src-tauri/Cargo.toml correctness
+cargo test --manifest-path crates/proxyman-core/Cargo.toml correctness
 ```
 
 Done when:
@@ -70,7 +70,7 @@ Done when:
 Status:
 
 - State: Verified
-- Test command: `cargo test --manifest-path src-tauri/Cargo.toml correctness -- --nocapture`; full suite `cargo test --manifest-path src-tauri/Cargo.toml`
+- Test command: `cargo test --manifest-path crates/proxyman-core/Cargo.toml correctness -- --nocapture`; full suite `cargo test --manifest-path crates/proxyman-core/Cargo.toml`
 - Last verified: 2026-04-28
 - Known gaps: Rule save-time validation is still deferred to Batch 05; Batch 01 currently prevents runtime panics by skipping invalid regex/destinations and returning controlled decode errors.
 
@@ -96,7 +96,7 @@ Implementation scope:
 Verification:
 
 ```sh
-cargo test --manifest-path src-tauri/Cargo.toml streaming
+cargo test --manifest-path crates/proxyman-core/Cargo.toml streaming
 ```
 
 Done when:
@@ -107,7 +107,7 @@ Done when:
 Status:
 
 - State: Verified
-- Test command: `cargo test --manifest-path src-tauri/Cargo.toml streaming -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml core_api_events -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml exchange_error -- --nocapture`; full suite `cargo test --manifest-path src-tauri/Cargo.toml`
+- Test command: `cargo test --manifest-path crates/proxyman-core/Cargo.toml streaming -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml core_api_events -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml exchange_error -- --nocapture`; full suite `cargo test --manifest-path crates/proxyman-core/Cargo.toml`
 - Last verified: 2026-04-28
 - Known gaps: This batch implemented response-side body tap and bounded EOF capture while preserving full forwarding. The typed SwiftUI-facing stream now includes lifecycle completion events, `RequestBodyChunk` from captured request bodies, runtime `ResponseBodyChunk` events, request/response decode `ExchangeError`, body chunk and WebSocket payload `previewEncoding`/`lossyPreview` metadata, and explicit non-blocking `DropNewest` typed-event backpressure. Runtime response chunks and exchange errors are intentionally typed-only and are not written to the legacy JSONL session log. Remaining work before freezing this area: a process/IPC event-stream framing decision.
 
@@ -134,7 +134,7 @@ Implementation scope:
 Verification:
 
 ```sh
-cargo test --manifest-path src-tauri/Cargo.toml sse
+cargo test --manifest-path crates/proxyman-core/Cargo.toml sse
 ```
 
 Done when:
@@ -144,7 +144,7 @@ Done when:
 Status:
 
 - State: Verified
-- Test command: `cargo test --manifest-path src-tauri/Cargo.toml sse -- --nocapture`; full suite `cargo test --manifest-path src-tauri/Cargo.toml`
+- Test command: `cargo test --manifest-path crates/proxyman-core/Cargo.toml sse -- --nocapture`; full suite `cargo test --manifest-path crates/proxyman-core/Cargo.toml`
 - Last verified: 2026-04-28
 - Known gaps: SSE rule actions such as event injection, filtering, and delay are intentionally deferred to the rule-engine batch. Current support captures and emits parsed SSE events while preserving raw stream forwarding.
 
@@ -170,7 +170,7 @@ Implementation scope:
 Verification:
 
 ```sh
-cargo test --manifest-path src-tauri/Cargo.toml websocket
+cargo test --manifest-path crates/proxyman-core/Cargo.toml websocket
 ```
 
 Done when:
@@ -180,7 +180,7 @@ Done when:
 Status:
 
 - State: Verified
-- Test command: `cargo test --manifest-path src-tauri/Cargo.toml websocket -- --nocapture`; full suite `cargo test --manifest-path src-tauri/Cargo.toml`
+- Test command: `cargo test --manifest-path crates/proxyman-core/Cargo.toml websocket -- --nocapture`; full suite `cargo test --manifest-path crates/proxyman-core/Cargo.toml`
 - Last verified: 2026-04-28
 - Known gaps: Text, binary, ping, pong, and close frames now have dedicated forwarding/capture tests. Typed WebSocket messages include stable payload preview metadata (`previewEncoding`, `lossyPreview`, `previewTruncated`) and close frame code/reason. Remaining WebSocket API work before the native UI freeze is process/IPC event-stream framing and any future mutation/breakpoint contract.
 
@@ -206,7 +206,7 @@ Implementation scope:
 Verification:
 
 ```sh
-cargo test --manifest-path src-tauri/Cargo.toml rules
+cargo test --manifest-path crates/proxyman-core/Cargo.toml rules
 ```
 
 Done when:
@@ -217,7 +217,7 @@ Done when:
 Status:
 
 - State: Partially verified
-- Test command: `cargo test --manifest-path src-tauri/Cargo.toml core_api_rules_ -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml typed_rules_runtime -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml core_api_rules_parses_and_formats_map_and_body_line_dsl -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml rules_typed_block_returns_response_without_upstream -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml rules_typed_response_header_mutates_matching_response -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml rules_invalid -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml rules_delay_does_not_block_unmatched_concurrent_request -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml request_header -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml rules_response_header -- --nocapture`; full suite `cargo test --manifest-path src-tauri/Cargo.toml`
+- Test command: `cargo test --manifest-path crates/proxyman-core/Cargo.toml core_api_rules_ -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml typed_rules_runtime -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml core_api_rules_parses_and_formats_map_and_body_line_dsl -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml rules_typed_block_returns_response_without_upstream -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml rules_typed_response_header_mutates_matching_response -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml rules_invalid -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml rules_delay_does_not_block_unmatched_concurrent_request -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml request_header -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml rules_response_header -- --nocapture`; full suite `cargo test --manifest-path crates/proxyman-core/Cargo.toml`
 - Last verified: 2026-04-28
 - Known gaps: Existing redirect/delay/response rules now compile regex at build/update time, reject invalid regex, process requests from cloned rule snapshots so delayed rules do not block unrelated traffic, and include request/response header mutation via `RequestHeader` and `ResponseHeader`. `core_api::rules` now provides versioned transition DTOs and stable `RuleKind` wrappers over current processor modes and pack operations. Typed rule DTOs plus `validate_typed_rules_v1` now cover rule IDs, priorities, request/response phases, method/scheme/host/port/path/query/header/status/content-type/body-preview matchers, redirect/delay/map/block/header/body/fault actions, regex validation, phase validation, duplicate-id rejection, and deterministic priority/id evaluation order. The `.rules` parser/formatter/persistence path covers redirect, delay, request-header, response-header, block, map-remote, map-local, request-body, and response-body lines, preserves user-authored text, and removes old per-processor files when saving a `.rules` pack. `TypedRuleProcessor` now loads `rules.rules` and executes compatible actions in order before legacy processors in the same pack, including request-side redirect, delay, request-header, request-body, map-remote, map-local, and block, plus response-side response-header, response-body, delay, and typed response block with request URL and status matching. Deferred until after first SwiftUI shell: fault injection execution, body-preview matcher execution, richer breakpoint-style response actions, and rule-hit event details beyond the current processor-effect metadata.
 
@@ -243,7 +243,7 @@ Implementation scope:
 Verification:
 
 ```sh
-cargo test --manifest-path src-tauri/Cargo.toml ca system_proxy
+cargo test --manifest-path crates/proxyman-core/Cargo.toml ca system_proxy
 ```
 
 Manual verification is also required because macOS trust and network settings need real OS state.
@@ -256,7 +256,7 @@ Done when:
 Status:
 
 - State: Partially verified
-- Test command: `cargo test --manifest-path src-tauri/Cargo.toml system_proxy_ -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml ca_ -- --nocapture`; full suite `cargo test --manifest-path src-tauri/Cargo.toml`
+- Test command: `cargo test --manifest-path crates/proxyman-core/Cargo.toml system_proxy_ -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml ca_ -- --nocapture`; full suite `cargo test --manifest-path crates/proxyman-core/Cargo.toml`
 - Last verified: 2026-04-28
 - Known gaps: System proxy service discovery no longer hardcodes `Wi-Fi`; enabled network services are parsed from `networksetup -listallnetworkservices`, disabled services are skipped, and proxy settings are applied across detected services. Before enabling Proxyman, existing HTTP/HTTPS proxy states and bypass domains are snapshotted to app data; disable restores that snapshot and uses `Empty` to clear previously empty bypass lists. Root CA material is now generated per local app data path and reused from disk, leaf certificates write DNS SAN or IP SAN according to the requested authority, and the old shared CA certificate/key are no longer bundled. Native `URLSession` system-proxy verification and sidecar CA install/status passed on macOS. Remaining work: explicit service selection, authenticated proxy/PAC/SOCKS preservation, and trust-state reporting beyond the current `security verify-cert` boolean.
 
@@ -282,7 +282,7 @@ Implementation scope:
 Verification:
 
 ```sh
-cargo test --manifest-path src-tauri/Cargo.toml storage replay har
+cargo test --manifest-path crates/proxyman-core/Cargo.toml storage replay har
 ```
 
 Done when:
@@ -292,7 +292,7 @@ Done when:
 Status:
 
 - State: Partially verified
-- Test command: `cargo test --manifest-path src-tauri/Cargo.toml core_api_session_ -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml session_store -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml session_store_search -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml session_store_exports -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml har_timings -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml replay -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml spills -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml imports_har -- --nocapture`; full suite `cargo test --manifest-path src-tauri/Cargo.toml`
+- Test command: `cargo test --manifest-path crates/proxyman-core/Cargo.toml core_api_session_ -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml session_store -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml session_store_search -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml session_store_exports -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml har_timings -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml replay -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml spills -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml imports_har -- --nocapture`; full suite `cargo test --manifest-path crates/proxyman-core/Cargo.toml`
 - Last verified: 2026-04-28
 - Known gaps: Proxy events are now appended to a local JSONL session log under app data for the transition surface, with parent directories created automatically and write failures logged without blocking proxy traffic. Large body strings spill to sidecar body files; JSONL keeps a bounded preview plus `bodyRef`, and the full body can be lazy-loaded through a command/API boundary. The log can be read back and filtered by method, host substring, and response status. Request/response pairs with the same event ID can be exported as HAR 1.2 entries with method, URL, query string, headers, status, status text, body text, started time, total time, and wait timing. HAR 1.2 entries can also be imported into the session log as request/response event pairs. Replay can rebuild a captured request by exchange ID, apply method/URI/header/body edits, and send it to the upstream endpoint through a command/API boundary. Session search/body/HAR/replay now go through a typed `core_api::session::SessionStore` contract; JSONL is only transition support, and a fake non-JSONL store test verifies the facade does not consume raw event values. The first SwiftUI sidecar now has an in-memory `SessionStore` that records typed `proxyEvent` frames and exposes session summary search, body loading, clear, replay, and HAR import/export commands. Typed search supports method, host, path, status, body text, header name, and header value without returning body/header details in list summaries. Decision: do not switch to SQLite before first shell; implement SQLite later only if [session-storage-backend.md](session-storage-backend.md) cutover criteria become first-shell requirements. Remaining work before full native session parity: add HTTPS replay parity and expand HAR phases when needed.
 
@@ -317,8 +317,8 @@ Implementation scope:
 Verification:
 
 ```sh
-swift build --package-path swiftui/ProxymanClient
-cargo test --manifest-path src-tauri/Cargo.toml
+swift build --package-path swiftui
+cargo test --manifest-path crates/proxyman-core/Cargo.toml
 ```
 
 Done when:
@@ -327,9 +327,9 @@ Done when:
 
 Status:
 
-- State: In progress; lifecycle, live-event, session summary/body, replay, HAR, bounded CA/system-proxy/rules shell, first rule editing UI, first CA/system-proxy controls, CA install/status, native system-proxy effect, and read-only system-proxy status verified
-- Test command: `cargo test --manifest-path src-tauri/Cargo.toml core_api_session_ -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml sidecar_ -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml system_proxy -- --nocapture`; `cargo test --manifest-path src-tauri/Cargo.toml`; `cargo check --manifest-path src-tauri/Cargo.toml --bin proxyman-sidecar`; `cargo build --manifest-path src-tauri/Cargo.toml --bin proxyman-sidecar`; `swift build --package-path swiftui/ProxymanClient`; `git diff --check`; `scripts/run-swiftui-minimal-test.sh start`; manual Unix-socket `proxy.availablePort`, lower-level `proxy.start` with `findAvailable: true`, external event-socket `nc -U` subscriber, `curl --proxy`, `scripts/verify-system-proxy-urlsession.swift --service Wi-Fi`, sidecar `ca.status`/`ca.install`, and sidecar `systemProxy.status`
-- Last verified: 2026-04-29
-- Progress: SwiftUI can start with a bundled sidecar and call lifecycle JSON-RPC over Unix command socket. Lifecycle commands now drive the real proxy core. On launch/status refresh while stopped, SwiftUI calls `proxy.availablePort` so the port field reflects the first free loopback port before Start; the SwiftUI Start action then sends `findAvailable: false` so the displayed port is stable. The lower-level sidecar `proxy.start` path still accepts `findAvailable: true`, starts scanning at preferred port `9000`, skipped an occupied `*:9000`, bound `127.0.0.1:9001`, and successfully forwarded a local HTTP request through `curl --proxy`. The sidecar now wraps core typed events as event-socket `proxyEvent` frames, supports multiple event subscribers, records typed `proxyEvent` frames into an in-memory session store, and exposes `sessions.search`, `sessions.loadBody`, `sessions.clear`, `replay.send`, `har.export`, `har.import`, `ca.status`, `ca.install`, `systemProxy.status`, `systemProxy.enable`, `systemProxy.disable`, `rules.getPackRules`, `rules.validate`, `rules.savePackRules`, `rules.addPack`, `rules.removePack`, and `rules.updatePackStatus`. SwiftUI consumes live frames for immediate list updates, refreshes session summaries, lazy-loads selected request/response bodies by body ref, replays the selected exchange, and has `CoreClient` methods for HAR JSON `Data`, CA, system proxy, and rule-pack operations. The Rules section now provides a native pack list/editor with add/remove, enable toggle, validate, save, and dirty/validation status. The Certificates section now refreshes CA trust status, runs CA install, and changes the install action to `Reinstall` when the CA is already trusted; the System Proxy section now refreshes current macOS HTTP/HTTPS proxy state and enables/disables proxying against the selected port. The UI now has a compact source-list sidebar, flat titlebar proxy controls, fixed titlebar control slots to avoid start/stop jitter, and shared token-backed action button styling. Native `URLSession` system-proxy verification passed on Wi-Fi with a fake local proxy, and Wi-Fi HTTP/HTTPS/bypass settings were restored. Sidecar CA verification passed: status reported missing before install, install returned true, and status reported installed afterward. Sidecar `systemProxy.status` now returns current service states and whether they match the requested Proxyman target.
-- Known gaps: Deeper CA trust-state reporting, explicit service selection, authenticated proxy/PAC/SOCKS preservation, and richer rule-engine items remain out of the first shell unless they become blockers.
-- Next tasks: move app entry/services/stores toward the planned folder shape, replace the temporary smoke script with `script/build_and_run.sh`, and add narrow SwiftPM tests for store/event behavior.
+- State: Verified; lifecycle, live-event, session summary/body, replay, HAR, bounded CA/system-proxy/rules shell, first rule editing UI, first CA/system-proxy controls, upstream TLS verification toggle, CA install/status, native system-proxy effect, read-only system-proxy status, SwiftPM logic tests, first Swift source split, Session/Capture/Rules/CA/System Proxy/Proxy Lifecycle AppModel store extraction, Rules content auto-validate/save, independent enable persistence, replay feedback/rule handling, system-trusted local HTTPS upstreams, self-signed upstream TLS ignore mode, and release package unsigned fallback verified
+- Test command: `cargo test --manifest-path crates/proxyman-core/Cargo.toml core_api_session_ -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml sidecar_ -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml system_proxy -- --nocapture`; `cargo test --manifest-path crates/proxyman-core/Cargo.toml`; `cargo check --manifest-path crates/proxyman-core/Cargo.toml --bin proxyman-sidecar`; `cargo build --manifest-path crates/proxyman-core/Cargo.toml --bin proxyman-sidecar`; `cargo build --release --manifest-path crates/proxyman-core/Cargo.toml --bin proxyman-sidecar`; `swift test --package-path swiftui`; `swift build --package-path swiftui`; `swift build -c release --package-path swiftui`; `bash -n script/build_and_run.sh`; `bash -n script/import_codesign_certificate.sh`; `git diff --check`; `./script/build_and_run.sh --verify`; `./script/build_and_run.sh --package`; manual SwiftUI end-to-end proxy smoke with UI Start, local HTTP, valid-cert HTTPS, `.rules` block, body load, command replay, and UI Replay; manual Unix-socket `proxy.availablePort`, lower-level `proxy.start` with `findAvailable: true`, external event-socket `nc -U` subscriber, `curl --proxy`, system-trusted local HTTPS upstream smoke, `script/verify-system-proxy-urlsession.swift --service Wi-Fi`, sidecar `ca.status`/`ca.install`, and sidecar `systemProxy.status`
+- Last verified: 2026-05-01
+- Progress: SwiftUI can start with a bundled sidecar and call lifecycle JSON-RPC over Unix command socket. Lifecycle commands now drive the real proxy core. On launch/status refresh while stopped, SwiftUI calls `proxy.availablePort` so the port field reflects the first free loopback port before Start; the SwiftUI Start action then sends `findAvailable: false` so the displayed port is stable. The lower-level sidecar `proxy.start` path still accepts `findAvailable: true`, starts scanning at preferred port `9000`, skipped an occupied `*:9000`, bound `127.0.0.1:9001`, and successfully forwarded a local HTTP request through `curl --proxy`. The sidecar now wraps core typed events as event-socket `proxyEvent` frames, supports multiple event subscribers, records typed `proxyEvent` frames into an in-memory session store, and exposes `sessions.search`, `sessions.loadBody`, `sessions.clear`, `replay.send`, `har.export`, `har.import`, `ca.status`, `ca.install`, `upstreamTls.status`, `upstreamTls.update`, `systemProxy.status`, `systemProxy.enable`, `systemProxy.disable`, `rules.getPackRules`, `rules.validate`, `rules.savePackRules`, `rules.addPack`, `rules.removePack`, and `rules.updatePackStatus`. SwiftUI consumes live frames for immediate list updates, refreshes session summaries, lazy-loads selected request/response bodies by body ref, replays the selected exchange with visible success/failure feedback, and has `CoreClient` methods for HAR JSON `Data`, CA, upstream TLS verification, system proxy, and rule-pack operations. A SwiftUI end-to-end smoke passed with UI Start, local HTTP capture/detail/body loading, valid-certificate HTTPS capture, existing `.rules` block behavior, command replay, and UI Replay showing `Replayed 200`. Sidecar proxy forwarding and replay now use system TLS trust for outbound HTTPS by default, while the Certificates section can toggle an insecure upstream TLS mode that accepts invalid upstream certificates and hostnames; a local HTTPS upstream whose leaf is signed by a CA trusted by macOS returned `HTTP/1.1 200 OK` through `curl --proxy`, and a local self-signed HTTPS upstream returned `502` with ignore disabled and `200` with ignore enabled. Sidecar replay applies current app rules before network send, so request rules such as block/map/redirect can answer replayed captures before DNS/network failures. The Rules section now provides a native pack list/editor with a prominent add control, add/remove, automatic content validation/save, and matched-size enabled/saved/delete controls beside the selected pack name. The Certificates section now refreshes CA trust status, runs CA install, changes the install action to `Reinstall` when the CA is already trusted, and exposes the upstream TLS verification toggle. The System Proxy section now refreshes current macOS HTTP/HTTPS proxy state and enables/disables proxying against the selected port. The UI now has a compact source-list sidebar, subtle gray capture selection rows, flat titlebar proxy controls, fixed titlebar control slots to avoid start/stop jitter, and shared token-backed action button styling. SwiftPM tests cover AppModel available-port preflight, running-status refresh without a second port preflight, displayed-port Start behavior, invalid Start rejection, Start/Stop failure state restoration, Stop preserving the last known endpoint, proxy status event application, typed capture event application, session summary merge, selected body loading, clear/replay success and failure state, rule-pack refresh/select/content dirty/validate/save/add/remove/enable state, CA status/install state, upstream TLS verification setting state, system-proxy status/enable/disable state, and sidecar JSON-RPC response decoding. `Models.swift` now holds value models only; `AppModel`, `CoreClient`, Unix socket client code, `ProxyLifecycleStore`, `CaptureSessionsStore`, `RulePacksStore`, `CertificateStore`, and `SystemProxyStore` live in dedicated flat source files. Native `URLSession` system-proxy verification passed on Wi-Fi with a fake local proxy, and Wi-Fi HTTP/HTTPS/bypass settings were restored. Sidecar CA verification passed: status reported missing before install, install returned true, and status reported installed afterward. Sidecar `systemProxy.status` now returns current service states and whether they match the requested Proxyman target. Release packaging now creates the native app archive at `dist/ProxymanClient-macos.zip`, writes version/build metadata, preserves unsigned local packaging by default, signs with `PROXYMAN_CODESIGN_IDENTITY` when configured, and can notarize/staple/re-archive when notary credentials are configured. The release workflow runs Rust and Swift tests, imports an optional base64 `.p12` signing certificate from GitHub secrets, packages the app, and uploads the archive to a draft release.
+- Known gaps: Credentialed signing/notarization has not been run locally because no Developer ID certificate or notary credentials are configured. Deeper CA trust-state reporting, explicit service selection, authenticated proxy/PAC/SOCKS preservation, and richer rule-engine items remain out of the first shell unless they become blockers.
+- Next tasks: keep the current AppModel store boundaries fixed unless a concrete behavior change creates a new dependency boundary. After release hardening, choose the next post-shell track: persistent session storage or deferred rule-engine expansion.

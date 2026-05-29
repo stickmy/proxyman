@@ -2,7 +2,7 @@
 
 Status: first native shell uses in-memory sessions by default. Do not switch to SQLite before the first native shell unless the cutover criteria below become true.
 
-The SwiftUI-facing API must depend on `core_api::session::CoreSessionApi` and the typed `SessionStore` contract, not on JSONL event records. JSONL remains transition support for the old Tauri surface and for local debugging, but it is not the first SwiftUI storage model.
+The SwiftUI-facing API must depend on `core_api::session::CoreSessionApi` and the typed `SessionStore` contract, not on JSONL event records. JSONL remains transition support for local debugging and migration, but it is not the first SwiftUI storage model.
 
 ## First Native Model
 
@@ -97,4 +97,4 @@ Likely later additions: `tags`, `exchange_tags`, `notes`, `rule_hits`, `websocke
 - Implement `InMemorySessionStore` before wiring SwiftUI to the real sidecar.
 - Add a schema version table before writing production SQLite files.
 - Preserve body sidecars unless there is a measured reason to move bodies into SQLite blobs.
-- Keep JSONL import available at least as a migration path while the old React/Tauri transition surface exists.
+- Keep JSONL import available at least as a migration/debugging path while the storage model settles.
